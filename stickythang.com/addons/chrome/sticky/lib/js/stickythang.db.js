@@ -1,7 +1,6 @@
-if (! ("stickythang" in window) )
-window.stickythang = {}
+
  
-stickythang.db = {
+window.stickythang.db = {
 		localdb:null,
 		version:"1.0",
 		tableName:"stickies01",
@@ -104,3 +103,17 @@ stickythang.db = {
 		s+="}";
 		return s;
 	}
+	
+/*
+	
+	YUI().use('node', function(Y) {
+	      Y.on("domready", function(){
+		  	stickythang.init();
+		  }); 
+	});
+	
+*/
+
+
+
+	
