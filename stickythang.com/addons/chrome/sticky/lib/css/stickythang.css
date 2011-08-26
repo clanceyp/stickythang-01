@@ -1,12 +1,32 @@
+
 div#stickythangContainer {
 	left:0;
 	position:absolute;
 	top:0;
-	z-index:99999;
+	z-index:99998;
 	-webkit-perspective: 1000;
 }
-div#stickythangButtonContainer {left:4px;position:fixed;top:50px;z-index:1;}
-
+div#stickythangButtonLayer {
+	left:0;
+	position:fixed;
+	top:0;
+	z-index:999998;
+}
+div#stickythangFormContainer {
+	left:0;
+	position:absolute;
+	top:50px;
+}		
+div#stickythangFormContainer span.handle {
+	border-radius:3px 3px 0 0;
+	cursor:move;
+	display:block;
+	height:12px;
+	margin:0 3px 2px 1px;
+}		
+div#stickythangFormContainer:hover span.handle {
+ 	background-color:#999;
+}	
 @-webkit-keyframes stickyThangFadeIn{0%{opacity:0;}100%{opacity:1;}}
 @-webkit-keyframes noteFadeOut{0%{opacity:1;}100%{opacity:0;}}
 @-webkit-keyframes noteZoomIn{
@@ -246,6 +266,7 @@ div.stickythang div.scope2 input {
 	margin:0 3px -1px 1px;
 	vertical-align:bottom;
 }
+
 div.stickythang div.timestamp {
 	background-image:-webkit-gradient(
 	    linear,
@@ -259,3 +280,4 @@ div.stickythang div.timestamp {
 	cursor:move;
 	top:0;
 }
+			

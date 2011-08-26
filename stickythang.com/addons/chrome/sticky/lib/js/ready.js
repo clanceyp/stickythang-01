@@ -1,7 +1,15 @@
 
 (function(){
 	
-	
+
+		
+	if (!YUI){
+		console.log('ooch yui not loaded')
+		return;
+	}	else {
+		console.log('ooch yui loaded ! : )')
+		
+	}
 	YUI().use('node', function(Y) {
 	 
 	    function init() {
@@ -9,9 +17,10 @@
 	        stickythang.init();
 	    }
 	 
-	     Y.on("domready", init); 
+	    Y.on("domready", init); 
 	});
 	
+
 	
 })()
 

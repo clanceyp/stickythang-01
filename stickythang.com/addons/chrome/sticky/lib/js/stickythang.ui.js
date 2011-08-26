@@ -6,6 +6,19 @@
 window.stickythang={
 	isloaded:false,
 	user:"",
+	settings:{
+		save:function(Y,node){
+			var xy = node.getXY();
+			var settings = {
+				button:{
+					left:xy[0]
+					,top:xy[1]
+				}
+			}
+			localStorage.setItem(stickythang.ops.skey, Y.JSON.stringify( settings ) )
+			console.log('setting saved')
+		}
+	},
 	util:{
 		modifiedString:function(x,n){
 	        var date = new Date();
@@ -80,9 +93,11 @@ window.stickythang={
 		,className:["yellow","green","blue","red","gold","purple","silver","cornflowerblue","white"]
 		,count:0
 		,css:{left:350,leftOffset:120,top:50,topOffset:40}
+		,defultsettings:{button:{left:0,top:50}}
 		,domain:window.location.host
 		,highestZ:1
 		,path:window.location.pathname
+		,skey:'stickythang.settings'
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
@@ -122,21 +137,35 @@ stickythang.init = function(){
 	stickythang.user = "me";
 	console.log('myStickies loading...');
 	stickythang.db.init();
+	var temp = localStorage.getItem(stickythang.ops.skey);
+	
 	
 	YUI().use('node','dd-plugin','resize','json', function(Y) {
+		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
+		
 		Y.one('body').append('<div id="stickythangContainer" />')
-		Y.one('body').append('<div id="stickythangButtonContainer" class="fade" />')
-		Y.one('#stickythangButtonContainer')
-			.setContent('<input alt="Add sticky" title="Add sticky" type=image id="stickythangButton01" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABSNJREFUeNq0V1tsVFUUXec+5j19TGkrDW1NBaOJNkG0tDRBYwTUCj74MRr/lBg1ih8mmqDED01EDbUh6g/4JT9+gFVIAIP1EdtSLEIMCK3lMZ0ynWGm79fMnXvd59x7OzOdthiYue3OzOx75ux11957nT0MgHJqb+NhBXqLrhso5CVJDBqkIw1vdz1DHzXuU8jciqG3rH1xm+ViluXzMkyjaGe+bW/hMckmbAAuXU+Rqx649CHFVgvz+EYSuHs3dP0Q/+TKBMAEOg5CBHfQa54ZMAyTVB5DsJGmWEkvSmAkzEFohQFgpFBal8i5lQFAQ+n92ym4UpgaoP2FLQ6AmSijR01XIRjgFe7dkfNwGQzYNaDmH4DIOzNjLJkC6NSoMr3K+U8BM8z9hWEZBgxOv1ygGjBuwgBXQUnielUYAEwyYyydgpQVvEAAxL6p5bpAs1qwQCmwWn3pLphHWSgGjDSQpdtQzg+A+TZm6Q4TLC/XBQLdbQLghUZHrngQ/p4tECJZgsz9OQBsxFwHDOlWD3sKoOBiNIgD/3Th+OAopIzn37KqGDsavPBKai4APiiMDvSjJKBYWsEW9PD/Ce7Avt5j+H5oAE+vewFtjzXB7XCL2zOJaZy92onXT36JjakV2aSRVfS2Ng77AgGsaa5dIFZWcE6hri/ax4JqRcVHXYdxenwM72z7BKHxTvwdPoTI5JRYUuHz4r47nsWq4g3Yd3QXwuH4Nyd34xXelwLAmS+ahlc3rceFjj9MwbKDWpVbXrsCdQ/U0fLcPua0X4oN4o2uH7Br+x50D7YhMhHEHKW87SkT8Js/MjiJ3Ep/NTbU7ERb+we4fnnq4V8/x2/zOhC7cgpVd8koq2BwFVOelGKyAM0nAXQf7EDdQ2ssOV1Q7bIqcv5cw0s4Fz6A+HQQCpGSYNnLuC9G9/4a2o8n1j2Pg2P7P6Zbj0p2kZZVeZFISIiGgakYjU+zI8BcjHaKmzsIkbKFyjZFnKDHgxHUVBYhNHEBGu01R9lKZKSSv+c+fi84cR4ry718u2Yxj9ptIqkeBFYaiA3NIBY1yKXBVzJKcawhVbSVlC0mwqdAoduR2R5RPp9uzq2Tr7amfe/+xDA802OXucNkgP5kxUMgXAhUuaFpDPEbDFNjlHNt1KpVaUnjBE0mrgmab3aRFIi1FgCm2MXOGZCTKZGOQBUQJybiUQ4saT64REslI7sTBAOycI3MXIeL5tn3f2ZIEhWzVIStW8y1O49RXdHXVVrupjVjs6G09NjtplDPSg4PFGJCJibKOBPUJLGIpQoCgGVC6Sy1o2tzbS0iVC5Oql2PE/CReRxpnPy98DnNNTEqq+Q0emHLHiM4zFMEp8cH1eOHw+WH6vaivNoDTWe4d+OD6OvowWgoShM9jfQuvpNlqoKX6zfh/IAZTFWFSwSyL6flc6hmSf17GQj9iVZYzVJxem9jPyHxG4Y1u4l/JqrfpIoXpSkQOj9QMrIg0wI3c+C7VD963GE80mASk6QUJC3ZUGUTAK/Szh4q2Cto79iDt8gzxLcvIat77cnq5tmknWCWrZVZ0+0iYkhDn5Fkxtm1wcdr7sTWe0gyKiupSS2V0QjM8DBwsY/oD+LIL5/hPXJf5b+OmDkGw0/mTdfELV08XNHqTWisXY9XHUWon2eKoiTGce5aN77uO4HfyRMiG7OlGAv67HZmLn76lJLxE8dnqZU9702S3SCjEsSUPZ/le/SxGXWbPzLTEwEvOH4wkiUz1ew/AQYAWCLP2hYlv1wAAAAASUVORK5CYII="/>')
-			.setStyle('webkitAnimationName','stickyThangFadeIn')
-			//.plug(Y.Plugin.Drag)
-			//.dd.addHandle('#stickythangButton01');
+		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>')
+		Y.one('#stickythangFormContainer')
+			.setStyles({
+				'left':settings.button.left
+				,'top':settings.button.top
+			})
+			.setContent('<span class="handle"></span><input alt="Add sticky" title="Add sticky" type=image id="stickythangButton01" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABSNJREFUeNq0V1tsVFUUXec+5j19TGkrDW1NBaOJNkG0tDRBYwTUCj74MRr/lBg1ih8mmqDED01EDbUh6g/4JT9+gFVIAIP1EdtSLEIMCK3lMZ0ynWGm79fMnXvd59x7OzOdthiYue3OzOx75ux11957nT0MgHJqb+NhBXqLrhso5CVJDBqkIw1vdz1DHzXuU8jciqG3rH1xm+ViluXzMkyjaGe+bW/hMckmbAAuXU+Rqx649CHFVgvz+EYSuHs3dP0Q/+TKBMAEOg5CBHfQa54ZMAyTVB5DsJGmWEkvSmAkzEFohQFgpFBal8i5lQFAQ+n92ym4UpgaoP2FLQ6AmSijR01XIRjgFe7dkfNwGQzYNaDmH4DIOzNjLJkC6NSoMr3K+U8BM8z9hWEZBgxOv1ygGjBuwgBXQUnielUYAEwyYyydgpQVvEAAxL6p5bpAs1qwQCmwWn3pLphHWSgGjDSQpdtQzg+A+TZm6Q4TLC/XBQLdbQLghUZHrngQ/p4tECJZgsz9OQBsxFwHDOlWD3sKoOBiNIgD/3Th+OAopIzn37KqGDsavPBKai4APiiMDvSjJKBYWsEW9PD/Ce7Avt5j+H5oAE+vewFtjzXB7XCL2zOJaZy92onXT36JjakV2aSRVfS2Ng77AgGsaa5dIFZWcE6hri/ax4JqRcVHXYdxenwM72z7BKHxTvwdPoTI5JRYUuHz4r47nsWq4g3Yd3QXwuH4Nyd34xXelwLAmS+ahlc3rceFjj9MwbKDWpVbXrsCdQ/U0fLcPua0X4oN4o2uH7Br+x50D7YhMhHEHKW87SkT8Js/MjiJ3Ep/NTbU7ERb+we4fnnq4V8/x2/zOhC7cgpVd8koq2BwFVOelGKyAM0nAXQf7EDdQ2ssOV1Q7bIqcv5cw0s4Fz6A+HQQCpGSYNnLuC9G9/4a2o8n1j2Pg2P7P6Zbj0p2kZZVeZFISIiGgakYjU+zI8BcjHaKmzsIkbKFyjZFnKDHgxHUVBYhNHEBGu01R9lKZKSSv+c+fi84cR4ry718u2Yxj9ptIqkeBFYaiA3NIBY1yKXBVzJKcawhVbSVlC0mwqdAoduR2R5RPp9uzq2Tr7amfe/+xDA802OXucNkgP5kxUMgXAhUuaFpDPEbDFNjlHNt1KpVaUnjBE0mrgmab3aRFIi1FgCm2MXOGZCTKZGOQBUQJybiUQ4saT64REslI7sTBAOycI3MXIeL5tn3f2ZIEhWzVIStW8y1O49RXdHXVVrupjVjs6G09NjtplDPSg4PFGJCJibKOBPUJLGIpQoCgGVC6Sy1o2tzbS0iVC5Oql2PE/CReRxpnPy98DnNNTEqq+Q0emHLHiM4zFMEp8cH1eOHw+WH6vaivNoDTWe4d+OD6OvowWgoShM9jfQuvpNlqoKX6zfh/IAZTFWFSwSyL6flc6hmSf17GQj9iVZYzVJxem9jPyHxG4Y1u4l/JqrfpIoXpSkQOj9QMrIg0wI3c+C7VD963GE80mASk6QUJC3ZUGUTAK/Szh4q2Cto79iDt8gzxLcvIat77cnq5tmknWCWrZVZ0+0iYkhDn5Fkxtm1wcdr7sTWe0gyKiupSS2V0QjM8DBwsY/oD+LIL5/hPXJf5b+OmDkGw0/mTdfELV08XNHqTWisXY9XHUWon2eKoiTGce5aN77uO4HfyRMiG7OlGAv67HZmLn76lJLxE8dnqZU9702S3SCjEsSUPZ/le/SxGXWbPzLTEwEvOH4wkiUz1ew/AQYAWCLP2hYlv1wAAAAASUVORK5CYII="/>')
+			.plug(Y.Plugin.Drag)
+			.dd.addHandle('span.handle');
+		Y.one('#stickythangFormContainer').dd.on("drag:end",function(e){
+				console.log( 'drag:end ');
+				stickythang.settings.save(Y,Y.one('#stickythangFormContainer'));
+			})	
 		
 		Y.one('#stickythangButton01').on('click',function(e){
-			//alert(this.id)
 			stickythang.createNoteYUI(null,Y)
 		})
 		
+		
+		Y.one('#stickythangFormContainer')
+			.setStyle('webkitAnimationName','stickyThangFadeIn')
+
 	    stickythang.db.count(Y);
 	})
 
