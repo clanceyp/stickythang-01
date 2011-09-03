@@ -1,0 +1,237 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> 
+<html> 
+	<head> 
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"> 
+		<title>StickyThang! ALPHA</title> 
+		
+		<script src="lib/yui/build/yui/yui.js" type="text/javascript"></script>
+		<script src="lib/yui/build/loader/loader.js" type="text/javascript"></script>
+		
+		
+		<script> 
+		
+		
+	
+	// hgtools.db.init();
+				
+			
+		
+/**
+ * @author patcla
+ */
+
+ 
+var stickythang={
+	util:{
+		modifiedString:function(x){
+	        var date = new Date();
+	        date.setTime(parseFloat(x));
+	    	return 'Last Modified: ' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+		},
+		highestZ:function(){
+			return ++stickythang.ops.highestZ;
+		},
+		flip:{
+			toggle:function(e){
+				var note = e.currentTarget.ancestor('div.stickythang');
+				var dur = parseInt(1) * 500;
+				window.getSelection().removeAllRanges();
+				if (note.getData('flipped') === 'true')
+					stickythang.util.flip.turnBack(note,dur);
+				else 
+					stickythang.util.flip.turnOver(note,dur);
+			},
+			turnOver:function(note,dur){
+				console.log("flipping note:"+note.getComputedStyle('webkitAnimationDuration'))
+				note.setStyle("webkitAnimationName","noteFlip").addClass('in-flip');
+				setTimeout(function(){
+					note.addClass("flippingTemp")
+				},dur/2)
+				setTimeout(function(){
+					note.removeClass('in-flip').replaceClass("flippingTemp","flipped").setStyle("webkitAnimationName","").setData('flipped','true');
+				},dur)
+			},
+			turnBack:function(note,dur){
+				note.setStyle("webkitAnimationName","noteFlip").addClass('in-flip');
+				setTimeout(function(){
+					note.replaceClass("flipped"," flippingTemp2");
+				},dur/2)
+				setTimeout(function(){
+					note.removeClass('in-flip').removeClass("flippingTemp2").setStyle("webkitAnimationName","").setData('flipped','false');
+				},dur)					
+			}
+		}
+	},
+	ops:{
+		captured:null
+		,className:["yellow","green","blue","red","gold","purple","silver","cornflowerblue","white"]
+		,count:0
+		,domain:window.location.host
+		,highestZ:1
+		,path:window.location.pathname
+		,settingsHTML:"<label>Colour <select><option>$$</option></select></lable><label>Share with: (commer or line seporated list) <textarea>@andrew</textarea></label>"
+		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton"></div><div class="flipbutton"></div><div class="timestamp"></div><div class="edit front"></div><form class="settings back"><label>Colour <select><option>yellow</option><option>green</option><option>blue</option><option>red</option><option>gold</option><option>purple</option><option>silver</option><option>cornflowerblue</option><option>white</option></select><label>Share with: (commer or line seporated list) <textarea>@andrew</textarea></label></label><div class="scope">Scope: <label>page<input type="radio" name="scope" value="page" class="page"></label><label>site<input name="scope" class="site" type="radio" value="site"></label></div></form>'
+	},
+	loadNotes:function(){
+		console.log('Loading stickies');
+	    stickythang.db.localdb.transaction(function(tx) {
+	        tx.executeSql("SELECT id, note, timestamp, left, top, state, scope, className FROM stickies where (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global')", [], function(tx, result) {
+	        	console.log("loading stikies :"+ result.rows.length);
+	            for (var i = 0; i < result.rows.length; ++i) {
+					
+					console.log('loading note '+i)
+					stickythang.createNoteYUI( result.rows.item(i) );
+
+	            }
+	        }, function(tx, error) {
+	            console.log('Failed to retrieve notes from database - ' + error.message);
+	            return;
+	        });
+	    });		
+	},
+	createNewNote:function(){
+		
+	}
+} 
+ 
+stickythang.init = function(){
+	console.log('myStickies loading...')
+	stickythang.db.init();
+	
+	YUI().use('node', function(Y) {
+		Y.one('body').append('<div id="stickythangContainer" />')
+		Y.one('#stickythangContainer').append('<div id="stickythangButton00" class="fadeIn" />')
+		Y.one('#stickythangButton00')
+			.setContent('<input alt="Add sticky" title="Add sticky" type=image id="stickythangButton01" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABSNJREFUeNq0V1tsVFUUXec+5j19TGkrDW1NBaOJNkG0tDRBYwTUCj74MRr/lBg1ih8mmqDED01EDbUh6g/4JT9+gFVIAIP1EdtSLEIMCK3lMZ0ynWGm79fMnXvd59x7OzOdthiYue3OzOx75ux11957nT0MgHJqb+NhBXqLrhso5CVJDBqkIw1vdz1DHzXuU8jciqG3rH1xm+ViluXzMkyjaGe+bW/hMckmbAAuXU+Rqx649CHFVgvz+EYSuHs3dP0Q/+TKBMAEOg5CBHfQa54ZMAyTVB5DsJGmWEkvSmAkzEFohQFgpFBal8i5lQFAQ+n92ym4UpgaoP2FLQ6AmSijR01XIRjgFe7dkfNwGQzYNaDmH4DIOzNjLJkC6NSoMr3K+U8BM8z9hWEZBgxOv1ygGjBuwgBXQUnielUYAEwyYyydgpQVvEAAxL6p5bpAs1qwQCmwWn3pLphHWSgGjDSQpdtQzg+A+TZm6Q4TLC/XBQLdbQLghUZHrngQ/p4tECJZgsz9OQBsxFwHDOlWD3sKoOBiNIgD/3Th+OAopIzn37KqGDsavPBKai4APiiMDvSjJKBYWsEW9PD/Ce7Avt5j+H5oAE+vewFtjzXB7XCL2zOJaZy92onXT36JjakV2aSRVfS2Ng77AgGsaa5dIFZWcE6hri/ax4JqRcVHXYdxenwM72z7BKHxTvwdPoTI5JRYUuHz4r47nsWq4g3Yd3QXwuH4Nyd34xXelwLAmS+ahlc3rceFjj9MwbKDWpVbXrsCdQ/U0fLcPua0X4oN4o2uH7Br+x50D7YhMhHEHKW87SkT8Js/MjiJ3Ep/NTbU7ERb+we4fnnq4V8/x2/zOhC7cgpVd8koq2BwFVOelGKyAM0nAXQf7EDdQ2ssOV1Q7bIqcv5cw0s4Fz6A+HQQCpGSYNnLuC9G9/4a2o8n1j2Pg2P7P6Zbj0p2kZZVeZFISIiGgakYjU+zI8BcjHaKmzsIkbKFyjZFnKDHgxHUVBYhNHEBGu01R9lKZKSSv+c+fi84cR4ry718u2Yxj9ptIqkeBFYaiA3NIBY1yKXBVzJKcawhVbSVlC0mwqdAoduR2R5RPp9uzq2Tr7amfe/+xDA802OXucNkgP5kxUMgXAhUuaFpDPEbDFNjlHNt1KpVaUnjBE0mrgmab3aRFIi1FgCm2MXOGZCTKZGOQBUQJybiUQ4saT64REslI7sTBAOycI3MXIeL5tn3f2ZIEhWzVIStW8y1O49RXdHXVVrupjVjs6G09NjtplDPSg4PFGJCJibKOBPUJLGIpQoCgGVC6Sy1o2tzbS0iVC5Oql2PE/CReRxpnPy98DnNNTEqq+Q0emHLHiM4zFMEp8cH1eOHw+WH6vaivNoDTWe4d+OD6OvowWgoShM9jfQuvpNlqoKX6zfh/IAZTFWFSwSyL6flc6hmSf17GQj9iVZYzVJxem9jPyHxG4Y1u4l/JqrfpIoXpSkQOj9QMrIg0wI3c+C7VD963GE80mASk6QUJC3ZUGUTAK/Szh4q2Cto79iDt8gzxLcvIat77cnq5tmknWCWrZVZ0+0iYkhDn5Fkxtm1wcdr7sTWe0gyKiupSS2V0QjM8DBwsY/oD+LIL5/hPXJf5b+OmDkGw0/mTdfELV08XNHqTWisXY9XHUWon2eKoiTGce5aN77uO4HfyRMiG7OlGAv67HZmLn76lJLxE8dnqZU9702S3SCjEsSUPZ/le/SxGXWbPzLTEwEvOH4wkiUz1ew/AQYAWCLP2hYlv1wAAAAASUVORK5CYII="/>')
+			.setStyle('webkitAnimationName','noteFadeIn')
+		Y.one('#stickythangButton01').on('click',function(e){
+			alert(this.id)
+			stickythang.createNoteYUI()
+		})
+		
+		
+	    stickythang.db.localdb.transaction(function(tx) {
+	        tx.executeSql("SELECT COUNT(*) FROM stickies", [], function(result) {
+	        	// count exists loading stickies
+				console.log('count - loading sticky-notes')
+	            stickythang.loadNotes();
+	        }, function(tx, error) {
+	        //    tx.executeSql("CREATE TABLE stickies (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
+	                //stickythang.loadNotes(); 
+					console.log('no count - no notes to load');
+	        //    });
+	        });
+	    });			
+		
+		
+	})
+	
+	//document.getElementById('stickythangButton01').addEventListener('click',stickythang.newNote,false);
+
+ 
+
+	
+ };
+ 
+
+stickythang.createNoteYUI = function(ops){
+	YUI().use('node','dd-plugin','resize', function(Y) {
+		
+		if (!ops) {
+			ops = stickythang.createNewNote();
+		}
+		console.log('loading note '+ops.id)	
+		
+		var note = Y.Node.create('<div />');
+		
+		note.set('id',ops.id)
+			.set('className', "stickythang maximise "+ ops.className )
+			.setStyles({
+				'top':ops.top
+				,'left':ops.left
+				,'z-index':stickythang.util.highestZ()
+			})
+			.setContent(stickythang.ops.template)
+
+		note.one("div.timestamp").setContent( stickythang.util.modifiedString(ops.timestamp) );
+		note.one("div.edit").setAttribute( 'contenteditable' , 'true' );
+		note.one("div.flipbutton").on('click',stickythang.util.flip.toggle)
+
+		Y.one("#stickythangContainer").appendChild(note);	
+		note.setStyle('webkitAnimationName' , 'stickyThangNoteFadeIn') ;
+
+ 		note.plug(Y.Plugin.Drag);
+		note.dd.addHandle('div.timestamp');	
+		
+		var instance = new Y.Resize({
+			node: note,
+			handles: 'br'
+		});		
+		//note.on('click',stickythang.util.flip.toggle)
+		return
+		document.getElementById('ops.id').addEventListener('dblclick', function(e) {
+			var note = document.getElementById(ops.id)
+			var dur = parseInt(1) * 500;
+			try {
+				window.getSelection().removeAllRanges();
+			}catch(e){}
+			if (!note.className.match('flipped')){ // normal view
+				note.className = note.className.replace(" flipped","")
+				note.style.webkitAnimationName = "noteFlip"
+				setTimeout(function(){
+					note.className+= " flippingTemp"
+				},dur/2)
+				setTimeout(function(){
+					note.className = note.className.replace(" flippingTemp"," flipped");
+					note.style.webkitAnimationName = ""
+				},dur)
+			} else { // back view
+				note.style.webkitAnimationName = "noteFlip"
+				setTimeout(function(){
+					note.className = note.className.replace(" flipped"," flippingTemp2");
+				},dur/2)
+				setTimeout(function(){
+					note.className = note.className.replace(" flippingTemp2"," ");
+					note.style.webkitAnimationName = ""
+				},dur)				
+			}
+		}, false);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+			
+	});	
+} 
+
+			
+			
+		</script> 
+		
+		
+		<script src="lib/js/stickythang.db.js" type="text/javascript"></script>
+		
+		<link rel="stylesheet" type="text/css" href="lib/css/stickythang.css" /> 
+	</head> 
+	<body> 
+	
+	
+	<div 
+		class="stickythang cornflowerblue maximise" 
+		style="-webkit-animation-name: noteFadeIn; left: 519px; top: 139px; 
+		z-index: 20; "><div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="timestamp">Last Modified: 2011-7-25 21:25:54</div><div class="edit front" contenteditable="true">this is the best message</div><form class="settings back"><label>Colour <select><option>yellow</option><option>green</option><option>blue</option><option>red</option><option>gold</option><option>purple</option><option>silver</option><option>cornflowerblue</option><option>white</option></select><label>Share with: (commer or line seporated list) <textarea>@andrew</textarea></label></label><div class="scope">Scope: <label>page<input type="radio" name="scope" value="page" class="page"></label><label>site<input name="scope" class="site" type="radio" value="site"></label></div></form></div>
+	
+
+	</body> 
+	
+	
+	<script>
+		stickythang.init() 
+	</script> 
+</html> 
