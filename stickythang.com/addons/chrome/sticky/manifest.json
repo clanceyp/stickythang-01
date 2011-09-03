@@ -1,0 +1,121 @@
+{
+  // Required
+  "name": "StickyThang! ALPHA",
+  "version": "0.3",
+  "update_url": "http://stickythang.com/extentions/chrome/updates.xml",
+  "background_page": "background.html",
+
+  // Recommended
+  "description": "Syndicate your notes with your friends, work colleagues and study buddies"
+  ,"icons": { 
+		"16": "icon16.png" 
+		,"48": "icon48.png" 
+  }
+  ,"options_page": "options.html"
+  ,"content_scripts": [{
+    	"matches": [
+			"http://*/*"
+		],
+		"js": [
+//			"lib/yui/3.4.0.js"
+			//"lib/yui/3.4.0/build/yui-base/yui-base-debug.js"
+			"lib/yui/3.4.0/build/yui/yui-debug.js"
+			,"lib/yui/3.4.0/build/oop/oop-min.js"
+			,"lib/yui/3.4.0/build/features/features-min.js"
+			,"lib/yui/3.4.0/build/dom-base/dom-base-min.js"
+			,"lib/yui/3.4.0/build/dom-core/dom-core-min.js"
+			,"lib/yui/3.4.0/build/event-base/event-base-min.js"
+			,"lib/yui/3.4.0/build/event-custom-base/event-custom-base-min.js"
+			,"lib/yui/3.4.0/build/event-custom-complex/event-custom-complex-min.js"
+			,"lib/yui/3.4.0/build/event-delegate/event-delegate-min.js"
+			,"lib/yui/3.4.0/build/selector-native/selector-native-min.js"
+			,"lib/yui/3.4.0/build/selector/selector-min.js"
+			,"lib/yui/3.4.0/build/node/node-min.js"
+			,"lib/yui/3.4.0/build/node-base/node-base-min.js"
+			,"lib/yui/3.4.0/build/node-core/node-core-min.js"
+			,"lib/yui/3.4.0/build/node-event-delegate/node-event-delegate-min.js"
+			,"lib/yui/3.4.0/build/node-pluginhost/node-pluginhost-min.js"
+			,"lib/yui/3.4.0/build/node-screen/node-screen-min.js"
+			,"lib/yui/3.4.0/build/node-style/node-style-min.js"
+			,"lib/yui/3.4.0/build/pluginhost-base/pluginhost-base-min.js"
+			,"lib/yui/3.4.0/build/pluginhost-config/pluginhost-config-min.js"
+			,"lib/yui/3.4.0/build/dom-style/dom-style-min.js"
+			,"lib/yui/3.4.0/build/dom-screen/dom-screen-min.js"
+			,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
+			,"lib/yui/3.4.0/build/attribute-complex/attribute-complex-min.js"
+			,"lib/yui/3.4.0/build/base-base/base-base-min.js"
+			,"lib/yui/3.4.0/build/base-pluginhost/base-pluginhost-min.js"
+			,"lib/yui/3.4.0/build/base-build/base-build-min.js"
+			,"lib/yui/3.4.0/build/yui-throttle/yui-throttle-min.js"
+			,"lib/yui/3.4.0/build/classnamemanager/classnamemanager-min.js"
+			,"lib/yui/3.4.0/build/dd-constrain/dd-constrain-min.js"
+			,"lib/yui/3.4.0/build/dd-ddm-base/dd-ddm-base-min.js"
+			,"lib/yui/3.4.0/build/dd-ddm/dd-ddm-min.js"
+			,"lib/yui/3.4.0/build/dd-ddm-drop/dd-ddm-drop-min.js"
+			,"lib/yui/3.4.0/build/dd-delegate/dd-delegate-min.js"
+			,"lib/yui/3.4.0/build/dd-drag/dd-drag-min.js"
+			,"lib/yui/3.4.0/build/dd-drop-plugin/dd-drop-plugin-min.js"
+			,"lib/yui/3.4.0/build/dd-drop/dd-drop-min.js"
+			,"lib/yui/3.4.0/build/dd-plugin/dd-plugin-min.js"
+			,"lib/yui/3.4.0/build/dd-proxy/dd-proxy-min.js"
+			,"lib/yui/3.4.0/build/dd-scroll/dd-scroll-min.js"
+			,"lib/yui/3.4.0/build/dump/dump-min.js"
+			,"lib/yui/3.4.0/build/event-resize/event-resize-min.js"
+			,"lib/yui/3.4.0/build/event-mouseenter/event-mouseenter-min.js"
+			,"lib/yui/3.4.0/build/event-mousewheel/event-mousewheel-min.js"
+			,"lib/yui/3.4.0/build/event-key/event-key-min.js"
+			,"lib/yui/3.4.0/build/event-focus/event-focus-min.js"
+			,"lib/yui/3.4.0/build/event-synthetic/event-synthetic-min.js"
+			,"lib/yui/3.4.0/build/event-hover/event-hover-min.js"
+			,"lib/yui/3.4.0/build/event-outside/event-outside-min.js"
+			,"lib/yui/3.4.0/build/json-parse/json-parse-min.js"
+			,"lib/yui/3.4.0/build/json-stringify/json-stringify-min.js"
+			,"lib/yui/3.4.0/build/widget-base/widget-base-min.js"
+			,"lib/yui/3.4.0/build/widget-htmlparser/widget-htmlparser-min.js"
+			,"lib/yui/3.4.0/build/widget-uievents/widget-uievents-min.js"
+			,"lib/yui/3.4.0/build/widget-skin/widget-skin-min.js"
+			,"lib/yui/3.4.0/build/substitute/substitute-min.js"
+			,"lib/yui/3.4.0/build/plugin/plugin-min.js"
+			,"lib/yui/3.4.0/build/pluginhost-base/pluginhost-base-min.js"
+			,"lib/yui/3.4.0/build/pluginhost-config/pluginhost-config-min.js"
+			,"lib/yui/3.4.0/build/resize-base/resize-base-min.js"
+			,"lib/yui/3.4.0/build/resize-proxy/resize-proxy-min.js"
+			,"lib/yui/3.4.0/build/resize-constrain/resize-constrain-min.js"
+			,"lib/yui/3.4.0/build/loader/loader-min.js"
+			//,"lib/yui/3.4.0/build/loader-base/loader-base-min.js"
+			//,"lib/yui/3.4.0/build/loader-rollup/loader-rollup-min.js"
+			//,"lib/yui/3.4.0/build/loader-yui3/loader-yui3-min.js"
+			,"lib/yui/3.4.0/build/intl/intl-min.js"
+			,"lib/yui/3.4.0/build/intl-base/intl-base-min.js"
+			,"lib/js/stickythang.ui.js"
+			,"lib/js/stickythang.db.js"
+			,"lib/js/ready.js"
+		],
+		"css": [
+			"lib/css/stickythang.css"
+			,"lib/yui/3.4.0/build/resize-base/assets/skins/sam/resize-base.css"
+			,"lib/yui/3.4.0/build/widget-base/assets/skins/sam/widget-base.css"
+		]
+  }]
+  ,"permissions": [
+		"tabs" 
+		,"http://stickythang.com/"
+		,"http://yui.yahooapis.com/"
+  ]
+
+  /*  
+  //Pick one (or none)
+  "browser_action": {...},
+  "page_action": {...},
+  "theme": {...},
+
+  // Add any of these that you need
+  "chrome_url_overrides": {...},
+  "content_scripts": [...],
+  "key": "publicKey",
+  "minimum_chrome_version": "versionString",
+  "permissions": [...],
+  "plugins": [...],
+  "update_url": "http://path/to/updateInfo.xml"
+  */ 
+}
