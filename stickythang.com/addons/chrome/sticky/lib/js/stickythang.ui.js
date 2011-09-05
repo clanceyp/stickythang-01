@@ -2,6 +2,18 @@
  * @author patcla
  */
 
+
+chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+	console.log("request recived:" + request.action)
+	switch (request.action) {
+		case "create-note" :
+			YUI().use('node','dd-plugin','resize','json', function(Y) {
+				stickythang.createNoteYUI(null,Y);
+			});
+		break;	
+	}
+	sendResponse({message:'thank you'});
+});
  
 window.stickythang={
 	isloaded:false,
@@ -144,7 +156,9 @@ stickythang.init = function(){
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
-		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>')
+		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
+		
+		/*
 		Y.one('#stickythangFormContainer')
 			.setStyles({
 				'left':settings.button.left
@@ -157,11 +171,10 @@ stickythang.init = function(){
 				console.log( 'drag:end ');
 				stickythang.settings.save(Y,Y.one('#stickythangFormContainer'));
 			})	
-		
 		Y.one('#stickythangButton01').on('click',function(e){
 			stickythang.createNoteYUI(null,Y)
 		})
-		
+		*/
 		
 		Y.one('#stickythangFormContainer')
 			.setStyle('webkitAnimationName','stickyThangFadeIn')
