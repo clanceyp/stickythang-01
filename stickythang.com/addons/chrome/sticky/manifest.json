@@ -1,15 +1,20 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.3",
+  "version": "0.4",
   "update_url": "http://stickythang.com/extentions/chrome/updates.xml",
   "background_page": "background.html",
 
   // Recommended
   "description": "Syndicate your notes with your friends, work colleagues and study buddies"
   ,"icons": { 
-		"16": "icon16.png" 
+		"16": "icon16x.png" 
 		,"48": "icon48.png" 
+  }
+  ,"page_action": {
+    "default_icon": "icon16x.png", // optional
+    "default_title": "StickyThang!",    // optional; shown in tooltip
+    "default_popup": "popup.html"    // optional
   }
   ,"options_page": "options.html"
   ,"content_scripts": [{
