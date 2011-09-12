@@ -4,12 +4,17 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<title>popup</title>
 		<script src="lib/yui/3.4.0/build/yui/yui.js"></script>
-
-	<style>
+		<link href="lib/css/popup98.css" rel="stylesheet" />
+		
+		<style>
+			
 html {
 	border-radius:5px;
-background: #5670A1 url(http://stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
-}		
+	background: #5670A1 url(http://stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
+}	
+body {
+	width:300px;
+}	
 body,
 h1,h2 {
 	font-size:11px;
@@ -17,60 +22,115 @@ h1,h2 {
 }	
 a {text-decoration:none;}
 a:hover {text-decoration:underline;}	
-form,div {
+div.unit {
 	border-radius:5px;
 	background-color:#fff;
 	margin:0;
+	min-height:100px;
 	padding:12px 12px 6px 12px;
-	width:240px;
+	width:100%;
+}
+div.unit.off {
+	display:none;
 }
 *.centre {text-align:center;}
-h1{font-size:14px;
-background-image:url(banner01.png);
-background-repeat:no-repeat;
-background-position:50% 50%;
-height:80px;
-padding:0;
-margin:0;
+h1{
+	font-size:14px;
+	background-image:url(banner01.png);
+	background-repeat:no-repeat;
+	background-position:50% 50%;
+	height:80px;
+	padding:0;
+	margin:0;
 }
 h1 span {position:absolute;left:-99999px}
 h2,
 p {margin:0;padding:0 0 4px 0;}
 label {display:inline-block;width:80px;}
-*.tar {text-align:right}
-	</style>		
+*.tar {text-align:right}	
+*.tac {text-align:center;}	
+ul.menu {
+	margin:0 0 0 6px;
+	padding:0;
+}	
+ul.menu li {
+	background-color:#dfdfdf;
+	border-radius: 6px 6px 0 0;
+	display:inline-block;
+	list-style:none;
+	padding:3px 10px;
+}
+ul.menu a {
+	color:#06c;
+	cursor:pointer;
+}
+ul.menu li.active {
+	background-color:#fff;
+}
+#MyStickies input {
+	width:100%;
+}
+p.bottom {
+	font-size:120%;
+	margin-top:14px;
+	text-align:center;
+}
+p.bottom a {
+	display:inline-block;
+	background-color:rgba(255,255,255,0.5);
+	border-radius:5px;
+	padding:2px 20px;
+	text-decoration:underline;
+	
+	-webkit-transition: background-color 0.5s linear;
+}
+p.bottom a:hover {
+	background-color:rgba(255,255,255,1);
+}
+		
+		</style>
+		
 	</head>
 	<body>
 		<h1 class="centre"><a href="http://stickythang.com"><span>StickyThang!</span></a></h1>
-		<form>
-			<p><label>Login with...</label>
-			<select>
-				<option>Google</option>
-				<option>FaceBook</option>
-				<option>Yahoo</option>
-			</select></p>
-			<p>
-				<label>User:</label><input type="text" value=""/> 
-			</p>
-			<p>
-				<label>Password:</label><input type="password" value=""/> 
-			</p>
-			<p class="centre">
-				<input type="button" value="log me in to StickyThang!"/>
-			</p>
-		</form>
-		<hr />
-		<div>
-			<h2>My notes</h2>
-			<p>
-				You'll need to login inorder to share your notes.
-			</p>
-			<p class="tar">
-				<input type="button" id="addNote" value="add note" style="float:left;" />
-				<a target="_blank" href="http://stickythang.com" style="display:inline-block;line-height:22px">visit StickyThang!</a>
-			</p>
-
+		<ul class="menu">
+			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
+			<li><a class="LoginForm"><span>Login</span></a></li>
+		</ul>
+		<div id="LoginForm" class="off unit">
+			<form>
+				<p><label>Login with...</label>
+				<select>
+					<option>Google</option>
+					<option>FaceBook</option>
+					<option>Yahoo</option>
+				</select></p>
+				<p>
+					<label>User:</label><input type="text" value=""/> 
+				</p>
+				<p>
+					<label>Password:</label><input type="password" value=""/> 
+				</p>
+				<p class="centre">
+					<input type="button" value="log me in to StickyThang!"/>
+				</p>
+			</form>
 		</div>
+		<div id="MyStickies" class="on unit">
+			<div>
+				<h2>My stickies</h2>
+				<p>
+					<input type="button" id="addNote" value=" Add a new Sticky! " />
+				</p>
+				<p>
+					NB: You'll need to login inorder to share your notes.
+				</p>
+	
+			</div>
+		</div>
+		<p class="tac bottom">
+			<a target="_blank" href="http://stickythang.com">visit StickyThang!</a>
+		</p>
 	</body>
 		<script>
 			YUI().use('node',function(Y){
@@ -87,6 +147,17 @@ label {display:inline-block;width:80px;}
 					  });
 					});			
 				});
+				Y.all("ul.menu a").on("click",function(e){
+					e.preventDefault();
+					var target = e.currentTarget;
+					
+					Y.all("ul.menu li").removeClass("active");
+					target.ancestor("li").addClass("active")
+					
+					Y.all("div.unit").addClass("off")
+					Y.one("#"+ target.get("className") ).removeClass("off");
+					
+				})
 				
 			});
 		</script>	

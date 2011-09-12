@@ -49,7 +49,11 @@ div#stickythangFormContainer:hover span.handle {
 	0%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 	100%{-webkit-transform:scale(0) skew(-30deg, 0deg) }
 }
-@-webkit-keyframes noteFlip{
+@-webkit-keyframes stickyThangNoteCreate{
+	0%{-webkit-transform:scale(0) skew(-30deg, 0deg) }
+	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
+}
+@-webkit-keyframes stickyThangNoteFlip{
 	0%{-webkit-transform: rotateY(0deg) }
 	100%{-webkit-transform: rotateY(180deg) }
 }
@@ -95,9 +99,14 @@ div.stickythang.flippingTemp,
 div.stickythang.flippingTemp2 {
 	-webkit-box-shadow: -5px 5px 10px rgba(0, 0, 0, 0.5);
 }
+div.stickythang div.minimisebutton,
+div.stickythang div.closebutton {
+	opacity:0;
+	-webkit-transition: opacity 0.1s linear;
+}
 div.stickythang:hover div.minimisebutton,
 div.stickythang:hover div.closebutton {
-	display:block;
+	opacity:1;
 }
 div.stickythang *.back,
 div.stickythang.flipped *.front,
@@ -159,7 +168,6 @@ div.stickythang div.flipbutton {
 div.stickythang div.closebutton {
     background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gMBw8GF7RLhCYAAAMFSURBVDjLdZNfaFNXHMc/9557e1uT3CYh0lLmKFgGc2WI4laWggw3mLDoizJKq3u2vvjkEAuC9EXwOVNhnYFRKNk6tynuRdmquMAUtnZsS9Gh0VA06bL03lxzk3vP2UNq5/594cfh9+V7zvn9fud7NP6Bb6em9m7pjb9naTrCMECDMAhooSjXal+NTk9/9rxeez75dGwss6M3ng/v3LEIJSiFUgqQoGlYu3YFPzrO+18nErPZbBYA49nm7J49mZeDIP/0i0uWCgL+C62VFeOldDpXWV4GmAUQAB8MDWXetO28efu25UvJw0SCeLP5txJLySRdnocolfTNicT+Acu6983q6pI4sG3bO+8KYz714L7lK4V/5AijFy/yc6FApFxGAU+2byd99SpV2ya4cYPualVPRKP7zf7+otibSk2lq5WdKAW7d/NaNotpWQxkMvxaKOClUrw+N0ckmWRgZITfi0VUsUjU8/SyEF2GrK8hleqUu7BAJZcjdfgwXZEIb8zOIttteuJxpJT8MT9PePkyrOtFo4GhwoDwWa9K8eD4cQIpiR08iAIwTRquy9MrV3h07BhIuTEbqRRGEARITUNDdWgp+X5mhldGRrCiUQAC32dxZoaBMETT/nr5lgK9qTonhevrw6EhXjhzhmYY4jgOjuvSaDZ5cXqa+8PDhEohO87AVxLdtbo2iLWtW0mdOkVTKRzHwSwUMK5dw3UbeO02m0+epD48vH6hwhEC/VEy+eUP3d1tCdi1GvFWC9dxiS8u8vjECZ6cPk1v4TsajQZ2u02iViMEljdtkr/F45dEqVL5Zc007w7GYvvsel3IW7fos2NUzp5FSYkCvJs36U8maZ47h18uU4pG5SeeN9kaHPxIAxgfH6d6/frYeE9Pbku9bvI/0IDHsZic8/1Jc3T0/Fw+37Hy0tIS91z3p9VI5O5gLLavr9USAhC6jtC0jVixbflxEEy+eujQ+Q8vXPj3bwR4e8fOA2+Z5kRfyyel6xiaRkNKqobBghCfpycmcpNHj27o/wR6m2WS35rzJQAAAABJRU5ErkJggg==);
 	cursor:pointer;
-	display: none;
     height: 16px;
     margin-top: -5px;
     margin-right: -5px;
@@ -174,7 +182,6 @@ div.stickythang div.resizebutton {
 	/* background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAFo9M/3AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYdJREFUeNpi3Llz5ysGBoZ9TEDiFBAvAAggRqDIHyBjDQuQAGEGgAACifxngABGEAFSuxLGAYL/AAEEUvEFyBAH4rkMUH2bgXg6EEfAtEQCcR8QL4MJgMAFIAZZ9x8ggGBmcEMNj2BAAyAdwlBbf4N0ALE+uoKFUHYsVGE5VOEiIBYDKfiLZmoUEEtANbwECCCYG0DgABA3AHEJkmJtFqgDQcAPiP+hOXQFyIp9UA7IKlZsvnBGMuUtNgUg8A2I+YGYD4hBMcQGFe9hQlL8CYhFofgn1MuNLGgmvgZiLqiJIAd/ZWLABN+hXgYBZoAAA4UDSIADScEBqFdfMhAGS7GFtAMQdwMxJxEGMIMMOAhNUSD2YqR4/QZNQ6L4TABpqocGHSgBxAExOxAvhwbIIihtAA1idMDDhBb3IPALmmDEgPg5NPjPA/FHqAu5kNQGMxHw40VoeoZ5LQYUNVAX7gXiH0xEBNRvqNeYobmGARpLTiDDQAlBG5Qq8RjQA8TXoZo9oC6AgW8A4ZJfA7anhxcAAAAASUVORK5CYII=); */
 	bottom:1px;
 	cursor:move;
-    display: block;
 	height: 16px;
     margin-top: 0;
     margin-right: 1px;
@@ -186,7 +193,6 @@ div.stickythang div.resizebutton {
 div.stickythang div.minimisebutton {
 	background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQNJREFUeNpiXJbPkMDAwJDJQDqYHjnh/wIWkGb3/GozNjY2Bg4ODgYWTm0GBhZpTOV/njL8+X6V4cePHwy/fv1i2DmxFSQKNoCBk/EdA8NvIALhzw/wWssMVo/ggw1g/PuegVwANuD/vw+UGcDI+JdCA35+pMyATz8vUWYAw38Yl5EBFMAixt8wFL45y4mqFNkA1t/MEEmgbsb/OGz6wwzRzYjFALAkkvlfjvAj+FBTWRiYcXuB5TcT1AMISzAdgiyLwwWM//8DlTDC1TIygiigCMxvQPo/IxYDYABFkhHmCkawLxhgBmPxwvTVW9+SE4PTYR4DhRg3GQZ8/f///0eAAAMACbFREmi1ZPkAAAAASUVORK5CYII=);
 	cursor:pointer;
-    display: none;
 	height: 16px;
 	left:0;
     margin-left: -5px;
@@ -278,6 +284,27 @@ div.stickythang div.timestamp {
 	);
 	border-radius: 5px 5px 0 0 ;
 	cursor:move;
+	max-height: 22px;
+	overflow:hidden;
 	top:0;
 }
+div.stickythang form label {
+	display:block;
+	margin-bottom:3px;
+}
+div.stickythang.form-hide form  {
+	visibility:hidden;
+}
+div.stickythang form label span {
+	display:block;
+	font-size:80%;
+}
+div.stickythang form textarea {
+	width:190px;
+	min-height:50px;
+}
+div.stickythang form div.scope label {
+	padding-left:20px;
+}	
+		
 			

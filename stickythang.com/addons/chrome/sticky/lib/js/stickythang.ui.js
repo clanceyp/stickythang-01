@@ -2,18 +2,22 @@
  * @author patcla
  */
 
-
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-	console.log("request recived:" + request.action)
-	switch (request.action) {
-		case "create-note" :
-			YUI().use('node','dd-plugin','resize','json', function(Y) {
-				stickythang.createNoteYUI(null,Y);
-			});
-		break;	
-	}
-	sendResponse({message:'thank you'});
-});
+if (chrome && chrome.extension){
+	chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+		console.log("request recived:" + request.action)
+		switch (request.action) {
+			case "create-note" :
+				YUI().use('node','dd-plugin','resize','json', function(Y) {
+					stickythang.createNoteYUI(null,Y);
+				});
+			break;	
+			case "get-list" :
+				stickythang.db.getList(sendResponse);
+			break;				
+		}
+		sendResponse({message:'thank you'});
+	});
+}
  
 window.stickythang={
 	isloaded:false,
@@ -81,16 +85,23 @@ window.stickythang={
 			},
 			turnOver:function(note,dur){
 				console.log("flipping note:"+note.getComputedStyle('webkitAnimationDuration'))
-				note.setStyle("webkitAnimationName","noteFlip").addClass('in-flip');
+				note.addClass('form-hide').addClass('in-flip').setStyle("webkitAnimationName","stickyThangNoteFlip");
 				setTimeout(function(){
 					note.addClass("flippingTemp")
 				},dur/2)
 				setTimeout(function(){
 					note.removeClass('in-flip').replaceClass("flippingTemp","flipped").setStyle("webkitAnimationName","").setData('flipped','true');
+					note.transition({
+					    easing: 'ease-both',
+					    duration: 0.75,
+					    width: '200px',
+					    height: '240px',
+						on:{end:function(){note.removeClass('form-hide')}}
+					});
 				},dur)
 			},
 			turnBack:function(note,dur){
-				note.setStyle("webkitAnimationName","noteFlip").addClass('in-flip');
+				note.setStyle("webkitAnimationName","stickyThangNoteFlip").addClass('in-flip');
 				setTimeout(function(){
 					note.replaceClass("flipped"," flippingTemp2");
 				},dur/2)
@@ -113,7 +124,7 @@ window.stickythang={
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
-				'<label>Share with: (commer or line seporated list) <textarea>@andrew</textarea></label><div class="scope">Scope: <label>page<input type="radio" name="scope" class="path" value="path"></label><label>site<input class="domain" name="scope" type="radio" value="domain"></label><label>global<input class="global" name="scope" type="radio" value="global"></label></div>'+
+				'<label>Share with: <span>(commer or line seporated list)</span><textarea></textarea></label><div class="scope">Scope: <label><input type="radio" name="scope" class="path" value="path"> page</label><label><input class="domain" name="scope" type="radio" value="domain"> site</label></div>'+
 			'</form>'
 	},
 	Note:function(result,Y){
@@ -129,10 +140,10 @@ window.stickythang={
 				className: stickythang.ops.className[ stickythang.util.random(0, stickythang.ops.className.length ) ],
 				left: stickythang.util.random(stickythang.ops.css.left - stickythang.ops.css.leftOffset , stickythang.ops.css.left + stickythang.ops.css.leftOffset ),
 				state: 'maximise',
-				top: stickythang.util.random(stickythang.ops.css.top - stickythang.ops.css.topOffset , stickythang.ops.css.top + stickythang.ops.css.topOffset ),
+				top: stickythang.util.random(stickythang.ops.css.top - stickythang.ops.css.topOffset , stickythang.ops.css.top + stickythang.ops.css.topOffset ) + Y.one("body").get("scrollTop"),
 			}
 			this.isNew = true;
-			this.scope = 'global'
+			this.scope = 'domain'
 			this.timestamp = (new Date().getTime());
 			this.id = stickythang.user + '-' + this.timestamp;
 			this.html = '';
@@ -152,7 +163,7 @@ stickythang.init = function(){
 	var temp = localStorage.getItem(stickythang.ops.skey);
 	
 	
-	YUI().use('node','dd-plugin','resize','json', function(Y) {
+	YUI().use('node','dd-plugin','resize','json','transition', function(Y) {
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
@@ -195,6 +206,7 @@ stickythang.Note.prototype = {
 			,height:parseInt(self.getStyle('height'))
 			,left:xy[0]
 			,state:self.getData('state')
+			,scope:self.getData('scope')
 			,top:xy[1]
 			,width:parseInt(self.getStyle('width'))
 		}};
@@ -217,7 +229,7 @@ stickythang.Note.prototype = {
     {
         this.cancelPendingSave();
         var self = this;
-        this._saveTimer = setTimeout(function() { self.save() }, 1500);
+        this._saveTimer = setTimeout(function() { self.save() }, 3000);
     },
  
     cancelPendingSave: function()
@@ -237,13 +249,12 @@ stickythang.Note.prototype = {
     save: function()
     {
         this.cancelPendingSave();
-        if ("edited" in this) {
-            // this.timestamp = new Date().getTime();
+/*        if ("edited" in this) {
             delete this.edited;
         }else{
 			return;
 		}
- 		
+ */		
         var ops = this.createOps();
 		
 		if(this.isNew){
@@ -290,8 +301,8 @@ stickythang.createNoteYUI = function(result,Y){
 			.setData('scope',note.scope || 'global')
 			.setData('state',note.ops.state || 'maximise')
 			.setData('ops',note.ops.json)
-			.setContent(stickythang.ops.template)
-			.on('dblclick',function(){note.edited = true; note.saveSoon()})
+			.setContent("<div class=card>"+stickythang.ops.template+"</div>")
+			.on('click',function(){note.edited = true; note.saveSoon()})
 		
 
 
@@ -306,8 +317,8 @@ stickythang.createNoteYUI = function(result,Y){
 		note.div.one("div.closebutton").on('click',stickythang.util.remove)
 
 		Y.one("#stickythangContainer").appendChild(note.div);
-		note.div.setStyle("webkitTransformOrigin","0 0");	
-		note.div.setStyle('webkitAnimationName' , 'stickyThangNoteShow') ;
+		note.div.setStyle("webkitTransformOrigin","100% 0");	
+		note.div.setStyle('webkitAnimationName' , 'stickyThangNoteCreate') ;
 		note.div.initForm = InitForm;
 		note.div.initForm();
 
@@ -351,6 +362,9 @@ stickythang.createNoteYUI = function(result,Y){
 					note.destroy();
 					break;
 				;
+				case "stickyThangNoteFlip" :
+					console.log("webkitAnimationEnd: resize to fit form");
+					break;
 			}
 			function noteSave(){
 				note.edited = true; 
@@ -369,6 +383,10 @@ stickythang.createNoteYUI = function(result,Y){
 		function InitForm(){
 			var self = this;
 			self.one("input."+self.getData('scope')).setAttribute('checked','checked');
+			self.one("form").on('click',function(e){
+				var scope = self.one("input:checked").getAttribute("value");
+				self.setData('scope',scope)
+			})
 			self.one('select').setContent( function(){
 				var opts = "";
 				for (name in stickythang.ops.className){

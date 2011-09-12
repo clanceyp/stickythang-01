@@ -3,7 +3,7 @@
 window.stickythang.db = {
 		localdb:null,
 		version:"1.0",
-		tableName:"stickies01",
+		tableName:"stickies",
 		
 		init: function(){
 			
@@ -11,6 +11,18 @@ window.stickythang.db = {
 			console.log("open db version:"+stickythang.db.localdb.version)
 			stickythang.db.open();
 				
+		},
+		getList:function(sendResponse){
+			console.log('Loading list');
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
+		        	console.log("returing list :"+ result.rows.length);
+		            sendResponse({results:results})
+		        }, function(tx, error) {
+		            console.log('Failed to retrieve notes from database - ' + error.message);
+		            return;
+		        });
+		    });					
 		},
 		getAll:function(Y){
 			console.log('Loading stickies');
@@ -63,8 +75,8 @@ window.stickythang.db = {
 		},
 		saveNew:function(note){
 	        stickythang.db.localdb.transaction(function (trans){
-	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, scope, timestamp, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
-					[note.id, note.domain, note.html, note.json, note.path, note.scope, (new Date().getTime()) , stickythang.user],
+	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+					[note.id, note.domain, note.html, note.json, note.path, note.scope, (new Date().getTime()) , window.location.href , stickythang.user],
 					function(){},
 					function(tx,error){
 					console.log(error.message)
@@ -84,6 +96,7 @@ window.stickythang.db = {
 					'	querystring TEXT, '+
 					'	scope TEXT, '+
 					'	timestamp REAL, '+
+					'	url TEXT, '+
 					'	user TEXT '+
 					');',[],function(){
 							console.log("db.open.trans connection open and returned")
