@@ -4,90 +4,24 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<title>popup</title>
 		<script src="lib/yui/3.4.0/build/yui/yui.js"></script>
-		<link href="lib/css/popup98.css" rel="stylesheet" />
+		<link href="lib/css/popup.css" rel="stylesheet" />
 		
-		<style>
-			
-html {
-	border-radius:5px;
-	background: #5670A1 url(http://stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
-}	
-body {
-	width:300px;
-}	
-body,
-h1,h2 {
-	font-size:11px;
-	font-family:sans-serif;
-}	
-a {text-decoration:none;}
-a:hover {text-decoration:underline;}	
-div.unit {
-	border-radius:5px;
-	background-color:#fff;
-	margin:0;
-	min-height:100px;
-	padding:12px 12px 6px 12px;
-	width:100%;
-}
-div.unit.off {
-	display:none;
-}
-*.centre {text-align:center;}
-h1{
-	font-size:14px;
-	background-image:url(banner01.png);
-	background-repeat:no-repeat;
-	background-position:50% 50%;
-	height:80px;
-	padding:0;
-	margin:0;
-}
-h1 span {position:absolute;left:-99999px}
-h2,
-p {margin:0;padding:0 0 4px 0;}
-label {display:inline-block;width:80px;}
-*.tar {text-align:right}	
-*.tac {text-align:center;}	
-ul.menu {
-	margin:0 0 0 6px;
-	padding:0;
-}	
-ul.menu li {
-	background-color:#dfdfdf;
-	border-radius: 6px 6px 0 0;
-	display:inline-block;
-	list-style:none;
-	padding:3px 10px;
-}
-ul.menu a {
-	color:#06c;
-	cursor:pointer;
-}
-ul.menu li.active {
-	background-color:#fff;
-}
-#MyStickies input {
-	width:100%;
-}
-p.bottom {
-	font-size:120%;
-	margin-top:14px;
-	text-align:center;
-}
-p.bottom a {
-	display:inline-block;
-	background-color:rgba(255,255,255,0.5);
-	border-radius:5px;
-	padding:2px 20px;
-	text-decoration:underline;
-	
-	-webkit-transition: background-color 0.5s linear;
-}
-p.bottom a:hover {
-	background-color:rgba(255,255,255,1);
-}
-		
+		<style type="text/css">
+		#stickyList {
+			margin:0 0 14px 0;
+			padding:0 0 0 ;
+		}
+		#stickyList li {
+			margin:0;
+			padding:2px 0 2px 3px;
+			list-style-position:inside;
+		}
+		#stickyList li {
+			border-top:1px dashed #cecece;
+		}
+		#stickyList li:nth-child(1) {
+			border-top:0 none;
+		}
 		</style>
 		
 	</head>
@@ -98,28 +32,40 @@ p.bottom a:hover {
 			<li><a class="LoginForm"><span>Login</span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
-			<form>
-				<p><label>Login with...</label>
-				<select>
-					<option>Google</option>
-					<option>FaceBook</option>
-					<option>Yahoo</option>
-				</select></p>
+			<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" target="hiddenframe" method="post" id="login">
+				<input type="hidden" name="redirect" value="index.php"/>
 				<p>
-					<label>User:</label><input type="text" value=""/> 
+					<label>Login with...</label>
+					<select>
+						<option>StickyThang!</option>
+						<option>Google</option>
+						<option>FaceBook</option>
+						<option>Yahoo</option>
+					</select>
 				</p>
 				<p>
-					<label>Password:</label><input type="password" value=""/> 
+					<label for="username">User:</label><input type="text" tabindex="1" name="username" id="username"/>
+				</p>
+				<p>
+					<label for="password">Password:</label><input type="password" tabindex="2" id="password" name="password"/>
 				</p>
 				<p class="centre">
-					<input type="button" value="log me in to StickyThang!"/>
+					<input type="submit" name="login" tabindex="6"  value="log me in to StickyThang!" />
 				</p>
 			</form>
+			<iframe id="hiddenframe" name="hiddenframe" frameborder="no" width="1" height="1"></iframe>
 		</div>
 		<div id="MyStickies" class="on unit">
 			<div>
-				<h2>My stickies</h2>
-				<p>
+				<h2>My stickies for <span id="domainLable"></span></h2>
+				<ul id="stickyList">
+					
+				</ul>
+				<div id="outer" style="border:2px solid #cecece">
+					<div class="inner"></div>
+					
+				</div>
+				<p class="centre">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
 				<p>
@@ -133,12 +79,7 @@ p.bottom a:hover {
 		</p>
 	</body>
 		<script>
-			YUI().use('node',function(Y){
-				Y.one("form input[type='button']").on('click',function(e){
-					e.preventDefault();
-					this.set('value','Sorry, not implemented');
-					Y.one("form").addClass('disabled').setStyle('background-color','#cecece');
-				})
+			YUI().use('node','yql',function(Y){
 				Y.one("#addNote").on('click',function(e){
 					e.preventDefault();
 					chrome.tabs.getSelected(null, function(tab) {
@@ -157,8 +98,54 @@ p.bottom a:hover {
 					Y.all("div.unit").addClass("off")
 					Y.one("#"+ target.get("className") ).removeClass("off");
 					
-				})
+				});
 				
+				chrome.tabs.getSelected(null, function(tab) {
+				  chrome.tabs.sendRequest(tab.id, {action: "get-list", tabid: tab.id}, function(response) {
+				    populateList(response);
+				  });
+				});	
+			
+				function populateList(response){
+					var rs = response.results,
+						html = "";
+		            for (var i = 0; i < rs.length; ++i) {
+						html+= '<li><a target="_blank" href="'+ rs[i].url +'">'+ rs[i].note +'</a></li>';
+		            }
+					Y.one("#stickyList").setContent(html);
+					Y.one("#domainLable").setContent(response.domain)
+				}	
+				//populateList()	
+					Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(mod) {
+			            return function(r) {
+			                if (r && r.query && r.query.results) {
+			                    var inner = mod.one('div.inner'),
+			                    html = '';
+			                    
+			                    //Walk the list and create the news list
+			                    Y.each(r.query.results, function(items) {
+			                        Y.each(items, function(v, k) {
+										html+= function(v){
+											var t =""
+											for (name in v){t+=";"+name}
+											return "<li>"+t+"</li>"
+										}(v)
+			                            if (k < 5) {
+			                                if (v.title && v.title.content) {
+			                                    v.title = v.title.content;
+			                                }
+			                                if (v.link && (Y.Lang.isArray(v.link))) {
+			                                    v.link = v.link[0];
+			                                }
+			                                html += Y.Lang.sub('<li><a href="{link}" target="_blank">{title}</a>', v);
+			                            }
+			                        });
+			                    });
+			                    //Set the innerHTML of the module
+			                    inner.set('innerHTML', '<ul>' + html + '</ul>');
+			                }
+			            }
+			        })(Y.one("#outer")));						
 			});
 		</script>	
 </html>

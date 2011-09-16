@@ -17,7 +17,11 @@ window.stickythang.db = {
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
 		        	console.log("returing list :"+ result.rows.length);
-		            sendResponse({results:results})
+					var list = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						list.push({note:result.rows.item(i).note,url:result.rows.item(i).url});
+					}					
+		            sendResponse({results:list,domain:window.location.hostname})
 		        }, function(tx, error) {
 		            console.log('Failed to retrieve notes from database - ' + error.message);
 		            return;

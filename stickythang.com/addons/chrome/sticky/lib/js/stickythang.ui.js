@@ -15,7 +15,7 @@ if (chrome && chrome.extension){
 				stickythang.db.getList(sendResponse);
 			break;				
 		}
-		sendResponse({message:'thank you'});
+		// sendResponse({message:'thank you'});
 	});
 }
  
@@ -117,7 +117,7 @@ window.stickythang={
 		,count:0
 		,css:{left:350,leftOffset:120,top:50,topOffset:40}
 		,defultsettings:{button:{left:0,top:50}}
-		,domain:window.location.host
+		,domain:window.location.hostname
 		,highestZ:1
 		,path:window.location.pathname
 		,skey:'stickythang.settings'

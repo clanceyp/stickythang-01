@@ -10,7 +10,7 @@
       // Called when the url of a tab changes.
       function checkForValidUrl(tabId, changeInfo, tab) {
         // If the letter 'g' is found in the tab's URL...
-        if (tab.url.indexOf('stickythang.com') > -1) {
+        if (tab.url.indexOf('stickythang.com') > -1 || tab.url.indexOf("https") == 0 ) {
           // don't do anything for now
         } else {
           chrome.pageAction.show(tabId);

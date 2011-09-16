@@ -1,8 +1,13 @@
-
+	
 html {
 	border-radius:5px;
 	background: #5670A1 url(http://stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
-}		
+}	
+body {
+	margin:0;
+	padding:10px;
+	width:324px;
+}	
 body,
 h1,h2 {
 	font-size:11px;
@@ -10,25 +15,68 @@ h1,h2 {
 }	
 a {text-decoration:none;}
 a:hover {text-decoration:underline;}	
-form,div {
+div.unit {
 	border-radius:5px;
 	background-color:#fff;
 	margin:0;
+	min-height:100px;
 	padding:12px 12px 6px 12px;
-	width:240px;
+	width:300px;
+}
+div.unit.off {
+	display:none;
 }
 *.centre {text-align:center;}
-h1{font-size:14px;
-background-image:url(banner01.png);
-background-repeat:no-repeat;
-background-position:50% 50%;
-height:80px;
-padding:0;
-margin:0;
+h1{
+	font-size:14px;
+	background-image:url(../../banner01.png);
+	background-repeat:no-repeat;
+	background-position:50% 50%;
+	height:80px;
+	padding:0;
+	margin:0;
 }
 h1 span {position:absolute;left:-99999px}
 h2,
 p {margin:0;padding:0 0 4px 0;}
 label {display:inline-block;width:80px;}
-*.tar {text-align:right}
+*.tar {text-align:right}	
+*.tac {text-align:center;}	
+ul.menu {
+	margin:0 0 0 6px;
+	padding:0;
+}	
+ul.menu li {
+	background-color:#dfdfdf;
+	border-radius: 6px 6px 0 0;
+	display:inline-block;
+	list-style:none;
+	padding:3px 10px;
+}
+ul.menu a {
+	color:#06c;
+	cursor:pointer;
+}
+ul.menu li.active {
+	background-color:#fff;
+}
+#MyStickies input {
 	
+}
+p.bottom {
+	font-size:120%;
+	margin-top:14px;
+	text-align:center;
+}
+p.bottom a {
+	display:inline-block;
+	background-color:rgba(255,255,255,0.5);
+	border-radius:5px;
+	padding:2px 20px;
+	text-decoration:underline;
+	
+	-webkit-transition: background-color 0.5s linear;
+}
+p.bottom a:hover {
+	background-color:rgba(255,255,255,1);
+}
