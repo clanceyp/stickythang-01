@@ -52,15 +52,17 @@
 					');');
 				trans.executeSql('CREATE TABLE IF NOT EXISTS stickies '+
 					'	(id TEXT, '+
+					'	className TEXT,'+
+					'	domain TEXT, '+
+					'	left REAL, '+
 					'	note TEXT, '+
-					'	timestamp REAL, '+
-					'	left TEXT, '+
-					'	top TEXT, '+
-					'	pathway TEXT, '+
-					'	page TEXT, '+
+					'	path TEXT, '+
+					'	querystring TEXT, '+
 					'	scope TEXT, '+
 					'	state TEXT, '+
-					'	class TEXT'+
+					'	timestamp REAL, '+
+					'	top REAL, '+
+					'	user TEXT '+
 					');',[],function(){
 							// hgtools.db.loadall();
 						},function(tx,e){
@@ -229,7 +231,7 @@ var stickythang={
 	loadNotes:function(){
 		console.log('Loading stickies');
 	    hgtools.db.localdb.transaction(function(tx) {
-	        tx.executeSql("SELECT id, note, timestamp, left, top, state, scope, class FROM stickies where (page='"+hgtools.page.id+"') or (pathway='"+hgtools.pathway.id+"' and scope='pathway') or (scope='site')", [], function(tx, result) {
+	        tx.executeSql("SELECT id, note, timestamp, left, top, state, scope, className FROM stickies where (page='"+hgtools.page.id+"') or (pathway='"+hgtools.pathway.id+"' and scope='pathway') or (scope='site')", [], function(tx, result) {
 	        	console.log("loading stikies :"+ result.rows.length);
 	            for (var i = 0; i < result.rows.length; ++i) {
 	                var row = result.rows.item(i);
@@ -446,8 +448,8 @@ stickythang.Note.prototype = {
         var note = this;
         hgtools.db.localdb.transaction(function (tx)
         {
-            tx.executeSql("UPDATE stickies SET note = ?, timestamp = ?, left = ?, top = ?, scope = ?, state = ?, class = ? WHERE id = ?", 
-				[note.text, note.timestamp, parseInt(note.left), parseInt(note.top), note.scope, note.state, note.clasz, note.id],
+            tx.executeSql("UPDATE stickies SET note = ?, timestamp = ?, left = ?, top = ?, scope = ?, state = ?, className = ? WHERE id = ?", 
+				[note.text, note.timestamp, parseInt(note.left), parseInt(note.top), 'global', note.state, note.clasz, note.id],
 				function(){},
 				function(tx,error){
 				console.log(error.message)
@@ -462,8 +464,8 @@ stickythang.Note.prototype = {
         var note = this;
         hgtools.db.localdb.transaction(function (tx) 
         {
-            tx.executeSql("INSERT INTO stickies (id, note, timestamp, left, top, page, pathway, class, scope, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			 [note.id, note.text, note.timestamp, note.left, note.top, note.page, note.pathway, note.clasz, 'global', note.state],
+            tx.executeSql("INSERT INTO stickies (id, note, timestamp, left, top, className, scope, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+			 [note.id, note.text, note.timestamp, note.left, note.top, note.clasz, 'global', note.state],
 			 function(){},
 				function(tx,error){
 				console.log(error.message)

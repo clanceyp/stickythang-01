@@ -28,14 +28,14 @@ window.stickythang.db = {
 		        });
 		    });					
 		},
-		getAll:function(Y){
+		getAll:function(){
 			console.log('Loading stickies');
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT id, note, ops, scope, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
 		        	console.log("loading stikies :"+ result.rows.length);
 		            for (var i = 0; i < result.rows.length; ++i) {
 						console.log('getAll: loading note '+ i)
-						stickythang.createNoteYUI( result.rows.item(i) , Y );
+						stickythang.createNoteYUI( result.rows.item(i) );
 		            }
 		        }, function(tx, error) {
 		            console.log('Failed to retrieve notes from database - ' + error.message);
@@ -43,12 +43,12 @@ window.stickythang.db = {
 		        });
 		    });					
 		},
-		count:function(Y){
+		count:function(){
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
 		        	// count exists loading stickies
 					console.log('count - loading sticky-notes')
-		            stickythang.db.getAll(Y);
+		            stickythang.db.getAll();
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
 		                //stickythang.loadNotes(); 

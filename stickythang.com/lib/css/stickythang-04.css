@@ -16,15 +16,19 @@
 	0%{-webkit-transform:scale(0)}
 	100%{-webkit-transform:scale(1)}
 }
-@-webkit-keyframes noteMinimise{
+@-webkit-keyframes stickyThangNoteMinimise{
 	0%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 	100%{-webkit-transform:scale(0) skew(30deg, 0deg) }
 }
-@-webkit-keyframes noteMaximise{
+@-webkit-keyframes stickyThangNoteMaximise{
 	0%{-webkit-transform:scale(0) skew(30deg, 0deg) }
 	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 }
-@-webkit-keyframes noteDelete{
+@-webkit-keyframes stickyThangNoteShow {
+	0%{-webkit-transform:scale(0) skew(30deg, 0deg) }
+	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
+}
+@-webkit-keyframes stickyThangNoteDelete{
 	0%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 	100%{-webkit-transform:scale(0) skew(-30deg, 0deg) }
 }
@@ -33,7 +37,6 @@
 	100%{-webkit-transform: rotateY(180deg) }
 }
 #newNoteButton {-webkit-animation-iteration-count:1;-webkit-animation-duration:0.5s;}
-div.fadeIn {-webkit-animation-iteration-count:1;-webkit-animation-duration:0.5s;}
 div.stickythang{
 	font-family:"MS Sans Serif", Geneva, sans-serif;
 	
@@ -43,7 +46,7 @@ div.stickythang{
 	-webkit-animation-duration:0.5s;
 
 }
-div.stickythang.indrag {opacity:0.75;-webkit-box-shadow: 24px 24px 24px rgba(0, 0, 0, 0.4);}
+div.stickythang.stickythangInDrag {opacity:0.75;-webkit-box-shadow: 24px 24px 24px rgba(0, 0, 0, 0.4);}
 div.stickythang.flipped div.back {
 	display:block;
 }  
@@ -181,9 +184,10 @@ div.stickythang div.maximisebutton {
 	z-index:1;
 }
 div.stickythang.minimise  {
-	width:25px;
-	height:27px;
+	max-width:25px;
+	max-height:27px;
 	min-height:0;
+	min-width:0;
 	padding:0;
 	-webkit-box-shadow: 0px 0 0 rgba(0, 0, 0, 0);
 } 
@@ -192,12 +196,16 @@ div.stickythang.minimise div.maximisebutton {
 } 
 div.stickythang.minimise div.edit,
 div.stickythang.minimise div.scope, 
+div.stickythang.minimise div.resizebutton, 
 div.stickythang.minimise div.timestamp,
+div.stickythang.minimise div.flipbutton,
 div.stickythang.minimise div.closebutton,
+div.stickythang.minimise div.yui3-resize-handle,
 div.stickythang.minimise div.minimisebutton {
 	display:none;
 }
 div.stickythang div.edit {
+	height:75%;
 	margin-top:16px;
     outline: none;
 	padding-bottom:24px;
@@ -217,6 +225,7 @@ div.stickythang div.timestamp {
 div.stickythang form {
 	color:#fff;
 	font-size:12px;
+	overflow:auto;
 }
 div.stickythang legend {
 	font-size:14px;

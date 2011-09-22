@@ -43,7 +43,7 @@ label {display:inline-block;width:80px;}
 *.tar {text-align:right}	
 *.tac {text-align:center;}	
 ul.menu {
-	margin:0 0 0 6px;
+	margin:0 12px 0 6px;
 	padding:0;
 }	
 ul.menu li {

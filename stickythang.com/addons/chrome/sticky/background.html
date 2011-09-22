@@ -6,12 +6,15 @@
 -->
 <html>
   <head>
-    <script>
+  	<script src="lib/yui/3.4.0/build/yui/yui-min.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
       // Called when the url of a tab changes.
       function checkForValidUrl(tabId, changeInfo, tab) {
         // If the letter 'g' is found in the tab's URL...
-        if (tab.url.indexOf('stickythang.com') > -1 || tab.url.indexOf("https") == 0 ) {
+        if ( tab.url.indexOf('stickythang.com') > -1 ) {
           // don't do anything for now
+		  chrome.pageAction.show(tabId);
         } else {
           chrome.pageAction.show(tabId);
 		}
@@ -19,144 +22,214 @@
 
       // Listen for any changes to the URL of any tab.
       chrome.tabs.onUpdated.addListener(checkForValidUrl);
+	  
+	  
+	  
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+    if (!stickythang.db.localdb){
+		stickythang.db.init();
+	}
+	switch (request.action){
+		case "getList" :
+			stickythang.db.getList(sendResponse);
+		break;
+		case "getAll" : 
+			stickythang.db.count(sendResponse);
+		break;
+		case "remove" :
+			stickythang.db.remove(request.id,sendResponse);
+		break;
+		case "save" :
+			stickythang.db.save(request.ops,sendResponse);
+		break;
+		case "saveNew" :
+			stickythang.db.saveNew(request.ops,sendResponse);
+		break;
+	}
+
+});	  
+
+	  
+window.stickythang = {}	 
+stickythang.login = function(ops){
+	
+	localStorage.user = ops.user || localStorage.user || "guest"
+	localStorage.pass = ops.pass || localStorage.pass || "password"
+	// return "thanks-1" 
+
+	YUI().use("io-form", function(Y) {
+		var uri = "http://stickythang.com/phpBB3/ucp.php?mode=login";
+	    var cfg = {
+	        method: 'POST',
+	        form: {
+	            username: localStorage.user,
+	            password: localStorage.pass,
+				redirect: "index.php"
+	        }
+	    };
+	
+	
+	    // Start the transaction.
+	    Y.io(uri, cfg);
+		
+	});
+	return "login dispatched"
+}
+stickythang.db = {
+		localdb:null,
+		version:"1.0",
+		tableName:"stickies",
+		
+		init: function(){
+			
+			stickythang.db.localdb = openDatabase("StickyThang-background", "", "StickyThangs!", 200000);
+			console.log("open db version:"+stickythang.db.localdb.version)
+			stickythang.db.open();
+				
+		},
+		getList:function(sendResponse){
+			console.log('Loading list');
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
+		        	console.log("returing list :"+ result.rows.length);
+					var list = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						list.push({note:result.rows.item(i).note,url:result.rows.item(i).url});
+					}					
+		            sendResponse({results:list})
+		        }, function(tx, error) {
+		            console.log('Failed to retrieve notes from database - ' + error.message);
+		            return;
+		        });
+		    });					
+		},
+		getAll:function(sendResponse){
+			console.log('Loading stickies');
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT id, domain, note, ops, path, scope, timestamp, user FROM "+ stickythang.db.tableName, [], function(tx, result) {
+		        	console.log("loading stikies :"+ result.rows.length);
+					var list = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						list.push({
+							id:result.rows.item(i).id
+							,domain:result.rows.item(i).domain
+							,note:result.rows.item(i).note
+							,ops:result.rows.item(i).ops
+							,path:result.rows.item(i).path
+							,scope:result.rows.item(i).scope
+							,timestamp:result.rows.item(i).timestamp
+							,user:result.rows.item(i).user
+						});
+					}					
+		            sendResponse({list:list,message:'success'})					
+		        }, function(tx, error) {
+		            sendResponse({message:error.massage})
+		            return;
+		        });
+		    });					
+		},
+		count:function(sendResponse){
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
+		        	// count exists loading stickies
+					console.log('count - loading sticky-notes')
+		            stickythang.db.getAll(sendResponse);
+		        }, function(tx, error) {
+		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
+		                //stickythang.loadNotes(); 
+						console.log('no count - no notes to load');
+						sendResponse({message:'no notes found',list:[]})
+		        //    });
+		        });
+		    });				
+		},
+		remove:function(id,sendResponse){			
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("DELETE from "+ stickythang.db.tableName +" WHERE id = ?", 
+					[id],
+					function(){
+						sendResponse({message:'removed'})
+					},
+					function(tx,error){
+						sendResponse(error)
+				});
+	        });			
+		},
+		save:function(note,sendResponse){			
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET note = ?, ops = ?, scope = ?, timestamp = ? WHERE id = ?", 
+					[note.html, note.json, note.scope, (new Date().getTime()), note.id],
+					function(){
+						sendResponse({message:'saved'})
+					},
+					function(tx,error){
+						sendResponse(error)
+				});
+	        });			
+		},
+		saveNew:function(note,sendResponse){
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+					[note.id, note.domain, note.html, note.json, note.path, note.scope, (new Date().getTime()) , window.location.href , stickythang.user],
+					function(){
+						sendResponse({message:'created'})
+					},
+					function(tx,error){
+						sendResponse(error)
+				});
+	        });			
+		},
+		open: function(){
+			// open db assume it's the first time
+			stickythang.db.localdb.transaction(function(trans){
+				console.log("db.open.trans connection open")
+				trans.executeSql('CREATE TABLE IF NOT EXISTS '+ stickythang.db.tableName +' '+
+					'	(id TEXT, '+
+					'	domain TEXT, '+
+					'	note TEXT, '+
+					'	ops TEXT, '+
+					'	path TEXT, '+
+					'	querystring TEXT, '+
+					'	scope TEXT, '+
+					'	timestamp REAL, '+
+					'	url TEXT, '+
+					'	user TEXT '+
+					');',[],function(){
+							console.log("db.open.trans connection open and returned")
+						},function(tx,e){
+							console.log("db.open.trans connection open and returned an error "+ tx +"\n"+ stickythang.explode(e))
+						});
+			});
+		}
+	};	
+	 
+	  
+	  
+  
+	  
+	  
+	  
+	  
     </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   </head>
 </html>
-<!--
-//"http://yui.yahooapis.com/combo?3.4.0/build/yui/yui-min.js"
-			,"lib/yui/3.4.0/build/yui-base/yui-base-debug.js"
-			,"lib/yui/3.4.0/build/oop/oop-min.js"
-			,"lib/yui/3.4.0/build/event-custom-base/event-custom-base-min.js"
-			,"lib/yui/3.4.0/build/features/features-min.js"
-			,"lib/yui/3.4.0/build/dom-core/dom-core-min.js"
-			,"lib/yui/3.4.0/build/dom-base/dom-base-min.js"
-			,"lib/yui/3.4.0/build/selector-native/selector-native-min.js"
-			,"lib/yui/3.4.0/build/selector/selector-min.js"
-			,"lib/yui/3.4.0/build/node-core/node-core-min.js"
-			,"lib/yui/3.4.0/build/node-base/node-base-min.js"
-			,"lib/yui/3.4.0/build/event-base/event-base-min.js"
-			,"lib/yui/3.4.0/build/event-delegate/event-delegate-min.js"
-			,"lib/yui/3.4.0/build/node-event-delegate/node-event-delegate-min.js"
-			,"lib/yui/3.4.0/build/pluginhost-base/pluginhost-base-min.js"
-			,"lib/yui/3.4.0/build/pluginhost-config/pluginhost-config-min.js"
-			,"lib/yui/3.4.0/build/node-pluginhost/node-pluginhost-min.js"
-			,"lib/yui/3.4.0/build/dom-style/dom-style-min.js"
-			,"lib/yui/3.4.0/build/dom-screen/dom-screen-min.js"
-			,"lib/yui/3.4.0/build/node-screen/node-screen-min.js"
-			,"lib/yui/3.4.0/build/node-style/node-style-min.js"
-			,"lib/yui/3.4.0/build/event-custom-complex/event-custom-complex-min.js"
-			,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
-			,"lib/yui/3.4.0/build/attribute-complex/attribute-complex-min.js"
-			,"lib/yui/3.4.0/build/base-base/base-base-min.js"
-			,"lib/yui/3.4.0/build/base-pluginhost/base-pluginhost-min.js"
-			,"lib/yui/3.4.0/build/base-build/base-build-min.js"
-			,"lib/yui/3.4.0/build/yui-throttle/yui-throttle-min.js"
-			,"lib/yui/3.4.0/build/classnamemanager/classnamemanager-min.js"
-			,"lib/yui/3.4.0/build/dd-constrain/dd-constrain-min.js"
-			,"lib/yui/3.4.0/build/dd-ddm-base/dd-ddm-base-min.js"
-			,"lib/yui/3.4.0/build/dd-ddm/dd-ddm-min.js"
-			,"lib/yui/3.4.0/build/dd-ddm-drop/dd-ddm-drop-min.js"
-			,"lib/yui/3.4.0/build/dd-delegate/dd-delegate-min.js"
-			,"lib/yui/3.4.0/build/dd-drag/dd-drag-min.js"
-			,"lib/yui/3.4.0/build/dd-drop-plugin/dd-drop-plugin-min.js"
-			,"lib/yui/3.4.0/build/dd-drop/dd-drop-min.js"
-			,"lib/yui/3.4.0/build/dd-plugin/dd-plugin-min.js"
-			,"lib/yui/3.4.0/build/dd-proxy/dd-proxy-min.js"
-			,"lib/yui/3.4.0/build/dd-scroll/dd-scroll-min.js"
-			,"lib/yui/3.4.0/build/dump/dump-min.js"
-			,"lib/yui/3.4.0/build/event-resize/event-resize-min.js"
-			,"lib/yui/3.4.0/build/event-mouseenter/event-mouseenter-min.js"
-			,"lib/yui/3.4.0/build/event-mousewheel/event-mousewheel-min.js"
-			,"lib/yui/3.4.0/build/event-key/event-key-min.js"
-			,"lib/yui/3.4.0/build/event-focus/event-focus-min.js"
-			,"lib/yui/3.4.0/build/event-synthetic/event-synthetic-min.js"
-			,"lib/yui/3.4.0/build/event-hover/event-hover-min.js"
-			,"lib/yui/3.4.0/build/event-outside/event-outside-min.js"
-			,"lib/yui/3.4.0/build/json-parse/json-parse-min.js"
-			,"lib/yui/3.4.0/build/json-stringify/json-stringify-min.js"
-			,"lib/yui/3.4.0/build/widget-base/widget-base-min.js"
-			,"lib/yui/3.4.0/build/widget-htmlparser/widget-htmlparser-min.js"
-			,"lib/yui/3.4.0/build/widget-uievents/widget-uievents-min.js"
-			,"lib/yui/3.4.0/build/widget-skin/widget-skin-min.js"
-			,"lib/yui/3.4.0/build/substitute/substitute-min.js"
-			,"lib/yui/3.4.0/build/plugin/plugin-min.js"
-			,"lib/yui/3.4.0/build/resize-base/resize-base-min.js"
-			,"lib/yui/3.4.0/build/resize-proxy/resize-proxy-min.js"
-			,"lib/yui/3.4.0/build/resize-constrain/resize-constrain-min.js"
-			,"lib/yui/3.4.0/build/loader-base/loader-base-min.js"
-			,"lib/yui/3.4.0/build/loader-rollup/loader-rollup-min.js"
-			,"lib/yui/3.4.0/build/loader-yui3/loader-yui3-min.js"
-			,"lib/yui/3.4.0/build/intl/intl-min.js"
-			,"lib/yui/3.4.0/build/intl-base/intl-base-min.js"
-
-
-
-
-
-
-
-
-
-
-
-	,"lib/yui/3.4.0/build/yui-base/yui-base-min.js"
-	,"lib/yui/3.4.0/build/oop/oop-min.js"
-	,"lib/yui/3.4.0/build/event-custom-base/event-custom-base-min.js"
-	,"lib/yui/3.4.0/build/features/features-min.js"
-	,"lib/yui/3.4.0/build/dom-core/dom-core-min.js"
-	,"lib/yui/3.4.0/build/dom-base/dom-base-min.js"
-	,"lib/yui/3.4.0/build/selector-native/selector-native-min.js"
-	,"lib/yui/3.4.0/build/selector/selector-min.js"
-	,"lib/yui/3.4.0/build/node-core/node-core-min.js"
-	,"lib/yui/3.4.0/build/node-base/node-base-min.js"
-	,"lib/yui/3.4.0/build/event-base/event-base-min.js"
-	,"lib/yui/3.4.0/build/event-delegate/event-delegate-min.js"
-	,"lib/yui/3.4.0/build/node-event-delegate/node-event-delegate-min.js"
-	,"lib/yui/3.4.0/build/pluginhost-base/pluginhost-base-min.js"
-	,"lib/yui/3.4.0/build/pluginhost-config/pluginhost-config-min.js"
-	,"lib/yui/3.4.0/build/node-pluginhost/node-pluginhost-min.js"
-	,"lib/yui/3.4.0/build/dom-style/dom-style-min.js"
-	,"lib/yui/3.4.0/build/dom-screen/dom-screen-min.js"
-	,"lib/yui/3.4.0/build/node-screen/node-screen-min.js"
-	,"lib/yui/3.4.0/build/node-style/node-style-min.js"
-	,"lib/yui/3.4.0/build/event-custom-complex/event-custom-complex-min.js"
-	,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
-	,"lib/yui/3.4.0/build/attribute-complex/attribute-complex-min.js"
-	,"lib/yui/3.4.0/build/base-base/base-base-min.js"
-	,"lib/yui/3.4.0/build/base-pluginhost/base-pluginhost-min.js"
-	,"lib/yui/3.4.0/build/base-build/base-build-min.js"
-	,"lib/yui/3.4.0/build/yui-throttle/yui-throttle-min.js"
-	,"lib/yui/3.4.0/build/classnamemanager/classnamemanager-min.js"
-	,"lib/yui/3.4.0/build/dd-ddm-base/dd-ddm-base-min.js"
-	,"lib/yui/3.4.0/build/event-resize/event-resize-min.js"
-	,"lib/yui/3.4.0/build/dd-ddm/dd-ddm-min.js"
-	,"lib/yui/3.4.0/build/dd-ddm-drop/dd-ddm-drop-min.js"
-	,"lib/yui/3.4.0/build/dd-drag/dd-drag-min.js"
-	,"lib/yui/3.4.0/build/dd-proxy/dd-proxy-min.js"
-	,"lib/yui/3.4.0/build/dd-constrain/dd-constrain-min.js"
-	,"lib/yui/3.4.0/build/dd-drop/dd-drop-min.js"
-	,"lib/yui/3.4.0/build/dd-scroll/dd-scroll-min.js"
-	,"lib/yui/3.4.0/build/event-synthetic/event-synthetic-min.js"
-	,"lib/yui/3.4.0/build/event-mouseenter/event-mouseenter-min.js"
-	,"lib/yui/3.4.0/build/dd-drop-plugin/dd-drop-plugin-min.js"
-	,"lib/yui/3.4.0/build/dd-delegate/dd-delegate-min.js"
-	,"lib/yui/3.4.0/build/event-mousewheel/event-mousewheel-min.js"
-	,"lib/yui/3.4.0/build/event-key/event-key-min.js"
-	,"lib/yui/3.4.0/build/event-focus/event-focus-min.js"
-	,"lib/yui/3.4.0/build/event-hover/event-hover-min.js"
-	,"lib/yui/3.4.0/build/event-outside/event-outside-min.js"
-	,"lib/yui/3.4.0/build/json-parse/json-parse-min.js"
-	,"lib/yui/3.4.0/build/json-stringify/json-stringify-min.js"
-	,"lib/yui/3.4.0/build/widget-base/assets/skins/sam/widget-base.css"
-	,"lib/yui/3.4.0/build/widget-htmlparser/widget-htmlparser-min.js"
-	,"lib/yui/3.4.0/build/widget-uievents/widget-uievents-min.js"
-	,"lib/yui/3.4.0/build/widget-skin/widget-skin-min.js"
-	,"lib/yui/3.4.0/build/dump/dump-min.js"
-	,"lib/yui/3.4.0/build/substitute/substitute-min.js"
-	,"lib/yui/3.4.0/build/resize-base/assets/skins/sam/resize-base.css"
-	,"lib/yui/3.4.0/build/plugin/plugin-min.js"
-	,"lib/yui/3.4.0/build/resize-proxy/resize-proxy-min.js"
-	,"lib/yui/3.4.0/build/resize-constrain/resize-constrain-min.js"
-	
--->	

@@ -22,13 +22,34 @@
 		#stickyList li:nth-child(1) {
 			border-top:0 none;
 		}
+		div.menu ul {
+			margin:0 0 10px 0 ;
+			padding:0;
+		}
+		div.menu li {
+			border-bottom:1px dashed #cecece;
+			list-style:none;
+			padding: 2px 0 4px  ;
+		}
+		div.menu li span {
+			display:none;
+		}
+		textarea {
+			width:500px;
+			height:200px;
+		}
 		</style>
 		
 	</head>
+	
+	
+	
+
 	<body>
-		<h1 class="centre"><a href="http://stickythang.com"><span>StickyThang!</span></a></h1>
-		<ul class="menu">
+		<h1 class="centre"><a href="http://stickythang.com" target="_blank"><span>StickyThang!</span></a></h1>
+		<ul class="menu" dir="rtl">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
+			<li class=""><a class="AllStickies"><span>All stickies</span></a></li>
 			<li><a class="LoginForm"><span>Login</span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
@@ -44,27 +65,25 @@
 					</select>
 				</p>
 				<p>
-					<label for="username">User:</label><input type="text" tabindex="1" name="username" id="username"/>
+					<label for="username">User:</label><input value="tester" type="text" tabindex="1" name="username" id="username"/>
 				</p>
 				<p>
-					<label for="password">Password:</label><input type="password" tabindex="2" id="password" name="password"/>
+					<label for="password">Password:</label><input value="password" type="password" tabindex="2" id="password" name="password"/>
 				</p>
 				<p class="centre">
-					<input type="submit" name="login" tabindex="6"  value="log me in to StickyThang!" />
+					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
 				</p>
 			</form>
 			<iframe id="hiddenframe" name="hiddenframe" frameborder="no" width="1" height="1"></iframe>
 		</div>
 		<div id="MyStickies" class="on unit">
 			<div>
-				<h2>My stickies for <span id="domainLable"></span></h2>
+				<h2>My stickies <span id="domainLable"></span></h2>
+				<div id="myList" class="menu">
+				</div>
 				<ul id="stickyList">
 					
 				</ul>
-				<div id="outer" style="border:2px solid #cecece">
-					<div class="inner"></div>
-					
-				</div>
 				<p class="centre">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
@@ -74,12 +93,35 @@
 	
 			</div>
 		</div>
+		<div id="AllStickies" class="off unit">
+			<div>
+				<h2>All stickies</h2>
+				<div id="allList" class="menu">
+					
+				</div>
+	
+			</div>
+		</div>
 		<p class="tac bottom">
 			<a target="_blank" href="http://stickythang.com">visit StickyThang!</a>
 		</p>
 	</body>
 		<script>
-			YUI().use('node','yql',function(Y){
+			var background = chrome.extension.getBackgroundPage().window;
+			
+			YUI().use('node','yql','json-parse','node-load',function(Y){
+				Y.one('#myList').setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>").load("http://stickythang.com/phpBB3/search.php?author=tester")
+				var friends = ['tester','patrick'];
+				for (var i = 0; i<friends.length ; i++ ){
+					//
+				}
+				
+				Y.one('#allList')
+					.setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>")
+					//.load("http://stickythang.com/phpBB3/search.php?keywords=&terms=all",null,function(){
+						// Y.one('#allList').setContent( this.get("id") );
+					//})	
+				
 				Y.one("#addNote").on('click',function(e){
 					e.preventDefault();
 					chrome.tabs.getSelected(null, function(tab) {
@@ -99,13 +141,28 @@
 					Y.one("#"+ target.get("className") ).removeClass("off");
 					
 				});
-				
+				Y.one("#loginButton").on('click',function(e){
+					e.preventDefault();
+					// Y.one("#loginButton").set('value',typeof background.window)
+					// return;
+					try {
+						var v = background.stickythang.login({
+							user:'tester',
+							pass:'password'
+						})
+						Y.one("#loginButton").set('value','v:'+v)
+					}catch(e){
+						Y.one("#loginButton").set('value','e:'+e.message)
+					}
+					
+				})
+				/*
 				chrome.tabs.getSelected(null, function(tab) {
 				  chrome.tabs.sendRequest(tab.id, {action: "get-list", tabid: tab.id}, function(response) {
 				    populateList(response);
 				  });
 				});	
-			
+				*/
 				function populateList(response){
 					var rs = response.results,
 						html = "";
@@ -115,37 +172,40 @@
 					Y.one("#stickyList").setContent(html);
 					Y.one("#domainLable").setContent(response.domain)
 				}	
-				//populateList()	
-					Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(mod) {
-			            return function(r) {
-			                if (r && r.query && r.query.results) {
-			                    var inner = mod.one('div.inner'),
-			                    html = '';
-			                    
-			                    //Walk the list and create the news list
-			                    Y.each(r.query.results, function(items) {
-			                        Y.each(items, function(v, k) {
-										html+= function(v){
-											var t =""
-											for (name in v){t+=";"+name}
-											return "<li>"+t+"</li>"
-										}(v)
-			                            if (k < 5) {
-			                                if (v.title && v.title.content) {
-			                                    v.title = v.title.content;
-			                                }
-			                                if (v.link && (Y.Lang.isArray(v.link))) {
-			                                    v.link = v.link[0];
-			                                }
-			                                html += Y.Lang.sub('<li><a href="{link}" target="_blank">{title}</a>', v);
-			                            }
-			                        });
-			                    });
-			                    //Set the innerHTML of the module
-			                    inner.set('innerHTML', '<ul>' + html + '</ul>');
-			                }
-			            }
-			        })(Y.one("#outer")));						
+				//populateList()
+				
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(inner) {
+					return function(r) {
+						//var inner = mod.one('div.inner')
+		                if (r && r.query && r.query.results) {
+		                    
+			                var html = '',
+								obj = {},
+								str;
+		                    
+		                    //Walk the list and create the news list
+		                    Y.each(r.query.results, function(items) {
+		                        Y.each(items, function(v, k) {
+		                            if (1) {
+		                                if (v.content && v.content.content) {
+		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"");
+		                                }
+										obj = Y.JSON.parse( v.content );
+										if (obj.text)
+		                                	html += Y.Lang.sub('<li><a href="{url}" target="_blank">{text}</a>', obj);
+										//html+= "<li><textarea>"+ obj.className +"\n"+ temp  +"\n"+ (v.content == temp) +"</textarea></li>"
+		                            }
+		                        });
+		                    });
+		                    //Set the innerHTML of the module
+		                    inner.set('innerHTML', '<ul>' + html + '</ul>');
+		                }else{
+							inner.set('innerHTML', '<ul>problems :( </ul>');
+						}
+		            }
+		        })(Y.one("#allList")));	
+			        
+			      
 			});
 		</script>	
 </html>

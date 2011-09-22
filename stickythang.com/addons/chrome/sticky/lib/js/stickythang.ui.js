@@ -7,9 +7,7 @@ if (chrome && chrome.extension){
 		console.log("request recived:" + request.action)
 		switch (request.action) {
 			case "create-note" :
-				YUI().use('node','dd-plugin','resize','json', function(Y) {
-					stickythang.createNoteYUI(null,Y);
-				});
+				stickythang.createNoteYUI(null);
 			break;	
 			case "get-list" :
 				stickythang.db.getList(sendResponse);
@@ -127,7 +125,8 @@ window.stickythang={
 				'<label>Share with: <span>(commer or line seporated list)</span><textarea></textarea></label><div class="scope">Scope: <label><input type="radio" name="scope" class="path" value="path"> page</label><label><input class="domain" name="scope" type="radio" value="domain"> site</label></div>'+
 			'</form>'
 	},
-	Note:function(result,Y){
+	Note:function(result){
+		var Y = stickythang.Y;
 		if (result) {// it's a record from the db
 			this.ops = Y.JSON.parse( result.ops );
 			this.id = result.id;
@@ -153,7 +152,12 @@ window.stickythang={
 		// return this;
 	}
 } 
- 
+stickythang.loadAll = function(list){
+    for (var i = 0; i < list.length; ++i) {
+		console.log('getAll: loading note '+ i)
+		stickythang.createNoteYUI( list[i] );
+    }	
+}
 stickythang.init = function(){
 	if (stickythang.isloaded){return}
 	stickythang.isloaded=true
@@ -164,6 +168,7 @@ stickythang.init = function(){
 	
 	
 	YUI().use('node','dd-plugin','resize','json','transition', function(Y) {
+		stickythang.Y  = Y;
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
@@ -190,7 +195,10 @@ stickythang.init = function(){
 		Y.one('#stickythangFormContainer')
 			.setStyle('webkitAnimationName','stickyThangFadeIn')
 
-	    stickythang.db.count(Y);
+	    // stickythang.db.count();
+		chrome.extension.sendRequest({action: "getAll"}, function(response) {
+		  stickythang.loadAll(response.list);
+		});		
 	})
 
  };
@@ -259,11 +267,17 @@ stickythang.Note.prototype = {
 		
 		if(this.isNew){
 			console.log('adding node:'+ops.id)
-			stickythang.db.saveNew(ops);
+			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
+			  console.log(response.message)
+			});				
+			// stickythang.db.saveNew(ops);
 			this.isNew = false;
 		}else{
 			console.log('updating node:'+ops.id)
-			stickythang.db.save(ops);
+			//stickythang.db.save(ops);
+			chrome.extension.sendRequest({action:"save", ops:ops }, function(response) {
+			  console.log(response.message)
+			});					
 		}
 
     },
@@ -272,7 +286,10 @@ stickythang.Note.prototype = {
 		this.div.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
 		var id = this.div.get('id');
 		console.log('remove:'+ id )
-		stickythang.db.remove(id);
+		//stickythang.db.remove(id);
+		chrome.extension.sendRequest({action:"remove", id:id }, function(response) {
+		  console.log(response.message)
+		});			
 	},
 	destroy: function(){
 		this.div.remove();
@@ -280,9 +297,10 @@ stickythang.Note.prototype = {
 }
 
 
-stickythang.createNoteYUI = function(result,Y){
-		
-		var note = new stickythang.Note(result,Y);
+stickythang.createNoteYUI = function(result){
+		console.log('trying to creat note');
+		var Y = stickythang.Y;
+		var note = new stickythang.Note(result);
 
 		// console.log( Y.JSON.stringify( note.state ) )
 		
@@ -405,7 +423,7 @@ stickythang.createNoteYUI = function(result,Y){
 		}	
 } 
 
-
+// stickythang.db = chrome.extension.getBackgroundPage().db;
 	/*
 	YUI().use('node', function(Y) {
 	      Y.on("domready", function(){
