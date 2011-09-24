@@ -13,9 +13,8 @@ version: alpha 0.1
       // Called when the url of a tab changes.
       function checkForValidUrl(tabId, changeInfo, tab) {
         // If the letter 'g' is found in the tab's URL...
-        if ( tab.url.indexOf('stickythang.com') > -1 ) {
-          // don't do anything for now
-		  chrome.pageAction.show(tabId);
+        if ( tab.url.indexOf('chrome://') == 0 ) {
+          // don't show on chome pages
         } else {
           chrome.pageAction.show(tabId);
 		}
@@ -52,31 +51,47 @@ chrome.extension.onRequest.addListener(
 });	  
 
 	  
-window.stickythang = {}	 
-stickythang.login = function(ops){
-	
-	localStorage.user = ops.user || localStorage.user || "guest"
-	localStorage.pass = ops.pass || localStorage.pass || "password"
-	// return "thanks-1" 
+window.stickythang = {user:'me'}	 
 
-	YUI().use("io-form", function(Y) {
+YUI().use("io-form", function(Y) {
+	
+	function onFailure(transactionid, response, arguments) {
+	   console.log('not good'+ response.responseText)
+	}
+	// Subscribe to "io.failure".
+	Y.on('io:failure', onFailure, Y, 'Transaction Failed');
+	
+	function onSuccess(transactionid, response, arguments) {
+	   console.log('good:'+ response.responseText.match("You have been successfully logged in") +"\n\n"+ response.responseText)
+	   return response.responseText.match("You have been successfully logged in")
+	}	
+	Y.on('io:success', onSuccess, Y, true);		
+		
+	stickythang.login = function(ops){
+		
+		localStorage.user = ops.user 
+		localStorage.pass = ops.pass 
+		console.log("ST!login{user:'"+ localStorage.user +"',pass:'"+ localStorage.pass +"'}")
+		if (!localStorage.user || !localStorage.pass){
+			return {responseText:'ST!invalid'}
+		}
+			
+		// Subscribe to "io.success".
+		
 		var uri = "http://stickythang.com/phpBB3/ucp.php?mode=login";
 	    var cfg = {
 	        method: 'POST',
+			sync: true,
 	        form: {
+				id : Y.one("#login"),
 	            username: localStorage.user,
 	            password: localStorage.pass,
 				redirect: "index.php"
 	        }
 	    };
-	
-	
-	    // Start the transaction.
-	    Y.io(uri, cfg);
-		
-	});
-	return "login dispatched"
-}
+		return Y.io(uri, cfg);
+	}
+})
 stickythang.db = {
 		localdb:null,
 		version:"1.0",
@@ -92,16 +107,16 @@ stickythang.db = {
 		getList:function(sendResponse){
 			console.log('Loading list');
 		    stickythang.db.localdb.transaction(function(tx) {
-		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"' and scope='domain') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
+		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
 		        	console.log("returing list :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
 						list.push({note:result.rows.item(i).note,url:result.rows.item(i).url});
-					}					
-		            sendResponse({results:list})
+					}
+					sendResponse({results:list})			
 		        }, function(tx, error) {
 		            console.log('Failed to retrieve notes from database - ' + error.message);
-		            return;
+					sendResponse({results:[]});
 		        });
 		    });					
 		},
@@ -122,11 +137,36 @@ stickythang.db = {
 							,timestamp:result.rows.item(i).timestamp
 							,user:result.rows.item(i).user
 						});
-					}					
-		            sendResponse({list:list,message:'success'})					
+					}
+					sendResponse({list:list,message:'success'})					
 		        }, function(tx, error) {
-		            sendResponse({message:error.massage})
+		            sendResponse({message:error.massage,list:[]})
 		            return;
+		        });
+		    });					
+		},
+		get:function(sendResponse,ops){
+			console.log('Loading stickies');
+			ops = ops || {}
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT "+ (ops.select || '*') + " FROM "+ stickythang.db.tableName +" WHERE "+ ( ops.where || ' user=?' ),(ops.params || [stickythang.user]), function(tx, result) {
+		        	console.log("loading stikies :"+ result.rows.length);
+					var list = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						list.push({
+							id:result.rows.item(i).id
+							,domain:result.rows.item(i).domain
+							,note:result.rows.item(i).note
+							,ops:result.rows.item(i).ops
+							,path:result.rows.item(i).path
+							,scope:result.rows.item(i).scope
+							,timestamp:result.rows.item(i).timestamp
+							,user:result.rows.item(i).user
+						});
+					}
+					sendResponse({list:list,message:'success'})					
+		        }, function(tx, error) {
+		            sendResponse({message:error.massage,list:[]})
 		        });
 		    });					
 		},
@@ -140,7 +180,11 @@ stickythang.db = {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
 		                //stickythang.loadNotes(); 
 						console.log('no count - no notes to load');
-						sendResponse({message:'no notes found',list:[]})
+						if (sendResponse){
+							sendResponse({message:'no notes found',list:[]})
+						} else {
+							return "no notes found"
+						}
 		        //    });
 		        });
 		    });				
@@ -233,4 +277,26 @@ stickythang.db = {
 
 
   </head>
+
+<body><form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="login">
+				<input type="hidden" name="redirect" value="index.php"/>
+				<p>
+					<label>Login with...</label>
+					<select>
+						<option>StickyThang!</option>
+						<option>Google</option>
+						<option>FaceBook</option>
+						<option>Yahoo</option>
+					</select>
+				</p>
+				<p>
+					<label for="username">User:</label><input value="tester" type="text" tabindex="1" name="username" id="username"/>
+				</p>
+				<p>
+					<label for="password">Password:</label><input value="password" type="password" tabindex="2" id="password" name="password"/>
+				</p>
+				<p class="centre">
+					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
+				</p>
+			</form></body>
 </html>

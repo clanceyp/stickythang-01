@@ -126,19 +126,23 @@ window.stickythang={
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
-				'<label>Share with: <span>(commer or line seporated list)</span><textarea></textarea></label><div class="scope">Scope: <label><input type="radio" name="scope" class="path" value="path"> page</label><label><input class="domain" name="scope" type="radio" value="domain"> site</label></div>'+
+				'<label>Share with: <span>(commer or line seporated list)</span><textarea></textarea></label>'+
+				'<div class="scope">Scope: '+
+				'<label><input type="radio" name="scope" class="path" value="path"> page</label>'+
+				'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
+				'<label><input class="global" name="scope" type="radio" value="global"> everwhere</label></div>'+
 			'</form>'
 	},
-	Note:function(result){
+	Note:function(result){// note object set defaults here
 		var Y = stickythang.Y;
-		if (result) {// it's a record from the db
+		if (result) {// it's a record from the db parse ops 
 			this.ops = Y.JSON.parse( result.ops );
 			this.id = result.id;
 			this.scope = result.scope;
 			this.timestamp = result.timestamp;
 			this.html = result.note;
 		}
-		else {
+		else {// default ops for new notes
 			this.ops = {
 				className: stickythang.ops.className[ stickythang.util.random(0, stickythang.ops.className.length ) ],
 				left: stickythang.util.random(stickythang.ops.css.left - stickythang.ops.css.leftOffset , stickythang.ops.css.left + stickythang.ops.css.leftOffset ),
@@ -146,7 +150,7 @@ window.stickythang={
 				top: stickythang.util.random(stickythang.ops.css.top - stickythang.ops.css.topOffset , stickythang.ops.css.top + stickythang.ops.css.topOffset ) + Y.one("body").get("scrollTop"),
 			}
 			this.isNew = true;
-			this.scope = 'domain'
+			this.scope = 'global'
 			this.timestamp = (new Date().getTime());
 			this.id = stickythang.user + '-' + this.timestamp;
 			this.html = '';
@@ -404,6 +408,7 @@ stickythang.createNoteYUI = function(result){
 		});
 		function InitForm(){
 			var self = this;
+			console.log("ST!InitForm()")
 			self.one("input."+self.getData('scope')).setAttribute('checked','checked');
 			self.one("form").on('click',function(e){
 				var scope = self.one("input:checked").getAttribute("value");

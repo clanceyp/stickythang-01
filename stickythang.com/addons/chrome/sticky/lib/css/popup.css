@@ -80,3 +80,35 @@ p.bottom a {
 p.bottom a:hover {
 	background-color:rgba(255,255,255,1);
 }
+
+#stickyList {
+	margin:0 0 14px 0;
+	padding:0;
+}
+#stickyList li {
+	margin:0;
+	padding:2px 0 2px 3px;
+	list-style-position:inside;
+}
+#stickyList li {
+	border-top:1px dashed #cecece;
+}
+#stickyList li:nth-child(1) {
+	border-top:0 none;
+}
+div.menu ul {
+	margin:0 0 10px 0 ;
+	padding:0;
+}
+div.menu li {
+	border-bottom:1px dashed #cecece;
+	list-style:none;
+	padding: 2px 0 4px  ;
+}
+div.menu li span {
+	display:none;
+}
+textarea {
+	width:500px;
+	height:200px;
+}

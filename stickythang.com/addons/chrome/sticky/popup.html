@@ -13,37 +13,7 @@ version: alpha 0.1
 		<link href="lib/css/popup.css" rel="stylesheet" />
 		
 		<style type="text/css">
-		#stickyList {
-			margin:0 0 14px 0;
-			padding:0 0 0 ;
-		}
-		#stickyList li {
-			margin:0;
-			padding:2px 0 2px 3px;
-			list-style-position:inside;
-		}
-		#stickyList li {
-			border-top:1px dashed #cecece;
-		}
-		#stickyList li:nth-child(1) {
-			border-top:0 none;
-		}
-		div.menu ul {
-			margin:0 0 10px 0 ;
-			padding:0;
-		}
-		div.menu li {
-			border-bottom:1px dashed #cecece;
-			list-style:none;
-			padding: 2px 0 4px  ;
-		}
-		div.menu li span {
-			display:none;
-		}
-		textarea {
-			width:500px;
-			height:200px;
-		}
+
 		</style>
 		
 	</head>
@@ -55,7 +25,7 @@ version: alpha 0.1
 		<h1 class="centre"><a href="http://stickythang.com" target="_blank"><span>StickyThang!</span></a></h1>
 		<ul class="menu" dir="rtl">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
-			<li class=""><a class="AllStickies"><span>All stickies</span></a></li>
+			<li class=""><a class="AllStickies"><span>Friends stickies</span></a></li>
 			<li><a class="LoginForm"><span>Login</span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
@@ -63,7 +33,7 @@ version: alpha 0.1
 				<input type="hidden" name="redirect" value="index.php"/>
 				<p>
 					<label>Login with...</label>
-					<select>
+					<select disabled="true">
 						<option>StickyThang!</option>
 						<option>Google</option>
 						<option>FaceBook</option>
@@ -80,7 +50,7 @@ version: alpha 0.1
 					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
 				</p>
 			</form>
-			<iframe id="hiddenframe" name="hiddenframe" frameborder="no" width="1" height="1"></iframe>
+			
 		</div>
 		<div id="MyStickies" class="on unit">
 			<div>
@@ -116,11 +86,23 @@ version: alpha 0.1
 			var background = chrome.extension.getBackgroundPage().window;
 			
 			YUI().use('node','yql','json-parse','node-load',function(Y){
-				Y.one('#myList').setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>").load("http://stickythang.com/phpBB3/search.php?author=tester")
+				
+				function LoadList(results){
+					console.log('ST!' + results.list.length)
+					populateList(results);
+					
+				}
+
+				background.stickythang.db.get(LoadList);
+
+				/*
+				 * TODO, make friends db and getFriends method
+				
 				var friends = ['tester','patrick'];
 				for (var i = 0; i<friends.length ; i++ ){
-					//
+					// Y.one('#myList').setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>").load("http://stickythang.com/phpBB3/search.php?author=tester")
 				}
+				*/
 				
 				Y.one('#allList')
 					.setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>")
@@ -153,10 +135,20 @@ version: alpha 0.1
 					// return;
 					try {
 						var v = background.stickythang.login({
-							user:'tester',
-							pass:'password'
+							user:Y.one("#username").get('value')
+							,pass:Y.one("#password").get('value')
 						})
-						Y.one("#loginButton").set('value','v:'+v)
+						if ( v.responseText == 'ST!invalid'){
+							Y.one("#loginButton").set('value','Please add your details')
+						} else if ( v.responseText.match("You have been successfully logged in") ){
+							Y.one("#loginButton").set('value','Login successful!')
+						} else if ( v.responseText.match("<title>stickythang.com &bull; Index page</title>") ) {
+							Y.one("#loginButton").set('value','You alredy have an active session').setAttribute('disabled','disabled')
+						} else {
+							Y.one("#loginButton").set('value','Not sure what the status is : ( ');
+							console.log(v.responseText)
+						}
+						
 					}catch(e){
 						Y.one("#loginButton").set('value','e:'+e.message)
 					}
@@ -170,13 +162,13 @@ version: alpha 0.1
 				});	
 				*/
 				function populateList(response){
-					var rs = response.results,
+					var rs = response.list,
 						html = "";
 		            for (var i = 0; i < rs.length; ++i) {
 						html+= '<li><a target="_blank" href="'+ rs[i].url +'">'+ rs[i].note +'</a></li>';
 		            }
 					Y.one("#stickyList").setContent(html);
-					Y.one("#domainLable").setContent(response.domain)
+					// Y.one("#domainLable").setContent(response.domain)
 				}	
 				//populateList()
 				
