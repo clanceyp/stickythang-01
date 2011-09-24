@@ -1,6 +1,10 @@
-/**
- * @author patcla
- */
+/*
+Copyright (c) 2011, P Clancey. All rights reserved.
+Code licensed under the BSD License:
+http://www.opensource.org/licenses/bsd-license.php
+version: alpha 0.1
+*/
+ 
 
 if (chrome && chrome.extension){
 	chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {

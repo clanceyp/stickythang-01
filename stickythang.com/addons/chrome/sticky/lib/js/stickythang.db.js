@@ -1,4 +1,9 @@
-
+/*
+Copyright (c) 2011, P Clancey. All rights reserved.
+Code licensed under the BSD License:
+http://www.opensource.org/licenses/bsd-license.php
+version: alpha 0.1
+*/
  
 window.stickythang.db = {
 		localdb:null,
