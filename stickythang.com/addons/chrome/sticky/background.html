@@ -161,6 +161,7 @@ stickythang.db = {
 							,path:result.rows.item(i).path
 							,scope:result.rows.item(i).scope
 							,timestamp:result.rows.item(i).timestamp
+							,url:result.rows.item(i).url
 							,user:result.rows.item(i).user
 						});
 					}
@@ -214,13 +215,15 @@ stickythang.db = {
 	        });			
 		},
 		saveNew:function(note,sendResponse){
+			console.log('trying to save a new note')
 	        stickythang.db.localdb.transaction(function (trans){
-	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-					[note.id, note.domain, note.html, note.json, note.path, note.scope, (new Date().getTime()) , window.location.href , stickythang.user],
+	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+					[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, (new Date().getTime()) , note.href , stickythang.user],
 					function(){
 						sendResponse({message:'created'})
 					},
 					function(tx,error){
+						console.log(error.message)
 						sendResponse(error)
 				});
 	        });			

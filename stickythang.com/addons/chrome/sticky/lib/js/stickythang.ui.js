@@ -21,6 +21,7 @@ if (chrome && chrome.extension){
 	});
 }
  
+ 
 window.stickythang={
 	isloaded:false,
 	user:"",
@@ -77,7 +78,7 @@ window.stickythang={
 		flip:{
 			toggle:function(e){
 				var note = e.currentTarget.ancestor('div.stickythang');
-				note.setStyle("webkitTransformOrigin","50% 50%");
+				note.one('div.card').setStyle("webkitTransformOrigin","50% 50%");
 				var dur = parseInt(1) * 500;
 				window.getSelection().removeAllRanges();
 				if (note.getData('flipped') === 'true')
@@ -86,29 +87,29 @@ window.stickythang={
 					stickythang.util.flip.turnOver(note,dur);
 			},
 			turnOver:function(note,dur){
-				console.log("flipping note:"+note.getComputedStyle('webkitAnimationDuration'))
-				note.addClass('form-hide').addClass('in-flip').setStyle("webkitAnimationName","stickyThangNoteFlip");
+				console.log( "flipping note:" )
+				note.addClass('form-hide').addClass('in-flip').one('div.card').setStyle("webkitAnimationName","stickyThangNoteFlip");
 				setTimeout(function(){
 					note.addClass("flippingTemp")
 				},dur/2)
 				setTimeout(function(){
-					note.removeClass('in-flip').replaceClass("flippingTemp","flipped").setStyle("webkitAnimationName","").setData('flipped','true');
-					note.transition({
+					note.removeClass('in-flip').replaceClass("flippingTemp","flipped").setData('flipped','true').one('div.card').setStyle("webkitAnimationName","");
+					note.one('div.card').transition({
 					    easing: 'ease-both',
 					    duration: 0.75,
 					    width: '200px',
-					    height: '240px',
+					    height: '260px',
 						on:{end:function(){note.removeClass('form-hide')}}
 					});
 				},dur)
 			},
 			turnBack:function(note,dur){
-				note.setStyle("webkitAnimationName","stickyThangNoteFlip").addClass('in-flip');
+				note.addClass('in-flip').one('div.card').setStyle("webkitAnimationName","stickyThangNoteFlip");
 				setTimeout(function(){
 					note.replaceClass("flipped"," flippingTemp2");
 				},dur/2)
 				setTimeout(function(){
-					note.removeClass('in-flip').removeClass("flippingTemp2").setStyle("webkitAnimationName","").setData('flipped','false');
+					note.removeClass('in-flip').removeClass("flippingTemp2").setData('flipped','false').one('div.card').setStyle("webkitAnimationName","");
 				},dur)					
 			}
 		}
@@ -163,6 +164,20 @@ window.stickythang={
 stickythang.loadAll = function(list){
     for (var i = 0; i < list.length; ++i) {
 		console.log('getAll: loading note '+ i)
+		/*
+		switch (list[i].scope) {
+			case "path":
+				if (list[i].path != window.location.pathname){
+					continue
+				} 
+			case "domain": 
+				if (list[i].domain != window.location.domain){
+					continue
+				} 
+			case "global": 
+			break;
+		}
+		*/
 		stickythang.createNoteYUI( list[i] );
     }	
 }
@@ -182,23 +197,7 @@ stickythang.init = function(){
 		Y.one('body').append('<div id="stickythangContainer" />')
 		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
 		
-		/*
-		Y.one('#stickythangFormContainer')
-			.setStyles({
-				'left':settings.button.left
-				,'top':settings.button.top
-			})
-			.setContent('<span class="handle"></span><input alt="Add sticky" title="Add sticky" type=image id="stickythangButton01" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABSNJREFUeNq0V1tsVFUUXec+5j19TGkrDW1NBaOJNkG0tDRBYwTUCj74MRr/lBg1ih8mmqDED01EDbUh6g/4JT9+gFVIAIP1EdtSLEIMCK3lMZ0ynWGm79fMnXvd59x7OzOdthiYue3OzOx75ux11957nT0MgHJqb+NhBXqLrhso5CVJDBqkIw1vdz1DHzXuU8jciqG3rH1xm+ViluXzMkyjaGe+bW/hMckmbAAuXU+Rqx649CHFVgvz+EYSuHs3dP0Q/+TKBMAEOg5CBHfQa54ZMAyTVB5DsJGmWEkvSmAkzEFohQFgpFBal8i5lQFAQ+n92ym4UpgaoP2FLQ6AmSijR01XIRjgFe7dkfNwGQzYNaDmH4DIOzNjLJkC6NSoMr3K+U8BM8z9hWEZBgxOv1ygGjBuwgBXQUnielUYAEwyYyydgpQVvEAAxL6p5bpAs1qwQCmwWn3pLphHWSgGjDSQpdtQzg+A+TZm6Q4TLC/XBQLdbQLghUZHrngQ/p4tECJZgsz9OQBsxFwHDOlWD3sKoOBiNIgD/3Th+OAopIzn37KqGDsavPBKai4APiiMDvSjJKBYWsEW9PD/Ce7Avt5j+H5oAE+vewFtjzXB7XCL2zOJaZy92onXT36JjakV2aSRVfS2Ng77AgGsaa5dIFZWcE6hri/ax4JqRcVHXYdxenwM72z7BKHxTvwdPoTI5JRYUuHz4r47nsWq4g3Yd3QXwuH4Nyd34xXelwLAmS+ahlc3rceFjj9MwbKDWpVbXrsCdQ/U0fLcPua0X4oN4o2uH7Br+x50D7YhMhHEHKW87SkT8Js/MjiJ3Ep/NTbU7ERb+we4fnnq4V8/x2/zOhC7cgpVd8koq2BwFVOelGKyAM0nAXQf7EDdQ2ssOV1Q7bIqcv5cw0s4Fz6A+HQQCpGSYNnLuC9G9/4a2o8n1j2Pg2P7P6Zbj0p2kZZVeZFISIiGgakYjU+zI8BcjHaKmzsIkbKFyjZFnKDHgxHUVBYhNHEBGu01R9lKZKSSv+c+fi84cR4ry718u2Yxj9ptIqkeBFYaiA3NIBY1yKXBVzJKcawhVbSVlC0mwqdAoduR2R5RPp9uzq2Tr7amfe/+xDA802OXucNkgP5kxUMgXAhUuaFpDPEbDFNjlHNt1KpVaUnjBE0mrgmab3aRFIi1FgCm2MXOGZCTKZGOQBUQJybiUQ4saT64REslI7sTBAOycI3MXIeL5tn3f2ZIEhWzVIStW8y1O49RXdHXVVrupjVjs6G09NjtplDPSg4PFGJCJibKOBPUJLGIpQoCgGVC6Sy1o2tzbS0iVC5Oql2PE/CReRxpnPy98DnNNTEqq+Q0emHLHiM4zFMEp8cH1eOHw+WH6vaivNoDTWe4d+OD6OvowWgoShM9jfQuvpNlqoKX6zfh/IAZTFWFSwSyL6flc6hmSf17GQj9iVZYzVJxem9jPyHxG4Y1u4l/JqrfpIoXpSkQOj9QMrIg0wI3c+C7VD963GE80mASk6QUJC3ZUGUTAK/Szh4q2Cto79iDt8gzxLcvIat77cnq5tmknWCWrZVZ0+0iYkhDn5Fkxtm1wcdr7sTWe0gyKiupSS2V0QjM8DBwsY/oD+LIL5/hPXJf5b+OmDkGw0/mTdfELV08XNHqTWisXY9XHUWon2eKoiTGce5aN77uO4HfyRMiG7OlGAv67HZmLn76lJLxE8dnqZU9702S3SCjEsSUPZ/le/SxGXWbPzLTEwEvOH4wkiUz1ew/AQYAWCLP2hYlv1wAAAAASUVORK5CYII="/>')
-			.plug(Y.Plugin.Drag)
-			.dd.addHandle('span.handle');
-		Y.one('#stickythangFormContainer').dd.on("drag:end",function(e){
-				console.log( 'drag:end ');
-				stickythang.settings.save(Y,Y.one('#stickythangFormContainer'));
-			})	
-		Y.one('#stickythangButton01').on('click',function(e){
-			stickythang.createNoteYUI(null,Y)
-		})
-		*/
+
 		
 		Y.one('#stickythangFormContainer')
 			.setStyle('webkitAnimationName','stickyThangFadeIn')
@@ -221,23 +220,24 @@ stickythang.Note.prototype = {
 			className:self.getData('className')
 			,height:parseInt(self.getStyle('height'))
 			,left:xy[0]
-			,state:self.getData('state')
 			,scope:self.getData('scope')
+			,state:self.getData('state')
 			,top:xy[1]
 			,width:parseInt(self.getStyle('width'))
 		}};
-		YUI().use('node','json', function(Y) {
+		// YUI().use('node','json', function(Y) {
 			// console.log( Y.JSON.stringify( self.ops ) )
-			ops.json = Y.JSON.stringify( ops.ops );
 			ops.className = self.getData('className');
-			ops.id = self.get('id');
 			ops.domain = window.location.host
+			ops.href = window.location.href
+			ops.json = stickythang.Y.JSON.stringify( ops.ops );
+			ops.id = self.get('id');
 			ops.html = self.one("div.edit").get('innerHTML');
 			ops.path = window.location.pathname
 			ops.querystring = window.location.search
 			ops.scope = self.getData('scope');
 			ops.user = "me";
-		})		
+		// })		
 		return ops;
 	},
 	
@@ -265,16 +265,11 @@ stickythang.Note.prototype = {
     save: function()
     {
         this.cancelPendingSave();
-/*        if ("edited" in this) {
-            delete this.edited;
-        }else{
-			return;
-		}
- */		
+
         var ops = this.createOps();
 		
 		if(this.isNew){
-			console.log('adding node:'+ops.id)
+			console.log('adding node:'+ops.id)			
 			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
 			  console.log(response.message)
 			});				
@@ -285,7 +280,7 @@ stickythang.Note.prototype = {
 			//stickythang.db.save(ops);
 			chrome.extension.sendRequest({action:"save", ops:ops }, function(response) {
 			  console.log(response.message)
-			});					
+			});
 		}
 
     },
@@ -327,7 +322,7 @@ stickythang.createNoteYUI = function(result){
 			.setData('scope',note.scope || 'global')
 			.setData('state',note.ops.state || 'maximise')
 			.setData('ops',note.ops.json)
-			.setContent("<div class=card>"+stickythang.ops.template+"</div>")
+			.setContent("<div class='card'>"+stickythang.ops.template+"</div>")
 			.on('click',function(){note.edited = true; note.saveSoon()})
 		
 
@@ -393,17 +388,15 @@ stickythang.createNoteYUI = function(result){
 					break;
 			}
 			function noteSave(){
-				note.edited = true; 
 				note.save();
 			}
 		}, false);
 		
 		var instance = new Y.Resize({
-			node: note.div,
+			node: note.div.one('div.card'),
 			handles: 'br'
 		});			
 		instance.on('resize:end',function(){
-			note.edited = true; 
 			note.save();
 		});
 		function InitForm(){
@@ -415,12 +408,13 @@ stickythang.createNoteYUI = function(result){
 				self.setData('scope',scope)
 			})
 			self.one('select').setContent( function(){
-				var opts = "";
+				var opts = "",colour;
 				for (name in stickythang.ops.className){
-					if (self.getData('className') === stickythang.ops.className[name])					
-						opts += "<option selected='selected'>"+ stickythang.ops.className[name] +"</option>"
+					colour = stickythang.ops.className[name];
+					if (self.getData('className') === colour)					
+						opts += "<option selected='selected' class='"+ colour +"'>"+ colour +"</option>"
 					else
-						opts += "<option>"+ stickythang.ops.className[name] +"</option>"
+						opts += "<option class='"+ colour +"'>"+ colour +"</option>"
 				}
 				return opts
 			}() ).on('change',function(e){
@@ -432,54 +426,4 @@ stickythang.createNoteYUI = function(result){
 		}	
 } 
 
-// stickythang.db = chrome.extension.getBackgroundPage().db;
-	/*
-	YUI().use('node', function(Y) {
-	      Y.on("domready", function(){
-		  	console.log('stickythang going down1!');
-		  	stickythang.init();
-		  }); 
-	});
-YUI().use('node', function(Y) {
-	Y.on("domready", function(){
-		console.log('dom is ready');
-	  	// your code
-	}); 
-});	
-
- (function() {
-	var yui = document.createElement('script');
-	var yui2 = document.createElement('script');
-	yui.src = 'http://yui.yahooapis.com/3.3.0/build/yui/yui-min.js';
-	yui2.src = 'http://yui.yahooapis.com/3.3.0/build/loader/loader-min.js';
-	document.documentElement.firstChild.appendChild(yui);
-	document.documentElement.firstChild.appendChild(yui2);
-})();
-
-
-	document.addEventListener('click',function(){
-		if(stickythang.isloaded) return;
-		console.log('stickythnag going down1!');
-		
-		var yui = document.createElement('script');
-		yui.src = 'http://yui.yahooapis.com/3.4.0/build/yui/yui-min.js';
-		document.documentElement.firstChild.appendChild(yui);
-
-		window.setTimeout(function() { 
-			console.log('stickythang going down2!');
-			stickythang.init(); 
-		}, 2000)
-	},false)
-
-*/
-	
-	
-/*
-	window.setTimeout(function() { 
-		console.log('stickythang going down2!');
-		//stickythang.init(); 
-	}, 2000)
-
-*/
-	
 	

@@ -13,7 +13,7 @@ version: alpha 0.1
 		<link href="lib/css/popup.css" rel="stylesheet" />
 		
 		<style type="text/css">
-
+			a.strip * {display:inline;}
 		</style>
 		
 	</head>
@@ -79,21 +79,34 @@ version: alpha 0.1
 			</div>
 		</div>
 		<p class="tac bottom">
-			<a target="_blank" href="http://stickythang.com">visit StickyThang!</a>
+			<a target="_blank" href="options.html">Open Options</a>
 		</p>
 	</body>
 		<script>
 			var background = chrome.extension.getBackgroundPage().window;
 			
 			YUI().use('node','yql','json-parse','node-load',function(Y){
-				
-				function LoadList(results){
-					console.log('ST!' + results.list.length)
-					populateList(results);
-					
+				var loader = {
+					LoadList:function(results){
+						console.log('ST!' + results.list.length)
+						loader.populateList(results);
+						
+					},
+					populateList:function(response){
+						var rs = response.list,
+							html = "",
+							note = "";
+							mxlen = 100
+			            for (var i = 0; i < rs.length; ++i) {
+							note = rs[i].note.replace(/<[^>]*>?/g," ");
+							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
+							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+			            }
+						Y.one("#stickyList").setContent(html);
+						// Y.one("#domainLable").setContent(response.domain)
+					}	
 				}
-
-				background.stickythang.db.get(LoadList);
+				background.stickythang.db.get(loader.LoadList);
 
 				/*
 				 * TODO, make friends db and getFriends method
@@ -161,15 +174,7 @@ version: alpha 0.1
 				  });
 				});	
 				*/
-				function populateList(response){
-					var rs = response.list,
-						html = "";
-		            for (var i = 0; i < rs.length; ++i) {
-						html+= '<li><a target="_blank" href="'+ rs[i].url +'">'+ rs[i].note +'</a></li>';
-		            }
-					Y.one("#stickyList").setContent(html);
-					// Y.one("#domainLable").setContent(response.domain)
-				}	
+
 				//populateList()
 				
 				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(inner) {

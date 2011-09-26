@@ -42,24 +42,7 @@ p {margin:0;padding:0 0 4px 0;}
 label {display:inline-block;width:80px;}
 *.tar {text-align:right}	
 *.tac {text-align:center;}	
-ul.menu {
-	margin:0 12px 0 6px;
-	padding:0;
-}	
-ul.menu li {
-	background-color:#dfdfdf;
-	border-radius: 6px 6px 0 0;
-	display:inline-block;
-	list-style:none;
-	padding:3px 10px;
-}
-ul.menu a {
-	color:#06c;
-	cursor:pointer;
-}
-ul.menu li.active {
-	background-color:#fff;
-}
+
 #MyStickies input {
 	
 }
@@ -95,6 +78,25 @@ p.bottom a:hover {
 }
 #stickyList li:nth-child(1) {
 	border-top:0 none;
+}
+
+ul.menu {
+	margin:0 12px 0 6px;
+	padding:0;
+}	
+ul.menu li {
+	background-color:#dfdfdf;
+	border-radius: 6px 6px 0 0;
+	display:inline-block;
+	list-style:none;
+	padding:3px 10px;
+}
+ul.menu a {
+	color:#06c;
+	cursor:pointer;
+}
+ul.menu li.active {
+	background-color:#fff;
 }
 div.menu ul {
 	margin:0 0 10px 0 ;
