@@ -163,22 +163,16 @@ window.stickythang={
 } 
 stickythang.loadAll = function(list){
     for (var i = 0; i < list.length; ++i) {
-		console.log('getAll: loading note '+ i)
-		/*
-		switch (list[i].scope) {
-			case "path":
-				if (list[i].path != window.location.pathname){
-					continue
-				} 
-			case "domain": 
-				if (list[i].domain != window.location.domain){
-					continue
-				} 
-			case "global": 
-			break;
+		console.log('getAll: loading note '+ i +":"+list[i].scope +":"+ list[i].path +":"+ list[i].domain)
+		if (list[i].scope == 'global'){
+			stickythang.createNoteYUI( list[i] );
+		} else if (list[i].scope == 'domain' && list[i].domain == window.location.hostname){
+			stickythang.createNoteYUI( list[i] );
+		} else if (list[i].scope == 'path' && list[i].domain == window.location.hostname){
+			stickythang.createNoteYUI( list[i] );
+		} else if (list[i].path == window.location.href){
+			stickythang.createNoteYUI( list[i] );
 		}
-		*/
-		stickythang.createNoteYUI( list[i] );
     }	
 }
 stickythang.init = function(){

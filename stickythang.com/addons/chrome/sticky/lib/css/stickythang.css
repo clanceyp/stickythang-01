@@ -274,8 +274,10 @@ div.stickythang.minimise div.minimisebutton {
 }
 div.stickythang div.edit {
 	height:75%;
+	font-size:11px;
 	margin-top:16px;
     outline: none;
+	overflow-y: auto;
 	padding-bottom:24px;
 }
  
