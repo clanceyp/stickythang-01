@@ -90,7 +90,6 @@ version: alpha 0.1
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
 						loader.populateList(results);
-						
 					},
 					populateList:function(response){
 						var rs = response.list,
@@ -100,7 +99,7 @@ version: alpha 0.1
 			            for (var i = 0; i < rs.length; ++i) {
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
-							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ rs[i].url  +'</a></li>';
 			            }
 						Y.one("#stickyList").setContent(html);
 						// Y.one("#domainLable").setContent(response.domain)

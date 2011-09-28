@@ -22,7 +22,13 @@ version: alpha 0.1
 
       // Listen for any changes to the URL of any tab.
       chrome.tabs.onUpdated.addListener(checkForValidUrl);
-	  
+	  chrome.tabs.onSelectionChanged.addListener(function( tabId,  selectInfo) {
+			//chrome.tabs.getSelected(null, function(tab) {
+			  chrome.tabs.sendRequest(tabId, {action: "focus",noteids:window.ids}, function(response) {
+			    console.log(response.message);
+			  });
+			//});		  	
+	  });
 	  
 	  
 chrome.extension.onRequest.addListener(
@@ -51,7 +57,8 @@ chrome.extension.onRequest.addListener(
 });	  
 
 	  
-window.stickythang = {user:'me'}	 
+window.stickythang = {user:'me'}	
+window.ids = [] 
 
 YUI().use("io-form", function(Y) {
 	
@@ -171,11 +178,27 @@ stickythang.db = {
 		        });
 		    });					
 		},
+		getIds:function(){
+			console.log('getting ids')
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +"", [], function(tx, result) {
+		        	console.log("returing list :"+ result.rows.length);
+					window.ids = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						window.ids.push(result.rows.item(i).id);
+					}			
+		        }, function(tx, error) {
+		            console.log('Failed to retrieve notes from database - ' + error.message);
+					sendResponse({results:[]});
+		        });
+		    });					
+		},
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
 		        	// count exists loading stickies
 					console.log('count - loading sticky-notes')
+					stickythang.db.getIds();
 		            stickythang.db.getAll(sendResponse);
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
@@ -195,6 +218,7 @@ stickythang.db = {
 	            trans.executeSql("DELETE from "+ stickythang.db.tableName +" WHERE id = ?", 
 					[id],
 					function(){
+						stickythang.db.getIds();
 						sendResponse({message:'removed'})
 					},
 					function(tx,error){
@@ -220,6 +244,7 @@ stickythang.db = {
 	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
 					[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, (new Date().getTime()) , note.href , stickythang.user],
 					function(){
+						stickythang.db.getIds();
 						sendResponse({message:'created'})
 					},
 					function(tx,error){

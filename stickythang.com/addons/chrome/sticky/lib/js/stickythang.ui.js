@@ -15,6 +15,10 @@ if (chrome && chrome.extension){
 			break;	
 			case "get-list" :
 				stickythang.db.getList(sendResponse);
+			break;	
+			case "focus" :
+				stickythang.activeids = request.noteids;
+				sendResponse({message:'thank you'});
 			break;				
 		}
 		// sendResponse({message:'thank you'});
@@ -24,6 +28,8 @@ if (chrome && chrome.extension){
  
 window.stickythang={
 	isloaded:false,
+	activeids:[],
+	currentids:[],
 	user:"",
 	settings:{
 		save:function(Y,node){
@@ -298,6 +304,7 @@ stickythang.createNoteYUI = function(result){
 		console.log('trying to creat note');
 		var Y = stickythang.Y;
 		var note = new stickythang.Note(result);
+		stickythang.currentids.push(note.id)
 
 		// console.log( Y.JSON.stringify( note.state ) )
 		
