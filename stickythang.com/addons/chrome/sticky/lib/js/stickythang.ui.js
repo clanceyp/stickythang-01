@@ -12,13 +12,15 @@ if (chrome && chrome.extension){
 		switch (request.action) {
 			case "create-note" :
 				stickythang.createNoteYUI(null);
+				sendResponse({message:'thank you'});
 			break;	
 			case "get-list" :
 				stickythang.db.getList(sendResponse);
 			break;	
 			case "focus" :
-				stickythang.activeids = request.noteids;
-				sendResponse({message:'thank you'});
+				stickythang.backgroundnotes = request.notes;
+				stickythang.checkforchanges();
+				sendResponse({message:'thank you, Im checking'});
 			break;				
 		}
 		// sendResponse({message:'thank you'});
@@ -29,7 +31,9 @@ if (chrome && chrome.extension){
 window.stickythang={
 	isloaded:false,
 	activeids:[],
+	backgroundnotes:[],
 	currentids:[],
+	currentnotes:[],
 	user:"",
 	settings:{
 		save:function(Y,node){
@@ -181,12 +185,95 @@ stickythang.loadAll = function(list){
 		}
     }	
 }
+stickythang.checkforchanges = function(){
+	stickythang.checkforupdates();
+	stickythang.checkfororphans();
+	stickythang.checkfornewnotes();
+}
+stickythang.checkforupdates = function(){
+	console.log('checking for updates')
+	var updatedlist=[],temp,updatednote;
+	for (var i = 0; i < stickythang.currentnotes.length;i++){
+		updatednote = hasChanged(stickythang.currentnotes[i]);
+		if ( updatednote ){
+			updatedlist.push( updatednote );
+			stickythang.currentnotes[i].destroy();
+			temp = stickythang.currentnotes.splice(i,1);	
+			delete temp;		
+		}
+	}
+	stickythang.loadAll( updatedlist );
+	function hasChanged( note ){
+		for (var i = 0; i < stickythang.backgroundnotes.length;i++){
+			if ( (note.id == stickythang.backgroundnotes[i].id) && (note.timestamp != stickythang.backgroundnotes[i].timestamp)){
+				console.log(note.id +" !!! has changed")
+				return stickythang.backgroundnotes[i];
+			}
+		}	
+		return false;	
+	}
+}
+stickythang.checkfororphans = function(){
+	console.log('checking for orphans')
+	for (var i = 0; i < stickythang.currentnotes.length;i++){
+		if (!isAlive(stickythang.currentnotes[i].id)){
+			stickythang.killById( stickythang.currentnotes[i].id );
+		}
+	}
+	function isAlive(id){
+		for (var i = 0; i < stickythang.backgroundnotes.length;i++){
+			if (id == stickythang.backgroundnotes[i].id){
+				return true;
+			}
+		}	
+		return false;	
+	}
+}
+stickythang.checkfornewnotes = function(){
+	console.log('checking for new notes');
+	var newlist=[];
+	for (var i = 0; i < stickythang.backgroundnotes.length;i++){
+		if (isNew(stickythang.backgroundnotes[i].id)){
+			newlist.push( stickythang.backgroundnotes[i] );
+		}
+	}
+	stickythang.loadAll( newlist );
+	function isNew(id){
+		for (var i = 0; i < stickythang.currentnotes.length;i++){
+			if (id == stickythang.currentnotes[i].id){
+				return false;
+			}
+		}	
+		return true;	
+	}
+}
+stickythang.killById = function(id){
+	console.log("trying to remove:"+ id +" from:"+ stickythang.currentnotes.length)
+	var node;
+	for (var i = 0; i < stickythang.currentnotes.length;i++){
+		if (stickythang.currentnotes[i].id == id ){
+			console.log("idMATCH")
+			try{
+				console.log("trying to destroy:!!!!"+ id)
+				//stickythang.currentnotes[i].remove(1);
+				stickythang.currentnotes[i].destroy();
+				stickythang.currentnotes.splice(i,1);
+			}catch(e){
+				console.log("trying to remove:error"+ e)
+				stickythang.currentnotes.splice(i,1)
+			}
+			break;
+		}else{
+			console.log("idNO MATCH")
+		}
+	}	
+}
 stickythang.init = function(){
 	if (stickythang.isloaded){return}
 	stickythang.isloaded=true
 	stickythang.user = "me";
 	console.log('myStickies loading...');
-	stickythang.db.init();
+	//stickythang.db.init();
 	var temp = localStorage.getItem(stickythang.ops.skey);
 	
 	
@@ -218,12 +305,12 @@ stickythang.Note.prototype = {
 		var xy = self.getXY();
 		var ops = {ops:{
 			className:self.getData('className')
-			,height:parseInt(self.getStyle('height'))
+			,height:parseInt(self.one('div.card').getStyle('height'))
 			,left:xy[0]
 			,scope:self.getData('scope')
 			,state:self.getData('state')
 			,top:xy[1]
-			,width:parseInt(self.getStyle('width'))
+			,width:parseInt(self.one('div.card').getStyle('width'))
 		}};
 		// YUI().use('node','json', function(Y) {
 			// console.log( Y.JSON.stringify( self.ops ) )
@@ -245,7 +332,7 @@ stickythang.Note.prototype = {
     {
         this.cancelPendingSave();
         var self = this;
-        this._saveTimer = setTimeout(function() { self.save() }, 3000);
+        this._saveTimer = setTimeout(function() { self.save() }, 500);
     },
  
     cancelPendingSave: function()
@@ -261,38 +348,66 @@ stickythang.Note.prototype = {
         this.edited = true;
         this.saveSoon();
     },
-	
+	hide: function()
+	{
+		this.div.setStyle("display","none");	
+	},
     save: function()
     {
         this.cancelPendingSave();
 
         var ops = this.createOps();
-		
-		if(this.isNew){
+		var note = this;
+		ops.timestamp = note.timestamp = (new Date().getTime());
+		note.div.one("div.timestamp").setContent( stickythang.util.modifiedString(note.timestamp, note.isNew) );
+		if(note.isNew){
 			console.log('adding node:'+ops.id)			
 			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
 			  console.log(response.message)
 			});				
-			// stickythang.db.saveNew(ops);
-			this.isNew = false;
+			note.isNew = false;
 		}else{
 			console.log('updating node:'+ops.id)
-			//stickythang.db.save(ops);
 			chrome.extension.sendRequest({action:"save", ops:ops }, function(response) {
 			  console.log(response.message)
 			});
 		}
+		
 
     },
-	remove: function(){
+	remove: function(quick){
+		if (quick){
+			this.div.setStyle("display","none");	
+		}
 		this.div.setStyle("webkitTransformOrigin","100% 0");	
 		this.div.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
-		var id = this.div.get('id');
+		
+		var id = this.id;
 		console.log('remove:'+ id )
+		removeFormPageArrays(id)
 		//stickythang.db.remove(id);
 		chrome.extension.sendRequest({action:"remove", id:id }, function(response) {
 		  console.log(response.message)
 		});			
+		
+		function removeFormPageArrays(id){
+			try {
+				for (var i = 0; i < stickythang.currentnotes.length; i++) {
+					if (stickythang.currentnotes[i].id == id) {
+						var temp = stickythang.currentnotes.splice(i, 1);
+						break;
+					}
+				}
+				for (var i = 0; i < stickythang.currentids.length; i++) {
+					if (stickythang.currentids[i] == id) {
+						var temp = stickythang.currentids.splice(i, 1);
+						break;
+					}
+				}
+			}catch(e){
+				console.log('couldnt remove item')
+			}
+		}
 	},
 	destroy: function(){
 		this.div.remove();
@@ -304,7 +419,9 @@ stickythang.createNoteYUI = function(result){
 		console.log('trying to creat note');
 		var Y = stickythang.Y;
 		var note = new stickythang.Note(result);
-		stickythang.currentids.push(note.id)
+		
+		stickythang.currentids.push(note.id);
+		stickythang.currentnotes.push(note);
 
 		// console.log( Y.JSON.stringify( note.state ) )
 		
@@ -313,10 +430,8 @@ stickythang.createNoteYUI = function(result){
 			.addClass(note.ops.state)
 			.addClass(note.ops.className)
 			.setStyles({
-				'height':note.ops.height
-				,'left':note.ops.left
+				'left':note.ops.left
 				,'top':note.ops.top
-				,'width':note.ops.width
 				,'z-index':stickythang.util.highestZ()
 			})
 			.setData('className',note.ops.className)
@@ -325,6 +440,10 @@ stickythang.createNoteYUI = function(result){
 			.setData('ops',note.ops.json)
 			.setContent("<div class='card'>"+stickythang.ops.template+"</div>")
 			.on('click',function(){note.edited = true; note.saveSoon()})
+		note.div.one("div.card").setStyles({
+				'height':note.ops.height
+				,'width':note.ops.width
+			})
 		
 
 

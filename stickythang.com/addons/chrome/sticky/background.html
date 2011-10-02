@@ -24,7 +24,7 @@ version: alpha 0.1
       chrome.tabs.onUpdated.addListener(checkForValidUrl);
 	  chrome.tabs.onSelectionChanged.addListener(function( tabId,  selectInfo) {
 			//chrome.tabs.getSelected(null, function(tab) {
-			  chrome.tabs.sendRequest(tabId, {action: "focus",noteids:window.ids}, function(response) {
+			  chrome.tabs.sendRequest(tabId, {action: "focus",notes:stickythang.db.listAll}, function(response) {
 			    console.log(response.message);
 			  });
 			//});		  	
@@ -103,9 +103,10 @@ stickythang.db = {
 		localdb:null,
 		version:"1.0",
 		tableName:"stickies",
+		listAll:[],
 		
 		init: function(){
-			
+
 			stickythang.db.localdb = openDatabase("StickyThang-background", "", "StickyThangs!", 200000);
 			console.log("open db version:"+stickythang.db.localdb.version)
 			stickythang.db.open();
@@ -114,7 +115,7 @@ stickythang.db = {
 		getList:function(sendResponse){
 			console.log('Loading list');
 		    stickythang.db.localdb.transaction(function(tx) {
-		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName +" where ( (path='"+stickythang.ops.path+"') or (domain='"+stickythang.ops.domain+"') or (scope='global') ) and user='"+ stickythang.user+"'", [], function(tx, result) {
+		        tx.executeSql("SELECT id, note, url, timestamp FROM "+ stickythang.db.tableName, [], function(tx, result) {
 		        	console.log("returing list :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
@@ -144,10 +145,13 @@ stickythang.db = {
 							,timestamp:result.rows.item(i).timestamp
 							,user:result.rows.item(i).user
 						});
+						stickythang.db.listAll = list;
 					}
-					sendResponse({list:list,message:'success'})					
+					if (sendResponse)
+						sendResponse({list:list,message:'success'})					
 		        }, function(tx, error) {
-		            sendResponse({message:error.massage,list:[]})
+					if (sendResponse)
+			            sendResponse({message:error.massage,list:[]})
 		            return;
 		        });
 		    });					
@@ -171,6 +175,7 @@ stickythang.db = {
 							,url:result.rows.item(i).url
 							,user:result.rows.item(i).user
 						});
+						stickythang.db.listAll = list;
 					}
 					sendResponse({list:list,message:'success'})					
 		        }, function(tx, error) {
@@ -218,7 +223,7 @@ stickythang.db = {
 	            trans.executeSql("DELETE from "+ stickythang.db.tableName +" WHERE id = ?", 
 					[id],
 					function(){
-						stickythang.db.getIds();
+						stickythang.db.getAll();
 						sendResponse({message:'removed'})
 					},
 					function(tx,error){
@@ -229,23 +234,24 @@ stickythang.db = {
 		save:function(note,sendResponse){			
 	        stickythang.db.localdb.transaction(function (trans){
 	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET note = ?, ops = ?, scope = ?, timestamp = ? WHERE id = ?", 
-					[note.html, note.json, note.scope, (new Date().getTime()), note.id],
+					[note.html, note.json, note.scope, note.timestamp , note.id],
 					function(){
-						sendResponse({message:'saved'})
+						stickythang.db.getAll();
+						sendResponse({message:'updated'})
 					},
 					function(tx,error){
 						sendResponse(error)
 				});
 	        });			
 		},
-		saveNew:function(note,sendResponse){
+		saveNew:function(note,sendResponse){			
 			console.log('trying to save a new note')
 	        stickythang.db.localdb.transaction(function (trans){
 	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-					[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, (new Date().getTime()) , note.href , stickythang.user],
+					[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , stickythang.user],
 					function(){
-						stickythang.db.getIds();
-						sendResponse({message:'created'})
+						stickythang.db.getAll();
+						sendResponse({message:'inserted'})
 					},
 					function(tx,error){
 						console.log(error.message)
@@ -267,6 +273,7 @@ stickythang.db = {
 					'	scope TEXT, '+
 					'	timestamp REAL, '+
 					'	url TEXT, '+
+					'	urlextenal TEXT, '+
 					'	user TEXT '+
 					');',[],function(){
 							console.log("db.open.trans connection open and returned")
@@ -278,6 +285,9 @@ stickythang.db = {
 	};	
 	 
 	  
+	  
+	  
+	
 	  
   
 	  

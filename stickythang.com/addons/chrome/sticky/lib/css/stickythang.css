@@ -78,7 +78,7 @@ div.stickythang div.card{
 	height:240px;
     min-height: 80px;
     min-width: 80px;
-	padding:10px;
+	padding:20px 0; 
     width: 170px;
 }
 
@@ -144,7 +144,7 @@ div.stickythang.flipped *.back {
 }
 div.stickythang div.settings {
 	color:#fff;
-	font-size:12px;
+	font-size:11px;
 	padding-top:18px;
 }
 
@@ -259,6 +259,10 @@ div.stickythang.minimise div.card  {
 	min-width:0;
 	padding:0;
 } 
+div.stickythang {
+	max-width:25px;
+	max-height:27px;
+}
 div.stickythang.minimise div.maximisebutton {
 	display:block;
 } 
@@ -273,12 +277,12 @@ div.stickythang.minimise div.minimisebutton {
 	display:none;
 }
 div.stickythang div.edit {
-	height:75%;
-	font-size:11px;
-	margin-top:16px;
+	height:100%;
+	font-size:12px;
+	margin: 0;
     outline: none;
 	overflow-y: auto;
-	padding-bottom:24px;
+	padding:0 10px;
 }
  
 div.stickythang div.scope2, 
@@ -294,17 +298,14 @@ div.stickythang div.timestamp {
 }
 div.stickythang form {
 	color:#fff;
-	font-size:12px;
 	overflow:auto;
 }
 div.stickythang legend {
 	font-size:14px;
 	padding:16px 0 8px 0;
 }
-div.stickythang div.scope2 label {
-	color:#fff;
-    display:inline-block;
-	padding:0 2px 0 0;
+div.stickythang div.scope label {
+	font-size:11px;
 }
 div.stickythang div.scope2 input {
 	margin:0 3px -1px 1px;

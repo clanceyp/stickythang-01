@@ -1,8 +1,8 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.6",
-  "update_url": "http://stickythang.com/extentions/chrome/updates.xml",
+  "version": "0.8",
+  "update_url": "http://stickythang.com/extentions/chrome/update.xml",
   "background_page": "background.html",
 
   // Recommended
@@ -96,7 +96,7 @@
 			//,"lib/yui/3.4.0/build/loader-rollup/loader-rollup-min.js"
 			//,"lib/yui/3.4.0/build/loader-yui3/loader-yui3-min.js"
 			,"lib/js/stickythang.ui.js"
-			,"lib/js/stickythang.db.js"
+			//,"lib/js/stickythang.db.js"
 			,"lib/js/ready.js"
 		],
 		"css": [

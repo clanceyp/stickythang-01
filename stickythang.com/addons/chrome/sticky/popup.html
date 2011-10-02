@@ -14,6 +14,14 @@ version: alpha 0.1
 		
 		<style type="text/css">
 			a.strip * {display:inline;}
+			p.create {
+				border-top:1px dashed #cecece;
+				margin-top:10px;
+				padding:15px 0;
+			}
+			p.create input {
+				font-size:50px;
+			}
 		</style>
 		
 	</head>
@@ -60,10 +68,10 @@ version: alpha 0.1
 				<ul id="stickyList">
 					
 				</ul>
-				<p class="centre">
+				<p class="centre create">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
-				<p>
+				<p class="centre">
 					NB: You'll need to login inorder to share your notes.
 				</p>
 	
@@ -94,12 +102,15 @@ version: alpha 0.1
 					populateList:function(response){
 						var rs = response.list,
 							html = "",
-							note = "";
-							mxlen = 100
+							note = "",
+							mxlen = 100,
+							url;
 			            for (var i = 0; i < rs.length; ++i) {
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
-							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ rs[i].url  +'</a></li>';
+							url = rs[i].url
+							//if (note && note!="undefined" && url && url!="undefined")
+							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ rs[i].note  +'</a></li>';
 			            }
 						Y.one("#stickyList").setContent(html);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -127,6 +138,7 @@ version: alpha 0.1
 					chrome.tabs.getSelected(null, function(tab) {
 					  chrome.tabs.sendRequest(tab.id, {action: "create-note", tabid: tab.id}, function(response) {
 					    console.log(response.data);
+						window.close();
 					  });
 					});			
 				});
