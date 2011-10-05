@@ -13,15 +13,17 @@ if (chrome && chrome.extension){
 			case "create-note" :
 				stickythang.createNoteYUI(null);
 				sendResponse({message:'thank you'});
-			break;	
-			case "get-list" :
-				stickythang.db.getList(sendResponse);
-			break;	
+			break;
 			case "focus" :
 				stickythang.backgroundnotes = request.notes;
 				stickythang.checkforchanges();
+				stickythang.addCSS({style:request.style});
 				sendResponse({message:'thank you, Im checking'});
-			break;				
+			break;			
+			case "css" :
+				stickythang.addCSS(request.style);
+				sendResponse({message:'thank you, adding'});				 
+			break;	
 		}
 		// sendResponse({message:'thank you'});
 	});
@@ -152,6 +154,7 @@ window.stickythang={
 			this.scope = result.scope;
 			this.timestamp = result.timestamp;
 			this.html = result.note;
+			this.urlex = result.urlex;
 		}
 		else {// default ops for new notes
 			this.ops = {
@@ -277,7 +280,7 @@ stickythang.init = function(){
 	var temp = localStorage.getItem(stickythang.ops.skey);
 	
 	
-	YUI().use('node','dd-plugin','resize','json','transition', function(Y) {
+	YUI().use('node','dd-plugin','resize','yql','json','transition', function(Y) {
 		stickythang.Y  = Y;
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
@@ -415,6 +418,21 @@ stickythang.Note.prototype = {
 }
 
 
+stickythang.addCSS = function(style){
+	if (stickythang.bespokeCSS && stickythang.bespokeCSS == style){
+		return;
+	}else{
+		stickythang.bespokeCSS = style;
+	}
+	var s = document.createElement('style');
+	s.setAttribute("type", "text/css");
+
+	var stxt = document.createTextNode(style);
+    s.appendChild( stxt );
+
+	document.getElementsByTagName('head')[0].appendChild(s);	
+}
+
 stickythang.createNoteYUI = function(result){
 		console.log('trying to creat note');
 		var Y = stickythang.Y;
@@ -448,10 +466,45 @@ stickythang.createNoteYUI = function(result){
 
 
 		note.div.one("div.timestamp").setContent( stickythang.util.modifiedString(note.timestamp, note.isNew) );
-		note.div.one("div.edit")
-			.setAttribute( 'contenteditable' , 'true' )
-			.set('innerHTML', note.html)
-			.on('keyup',function(){note.edited=true;note.saveSoon();});
+		if (note.urlex){
+			note.div.one("div.edit").addClass("externalURL")
+				//.setContent("<iframe src='"+ note.urlex +"' />");	
+				/// debugger
+				console.log('oopar')
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=2"', (function(inner) {
+					return function(r) {
+						//var inner = mod.one('div.inner')
+		                if (r && r.query && r.query.results) {
+			                var html = '',
+								obj = {},
+								str;
+		                    //Walk the list and create the news list
+		                    Y.each(r.query.results, function(items) {
+		                        Y.each(items, function(v, k) {
+		                            if (1) {
+		                                if (v.content && v.content.content) {
+		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"");
+		                                }
+										obj = Y.JSON.parse( v.content );
+										if (obj.text)
+		                                	html += Y.Lang.sub('<li>!!{text}</li>', obj);
+										//html+= "<li><textarea>"+ obj.className +"\n"+ temp  +"\n"+ (v.content == temp) +"</textarea></li>"
+		                            }
+		                        });
+		                    });
+		                    //Set the innerHTML of the module
+		                    inner.set('innerHTML', '<ul>' + html + '</ul>');
+		                }else{
+							inner.set('innerHTML', '<ul>problems :( </ul>');
+						}
+		            }
+		        })(  note.div.one("div.edit")  ));					
+		} else {
+			note.div.one("div.edit")
+				.setAttribute( 'contenteditable' , 'true' )
+				.set('innerHTML', note.html)
+				.on('keyup',function(){note.edited=true;note.saveSoon();});
+		}
 		note.div.one("div.flipbutton").on('click',stickythang.util.flip.toggle)
 		note.div.one("div.minimisebutton").on('click',stickythang.util.state.toggle)
 		note.div.one("div.maximisebutton").on('dblclick',stickythang.util.state.toggle)

@@ -1,7 +1,7 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.8",
+  "version": "0.9",
   "update_url": "http://stickythang.com/extentions/chrome/update.xml",
   "background_page": "background.html",
 
@@ -63,10 +63,13 @@
 			,"lib/yui/3.4.0/build/event-resize/event-resize-min.js"
 			,"lib/yui/3.4.0/build/event-synthetic/event-synthetic-min.js"
 			,"lib/yui/3.4.0/build/features/features-min.js"
+			,"lib/yui/3.4.0/build/get/get-min.js"
 			,"lib/yui/3.4.0/build/intl/intl-min.js"
 			,"lib/yui/3.4.0/build/intl-base/intl-base-min.js"
 			,"lib/yui/3.4.0/build/json-parse/json-parse-min.js"
 			,"lib/yui/3.4.0/build/json-stringify/json-stringify-min.js"
+			,"lib/yui/3.4.0/build/jsonp/jsonp-min.js"
+			,"lib/yui/3.4.0/build/jsonp-url/jsonp-url-min.js"
 			,"lib/yui/3.4.0/build/loader/loader-min.js"
 			,"lib/yui/3.4.0/build/node/node-min.js"
 			,"lib/yui/3.4.0/build/node-base/node-base-min.js"
@@ -91,6 +94,7 @@
 			,"lib/yui/3.4.0/build/widget-htmlparser/widget-htmlparser-min.js"
 			,"lib/yui/3.4.0/build/widget-uievents/widget-uievents-min.js"
 			,"lib/yui/3.4.0/build/widget-skin/widget-skin-min.js"
+			,"lib/yui/3.4.0/build/yql/yql-min.js"
 			,"lib/yui/3.4.0/build/yui-throttle/yui-throttle-min.js"
 			//,"lib/yui/3.4.0/build/loader-base/loader-base-min.js"
 			//,"lib/yui/3.4.0/build/loader-rollup/loader-rollup-min.js"

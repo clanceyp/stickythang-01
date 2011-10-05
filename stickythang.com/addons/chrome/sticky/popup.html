@@ -22,6 +22,28 @@ version: alpha 0.1
 			p.create input {
 				font-size:50px;
 			}
+			#stickyList a {
+				display:block;
+			}
+			label.auto {
+				width:auto;
+			}
+			
+
+div.bottom {
+	background: #121A28 url(http://stickythang.com/assets/templates/drupify/images/bottom-bg.png) 0 0 repeat-x;
+	border-radius:0 0 10px 10px ;
+	color:#888;
+	font-size:120%;
+	padding:14px 0 10px;
+	text-align:center;
+}
+div.bottom a {
+	color:inherit
+}
+			
+			
+			
 		</style>
 		
 	</head>
@@ -74,7 +96,9 @@ version: alpha 0.1
 				<p class="centre">
 					NB: You'll need to login inorder to share your notes.
 				</p>
-	
+				<p>
+					<label class="auto"><input type="checkbox" value="" id="inputHideAll" /> Hide all stickies </label>
+				</p>
 			</div>
 		</div>
 		<div id="AllStickies" class="off unit">
@@ -86,9 +110,11 @@ version: alpha 0.1
 	
 			</div>
 		</div>
-		<p class="tac bottom">
+		<div class="tac bottom">
 			<a target="_blank" href="options.html">Open Options</a>
-		</p>
+			|
+			<a target="_blank" href="http://stickythang.com/">Visit StickyThang!</a>
+		</div>
 	</body>
 		<script>
 			var background = chrome.extension.getBackgroundPage().window;
@@ -103,14 +129,14 @@ version: alpha 0.1
 						var rs = response.list,
 							html = "",
 							note = "",
-							mxlen = 100,
+							mxlen = 140,
 							url;
 			            for (var i = 0; i < rs.length; ++i) {
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
 							url = rs[i].url
 							//if (note && note!="undefined" && url && url!="undefined")
-							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ rs[i].note  +'</a></li>';
+							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
 			            }
 						Y.one("#stickyList").setContent(html);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -153,6 +179,14 @@ version: alpha 0.1
 					Y.one("#"+ target.get("className") ).removeClass("off");
 					
 				});
+				Y.one("#inputHideAll").on('click',function(){
+					var hide = Y.one("#inputHideAll").get("checked");
+					if(hide){
+						background.stickythang.updateCSS('hide');
+					} else {
+						background.stickythang.updateCSS('show');
+					}
+				});
 				Y.one("#loginButton").on('click',function(e){
 					e.preventDefault();
 					// Y.one("#loginButton").set('value',typeof background.window)
@@ -188,7 +222,7 @@ version: alpha 0.1
 
 				//populateList()
 				
-				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(inner) {
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=2"', (function(inner) {
 					return function(r) {
 						//var inner = mod.one('div.inner')
 		                if (r && r.query && r.query.results) {
