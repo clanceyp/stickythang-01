@@ -101,11 +101,10 @@ YUI().use("io-form", function(Y) {
 })
 stickythang.updateCSS = function(state){
 	if (state == 'hide'){
-		console.log('try to hide stickies')
-		stickythang.bespokeCSS = "#stickythangContainer{display:none}"
+		stickythang.Y.one("#stickythangContainer").addClass("hide")
 	} else {
 		console.log('try to show stickies')
-		stickythang.bespokeCSS = "#stickythangContainer{display:block}"
+		stickythang.Y.one("#stickythangContainer").removeClass("hide")
 	}
 	chrome.tabs.getSelected(null, function(tab) {
 	  chrome.tabs.sendRequest(tab.id, {action: "css", style: stickythang.bespokeCSS ,tabid: tab.id}, function(response) {
