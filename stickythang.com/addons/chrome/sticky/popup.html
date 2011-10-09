@@ -90,12 +90,31 @@ div.bottom a {
 				<ul id="stickyList">
 					
 				</ul>
-				<p class="centre create">
+				<style>
+p.button {
+background-image: url(http://stickythang.com/lib/i/misc/button.png);
+background-repeat: no-repeat;
+background-position:50% 0;
+padding: 0;
+text-align:center;
+}	
+p.button input {
+	background-color:transparent;
+	border:0 none;
+	color:#fff;
+	height: 48px;
+	font-size:19px;
+	margin-bottom:10px;
+	text-align:center;
+	width: 220px;
+}				
+				</style>
+				<p class="button">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
-				<p class="centre">
+				<!-- p class="centre">
 					NB: You'll need to login inorder to share your notes.
-				</p>
+				</p -->
 				<p>
 					<label class="auto"><input type="checkbox" value="" id="inputHideAll" /> Hide all stickies </label>
 				</p>
@@ -135,8 +154,8 @@ div.bottom a {
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
 							url = rs[i].url
-							//if (note && note!="undefined" && url && url!="undefined")
-							html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+							if (note && note!="undefined" && url && url!="undefined")
+								html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
 			            }
 						Y.one("#stickyList").setContent(html);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -182,11 +201,18 @@ div.bottom a {
 				Y.one("#inputHideAll").on('click',function(){
 					var hide = Y.one("#inputHideAll").get("checked");
 					if(hide){
-						background.stickythang.updateCSS('hide');
+						background.stickythang.stickiesActive('hide');
 					} else {
-						background.stickythang.updateCSS('show');
+						background.stickythang.stickiesActive('show');
 					}
 				});
+				console.log(background.stickythang.getLocalStorage('stickiesActive'))
+				if (background.stickythang.getLocalStorage('stickiesActive') == 'hide'){
+					Y.one("#inputHideAll").set("checked","true")
+				}else {
+					console.log(background.stickythang.getLocalStorage('stickiesActive'))
+				}
+				
 				Y.one("#loginButton").on('click',function(e){
 					e.preventDefault();
 					// Y.one("#loginButton").set('value',typeof background.window)

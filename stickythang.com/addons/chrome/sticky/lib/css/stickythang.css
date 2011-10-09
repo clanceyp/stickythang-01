@@ -37,7 +37,11 @@ div#stickythangFormContainer:hover span.handle {
 	0%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 	100%{-webkit-transform:scale(0) skew(30deg, 0deg) }
 }
-@-webkit-keyframes stickyThangNoteMaximise{
+@-webkit-keyframes stickyThangNoteCreate{
+	0%{-webkit-transform:scale(0) skew(30deg, 0deg) }
+	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
+}
+@-webkit-keyframes stickyThangNoteMaximise {
 	0%{-webkit-transform:scale(0) skew(30deg, 0deg) }
 	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 }
@@ -48,10 +52,6 @@ div#stickythangFormContainer:hover span.handle {
 @-webkit-keyframes stickyThangNoteDelete{
 	0%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 	100%{-webkit-transform:scale(0) skew(-30deg, 0deg) }
-}
-@-webkit-keyframes stickyThangNoteCreate{
-	0%{-webkit-transform:scale(0) skew(-30deg, 0deg) }
-	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
 }
 @-webkit-keyframes stickyThangNoteFlip{
 	0%{-webkit-transform: rotateY(0deg) }
@@ -110,6 +110,9 @@ div.stickythang.stickythangInDrag div.card {
 div.stickythang.flipped div.back {
 	display:block;
 }  
+
+div.stickythang.flipped div.minimisebutton,
+div.stickythang.flipped div.closebutton,
 div.stickythang.in-flip *.yui3-resize-handle-br,
 div.stickythang.in-flip *.hide-flip,
 div.stickythang.flipped *.yui3-resize-handle-br,
@@ -303,6 +306,7 @@ div.stickythang div.timestamp {
 div.stickythang form {
 	color:#fff;
 	overflow:auto;
+	padding:0 12px;
 }
 div.stickythang legend {
 	font-size:14px;

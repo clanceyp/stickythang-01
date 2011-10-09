@@ -17,12 +17,12 @@ if (chrome && chrome.extension){
 			case "focus" :
 				stickythang.backgroundnotes = request.notes;
 				stickythang.checkforchanges();
-				stickythang.addCSS({style:request.style});
-				sendResponse({message:'thank you, Im checking'});
+				stickythang.stickiesActive(request.stickiesActive);
+				sendResponse({message:'thank you, Im checking:'+request.stickiesActive});
 			break;			
 			case "css" :
-				stickythang.addCSS(request.style);
-				sendResponse({message:'thank you, adding'});				 
+				stickythang.stickiesActive(request.stickiesActive);
+				sendResponse({message:'thank you, amending'});				 
 			break;	
 		}
 		// sendResponse({message:'thank you'});
@@ -109,7 +109,7 @@ window.stickythang={
 					note.one('div.card').transition({
 					    easing: 'ease-both',
 					    duration: 0.75,
-					    width: '200px',
+					    width: '230px',
 					    height: '260px',
 						on:{end:function(){note.removeClass('form-hide')}}
 					});
@@ -295,6 +295,7 @@ stickythang.init = function(){
 	    // stickythang.db.count();
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
 		  stickythang.loadAll(response.list);
+		  stickythang.stickiesActive(response.stickiesActive);
 		});		
 	})
 
@@ -382,6 +383,7 @@ stickythang.Note.prototype = {
 		if (quick){
 			this.div.setStyle("display","none");	
 		}
+		this.div.setStyle("max-width",this.div.one("div.card").getStyle("max-width"));
 		this.div.setStyle("webkitTransformOrigin","100% 0");	
 		this.div.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
 		
@@ -418,19 +420,13 @@ stickythang.Note.prototype = {
 }
 
 
-stickythang.addCSS = function(style){
-	if (stickythang.bespokeCSS && stickythang.bespokeCSS == style){
-		return;
-	}else{
-		stickythang.bespokeCSS = style;
+stickythang.stickiesActive = function(stickiesActive){
+	if (stickiesActive == 'hide'){
+		stickythang.Y.one("#stickythangContainer").addClass("hide");
+	} else {
+		stickythang.Y.one("#stickythangContainer").removeClass("hide");
 	}
-	var s = document.createElement('style');
-	s.setAttribute("type", "text/css");
-
-	var stxt = document.createTextNode(style);
-    s.appendChild( stxt );
-
-	document.getElementsByTagName('head')[0].appendChild(s);	
+	
 }
 
 stickythang.createNoteYUI = function(result){
@@ -511,7 +507,7 @@ stickythang.createNoteYUI = function(result){
 		note.div.one("div.closebutton").on('click',stickythang.util.remove)
 
 		Y.one("#stickythangContainer").appendChild(note.div);
-		note.div.setStyle("webkitTransformOrigin","100% 0");	
+		note.div.setStyle("webkitTransformOrigin","0 0");	
 		note.div.setStyle('webkitAnimationName' , 'stickyThangNoteCreate') ;
 		note.div.initForm = InitForm;
 		note.div.initForm();

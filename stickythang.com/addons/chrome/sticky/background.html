@@ -24,7 +24,7 @@ version: alpha 0.1
       chrome.tabs.onUpdated.addListener(checkForValidUrl);
 	  chrome.tabs.onSelectionChanged.addListener(function( tabId,  selectInfo) {
 			//chrome.tabs.getSelected(null, function(tab) {
-			  chrome.tabs.sendRequest(tabId, {action: "focus",style:stickythang.bespokeCSS ,notes:stickythang.db.listAll}, function(response) {
+			  chrome.tabs.sendRequest(tabId, {action: "focus",stickiesActive:stickythang.getLocalStorage('stickiesActive') ,notes:stickythang.db.listAll}, function(response) {
 			    console.log(response.message);
 			  });
 			//});		  	
@@ -57,7 +57,9 @@ chrome.extension.onRequest.addListener(
 });	  
 
 	  
-window.stickythang = {user:'me',bespokeCSS:""}	
+window.stickythang = {user:'me',bespokeCSS:"",getLocalStorage:function(key){
+	return localStorage[key]
+}}	
 window.ids = [] 
 
 YUI().use("io-form", function(Y) {
@@ -99,15 +101,11 @@ YUI().use("io-form", function(Y) {
 		return Y.io(uri, cfg);
 	}
 })
-stickythang.updateCSS = function(state){
-	if (state == 'hide'){
-		stickythang.Y.one("#stickythangContainer").addClass("hide")
-	} else {
-		console.log('try to show stickies')
-		stickythang.Y.one("#stickythangContainer").removeClass("hide")
-	}
+stickythang.stickiesActive = function(state){
+	localStorage.stickiesActive = state;
+	console.log("stickiesActive:"+state)
 	chrome.tabs.getSelected(null, function(tab) {
-	  chrome.tabs.sendRequest(tab.id, {action: "css", style: stickythang.bespokeCSS ,tabid: tab.id}, function(response) {
+	  chrome.tabs.sendRequest(tab.id, {action: "css", stickiesActive: state ,tabid: tab.id}, function(response) {
 	    console.log(response.message);
 	  });
 	});		
