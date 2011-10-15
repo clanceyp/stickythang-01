@@ -246,9 +246,20 @@ div.circles {
 						<fieldset>
 							<legend>Feedback</legend>
 							<div id="divFeedback">
+								<input type="hidden" name="name" id="name" />
+								<input type="hidden" name="email" value="feedback@stickio.com" />							
 								
-								<label>General feedback, bugs (please include steps to reproduce), feature requests etc...</label>
-								<textarea id="textareaFeedback"></textarea>
+								<label for="text">General feedback, bugs (please include steps to reproduce), feature requests etc...</label>
+								<textarea id="textareaFeedback" id="text"></textarea>
+								<label for="type" for="type">Type:</label>
+								<p>
+									
+									<select id="type">
+										<option>General</option>
+										<option>Bug</option>
+										<option>Suggestion / feature request</option>
+									</select>
+								</p>	
 								
 							</div>
 							<p>
@@ -403,13 +414,12 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				    opacity: '0'
 				})
 				
-				var uri = "http://stickythang.com/feedback.php";
+				var uri = "http://stickythang.com/index.php?id=3";
 			    var cfg = {
 			        method: 'POST',
 					sync: false,
 			        form: {
-						id : Y.one("#formSettings"),
-			            feedback: Y.one("#textareaFeedback").get('value')
+						id : Y.one("#formSettings")
 			        }
 			    };
 				Y.io(uri, cfg);

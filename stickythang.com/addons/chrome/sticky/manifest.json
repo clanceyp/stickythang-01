@@ -1,7 +1,7 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.13",
+  "version": "0.71",
   "update_url": "http://stickythang.com/extentions/chrome/update.xml",
   "background_page": "background.html",
 
@@ -23,9 +23,8 @@
 			,"https://*/*"
 		],
 		"js": [
-//			"lib/yui/3.4.0.js"
-			//"lib/yui/3.4.0/build/yui-base/yui-base-debug.js"
-			"lib/yui/3.4.0/build/yui/yui-debug.js"
+//			"lib/yui/3.4.0/build/yui/yui-debug.js"
+			"lib/yui/3.4.0/build/yui/yui-min.js"
 			,"lib/yui/3.4.0/build/anim/anim-min.js"
 			,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
 			,"lib/yui/3.4.0/build/attribute-complex/attribute-complex-min.js"
@@ -116,19 +115,4 @@
 		,"http://yui.yahooapis.com/"
   ]
 
-  /*  
-  //Pick one (or none)
-  "browser_action": {...},
-  "page_action": {...},
-  "theme": {...},
-
-  // Add any of these that you need
-  "chrome_url_overrides": {...},
-  "content_scripts": [...],
-  "key": "publicKey",
-  "minimum_chrome_version": "versionString",
-  "permissions": [...],
-  "plugins": [...],
-  "update_url": "http://path/to/updateInfo.xml"
-  */ 
 }

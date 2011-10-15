@@ -143,7 +143,7 @@ stickythang.db = {
 		getAll:function(sendResponse){
 			console.log('Loading stickies');
 		    stickythang.db.localdb.transaction(function(tx) {
-		        tx.executeSql("SELECT id, domain, note, ops, path, scope, timestamp, urlextenal user FROM "+ stickythang.db.tableName, [], function(tx, result) {
+		        tx.executeSql("SELECT id, domain, note, ops, path, scope, timestamp, urlextenal, user FROM "+ stickythang.db.tableName, [], function(tx, result) {
 		        	console.log("loading stikies :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
@@ -186,6 +186,7 @@ stickythang.db = {
 							,scope:result.rows.item(i).scope
 							,timestamp:result.rows.item(i).timestamp
 							,url:result.rows.item(i).url
+							,urlex:result.rows.item(i).urlextenal
 							,user:result.rows.item(i).user
 						});
 						stickythang.db.listAll = list;

@@ -9,7 +9,7 @@ version: alpha 0.1
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<title>popup</title>
-		<script src="lib/yui/3.4.0/build/yui/yui.js"></script>
+		<script src="lib/yui/3.4.0/build/yui/yui-min.js"></script>
 		<link href="lib/css/popup.css" rel="stylesheet" />
 		
 		<style type="text/css">
@@ -56,9 +56,29 @@ div.bottom a {
 		<ul class="menu" dir="rtl">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
 			<li class=""><a class="AllStickies"><span>Friends stickies</span></a></li>
-			<li><a class="LoginForm"><span>Login</span></a></li>
+			<li><a class="LoginForm"><span>Login / Feedback</span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
+			<div style="min-height:40px;">
+				<form id="feedback" action="http://stickythang.com/index.php?id=3" method="post">
+					<input type="hidden" name="name" id="name" />
+					<input type="hidden" name="email" value="feedback@stickio.com" />
+					<p>
+						<label for="type">Type:</label>
+						<select id="type">
+							<option>General</option>
+							<option>Bug</option>
+							<option>Suggestion / feature request</option>
+						</select>
+					</p>
+					<textarea name="text" id="text"></textarea>
+					<p>
+						<input type="submit" value="send feedback" />
+					</p>
+				</form>
+				<h2 style="opacity:0;display:none;" id="h2feedbackthanks">Thanks your for feedback</h2>
+			</div>
+			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
 			<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" target="hiddenframe" method="post" id="login">
 				<input type="hidden" name="redirect" value="index.php"/>
 				<p>
@@ -84,34 +104,40 @@ div.bottom a {
 		</div>
 		<div id="MyStickies" class="on unit">
 			<div>
-				<h2>My stickies <span id="domainLable"></span></h2>
-				<div id="myList" class="menu">
-				</div>
-				<ul id="stickyList">
-					
-				</ul>
+			
 				<style>
-p.button {
-background-image: url(http://stickythang.com/lib/i/misc/button.png);
-background-repeat: no-repeat;
-background-position:50% 0;
-padding: 0;
-text-align:center;
-}	
-p.button input {
-	background-color:transparent;
-	border:0 none;
-	color:#fff;
-	height: 48px;
-	font-size:19px;
-	margin-bottom:10px;
-	text-align:center;
-	width: 220px;
-}				
+					textarea {
+						width:99%!important;
+						height:100px!important;
+					}
+					p.button {
+						border-bottom:1px dashed #e2e2e2;
+						margin-bottom:6px;
+						padding:0 0 0 0;
+						text-align:center;
+					}	
+					p.button input {
+						background-color:transparent;
+						background-image: url(http://stickythang.com/lib/i/misc/button.png);
+						background-position:50% 50%;
+						background-repeat: no-repeat;
+						border:0 none;
+						color:#fff;
+						height: 48px;
+						font-size:19px;
+						margin-bottom:10px;
+						text-align:center;
+						width: 220px;
+					}				
 				</style>
 				<p class="button">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
+				<h2>My stickies <span id="domainLable"></span></h2>				
+				<div style="max-height:240px;overflow:auto">
+				<ul id="stickyList">
+					
+				</ul></div>				
 				<!-- p class="centre">
 					NB: You'll need to login inorder to share your notes.
 				</p -->
@@ -138,7 +164,7 @@ p.button input {
 		<script>
 			var background = chrome.extension.getBackgroundPage().window;
 			
-			YUI().use('node','yql','json-parse','node-load',function(Y){
+			YUI().use('node','yql','io-form','json-parse','node-load','transition',function(Y){
 				var loader = {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
@@ -212,7 +238,39 @@ p.button input {
 				}else {
 					console.log(background.stickythang.getLocalStorage('stickiesActive'))
 				}
-				
+				Y.one("#name").set("value",background.stickythang.user);
+				Y.one("#feedback").on('submit',function(e){
+					e.preventDefault();
+					var uri = Y.one("#feedback").getAttribute("action");
+				    var cfg = {
+				        method: 'POST',
+				        form: {
+				            id: "feedback"
+				        }
+				    };
+				    Y.io(uri, cfg);			
+					Y.one("#feedback").transition({
+						    easing: 'linear',
+							height:{
+						        delay: 0.5,
+						        duration: 0.5,
+						        value: 0
+						    },
+						    opacity: {
+						        delay: 0.5,
+						        duration: 0.5,
+						        value: 0
+						    }
+						},function(){
+							Y.one("#h2feedbackthanks").setStyle("display","block").transition({
+						    easing: 'linear',
+						    opacity: {
+						        duration: 0.5,
+						        value: 1
+						    }
+						})
+					})		
+				})
 				Y.one("#loginButton").on('click',function(e){
 					e.preventDefault();
 					// Y.one("#loginButton").set('value',typeof background.window)
@@ -248,29 +306,34 @@ p.button input {
 
 				//populateList()
 				
-				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=2"', (function(inner) {
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=4"', (function(inner) {
 					return function(r) {
 						//var inner = mod.one('div.inner')
 		                if (r && r.query && r.query.results) {
 		                    
 			                var html = '',
 								obj = {},
-								str;
+								str,
+								array = [];
 		                    
 		                    //Walk the list and create the news list
 		                    Y.each(r.query.results, function(items) {
 		                        Y.each(items, function(v, k) {
-		                            if (1) {
+		                            if (k < items.length-1) {
 		                                if (v.content && v.content.content) {
 		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"");
 		                                }
-										obj = Y.JSON.parse( v.content );
-										if (obj.text)
-		                                	html += Y.Lang.sub('<li><a href="{url}" target="_blank">{text}</a>', obj);
+										if (v.author && v.author.name){
+											v.name = v.author.name;
+										}
+										//obj = Y.JSON.parse( v.content );
+										//if (obj.text)
+		                                	array.push(Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', v));
 										//html+= "<li><textarea>"+ obj.className +"\n"+ temp  +"\n"+ (v.content == temp) +"</textarea></li>"
 		                            }
 		                        });
 		                    });
+							html = array.reverse().join('')
 		                    //Set the innerHTML of the module
 		                    inner.set('innerHTML', '<ul>' + html + '</ul>');
 		                }else{
