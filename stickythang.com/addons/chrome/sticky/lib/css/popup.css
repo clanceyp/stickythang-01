@@ -92,7 +92,39 @@ div.menu li {
 div.menu li span {
 	display:none;
 }
-textarea {
-	width:500px;
-	height:200px;
+
+
+#divUpdateUserName {
+	display:none;
+	position:relative;
 }
+div.absolute {
+	background-color:#fff;
+	padding:20px 0;
+	position:absolute;
+	text-align:center;
+	width:99%;
+}
+textarea {
+	width:99%;
+	height:100px;
+}
+p.button {
+	border-bottom:1px dashed #e2e2e2;
+	margin-bottom:6px;
+	padding:0 0 0 0;
+	text-align:center;
+}	
+p.button input {
+	background-color:transparent;
+	background-image: url(http://stickythang.com/lib/i/misc/button.png);
+	background-position:50% 50%;
+	background-repeat: no-repeat;
+	border:0 none;
+	color:#fff;
+	height: 48px;
+	font-size:19px;
+	margin-bottom:10px;
+	text-align:center;
+	width: 220px;
+}		

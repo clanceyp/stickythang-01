@@ -1,7 +1,7 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.71",
+  "version": "0.7",
   "update_url": "http://stickythang.com/extentions/chrome/update.xml",
   "background_page": "background.html",
 

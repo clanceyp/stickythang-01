@@ -56,7 +56,7 @@ div.bottom a {
 		<ul class="menu" dir="rtl">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
 			<li class=""><a class="AllStickies"><span>Friends stickies</span></a></li>
-			<li><a class="LoginForm"><span>Login / Feedback</span></a></li>
+			<li><a class="LoginForm"><span>Feedback / Login</span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
 			<div style="min-height:40px;">
@@ -91,45 +91,28 @@ div.bottom a {
 					</select>
 				</p>
 				<p>
-					<label for="username">User:</label><input value="tester" type="text" tabindex="1" name="username" id="username"/>
+					<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
 				</p>
 				<p>
-					<label for="password">Password:</label><input value="password" type="password" tabindex="2" id="password" name="password"/>
+					<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
 				</p>
 				<p class="centre">
-					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
+					<input type="submit" disabled="true" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
 				</p>
 			</form>
 			
 		</div>
 		<div id="MyStickies" class="on unit">
 			<div>
-			
-				<style>
-					textarea {
-						width:99%!important;
-						height:100px!important;
-					}
-					p.button {
-						border-bottom:1px dashed #e2e2e2;
-						margin-bottom:6px;
-						padding:0 0 0 0;
-						text-align:center;
-					}	
-					p.button input {
-						background-color:transparent;
-						background-image: url(http://stickythang.com/lib/i/misc/button.png);
-						background-position:50% 50%;
-						background-repeat: no-repeat;
-						border:0 none;
-						color:#fff;
-						height: 48px;
-						font-size:19px;
-						margin-bottom:10px;
-						text-align:center;
-						width: 220px;
-					}				
-				</style>
+				<div id="divUpdateUserName">
+					<div class="absolute">
+						<form id="setUserName">
+						<h2>Please enter your stickythang user name</h2>
+						<input type="text" id="userNameInput" value="" />
+						<input type="submit" value="User name" id="userNameButton" />
+						</form>
+					</div>
+				</div>
 				<p class="button">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
@@ -148,7 +131,7 @@ div.bottom a {
 		</div>
 		<div id="AllStickies" class="off unit">
 			<div>
-				<h2>All stickies</h2>
+				<h2>Friends stickies</h2>
 				<div id="allList" class="menu">
 					
 				</div>
@@ -165,6 +148,28 @@ div.bottom a {
 			var background = chrome.extension.getBackgroundPage().window;
 			
 			YUI().use('node','yql','io-form','json-parse','node-load','transition',function(Y){
+				
+				if (!background.stickythang.getLocalStorage('user')){
+					
+					Y.one("#divUpdateUserName").setStyle("display","block");
+					Y.one("#setUserName").on("submit",function(e){
+						e.preventDefault();
+						var user = Y.one("#userNameInput").get('value');
+						background.stickythang.updateUser(user);
+						Y.one("#username").set('value',user);
+						Y.one("#divUpdateUserName").transition({
+							duration:0.5,
+							opacity:0
+						},function(){
+							this.remove();
+						})
+					});
+					
+				} else {
+					Y.one("#username").set('value',background.stickythang.getLocalStorage('user'));
+				}
+				
+				
 				var loader = {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
@@ -273,6 +278,7 @@ div.bottom a {
 				})
 				Y.one("#loginButton").on('click',function(e){
 					e.preventDefault();
+					return
 					// Y.one("#loginButton").set('value',typeof background.window)
 					// return;
 					try {
@@ -321,15 +327,14 @@ div.bottom a {
 		                        Y.each(items, function(v, k) {
 		                            if (k < items.length-1) {
 		                                if (v.content && v.content.content) {
-		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"");
+		                                   v.content = v.content.content //.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"").replace(/<(.|\n)*?>/g,"");
 		                                }
 										if (v.author && v.author.name){
 											v.name = v.author.name;
 										}
-										//obj = Y.JSON.parse( v.content );
+										obj = Y.JSON.parse( v.content );
 										//if (obj.text)
-		                                	array.push(Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', v));
-										//html+= "<li><textarea>"+ obj.className +"\n"+ temp  +"\n"+ (v.content == temp) +"</textarea></li>"
+		                                array.push( Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', obj) );
 		                            }
 		                        });
 		                    });

@@ -24,7 +24,11 @@ version: alpha 0.1
       chrome.tabs.onUpdated.addListener(checkForValidUrl);
 	  chrome.tabs.onSelectionChanged.addListener(function( tabId,  selectInfo) {
 			//chrome.tabs.getSelected(null, function(tab) {
-			  chrome.tabs.sendRequest(tabId, {action: "focus",stickiesActive:stickythang.getLocalStorage('stickiesActive') ,notes:stickythang.db.listAll}, function(response) {
+			  chrome.tabs.sendRequest(tabId, {
+			  		action: "focus",
+					stickiesActive:stickythang.getLocalStorage('stickiesActive'),
+					notes:stickythang.db.listAll
+				}, function(response) {
 			    console.log(response.message);
 			  });
 			//});		  	
@@ -52,14 +56,24 @@ chrome.extension.onRequest.addListener(
 		case "saveNew" :
 			stickythang.db.saveNew(request.ops,sendResponse);
 		break;
+		case "updateUser" :
+			stickythang.updateUser(request.user)
+			sendResponse({message:"set"})
+		break;
 	}
 
 });	  
 
-	  
-window.stickythang = {user:'me',bespokeCSS:"",getLocalStorage:function(key){
-	return localStorage[key]
-}}	
+window.stickythang = {
+	user:'',bespokeCSS:"",
+	getLocalStorage:function(key,def){
+		return localStorage[key] || def || ''
+	},
+	updateUser:function(user){
+		localStorage["user"] = user;
+		stickythang.user = user;
+	}
+}	
 window.ids = [] 
 
 YUI().use("io-form", function(Y) {
@@ -133,7 +147,7 @@ stickythang.db = {
 					for (var i = 0; i < result.rows.length; ++i) {
 						list.push({note:result.rows.item(i).note,url:result.rows.item(i).url});
 					}
-					sendResponse({results:list})			
+					sendResponse({results:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user')})			
 		        }, function(tx, error) {
 		            console.log('Failed to retrieve notes from database - ' + error.message);
 					sendResponse({results:[]});
@@ -161,7 +175,7 @@ stickythang.db = {
 						stickythang.db.listAll = list;
 					}
 					if (sendResponse)
-						sendResponse({list:list,message:'success'})					
+						sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user'),message:'success'})					
 		        }, function(tx, error) {
 					if (sendResponse)
 			            sendResponse({message:error.massage,list:[]})
@@ -191,7 +205,7 @@ stickythang.db = {
 						});
 						stickythang.db.listAll = list;
 					}
-					sendResponse({list:list,message:'success'})					
+					sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user'),message:'success'})					
 		        }, function(tx, error) {
 		            sendResponse({message:error.massage,list:[]})
 		        });

@@ -251,9 +251,8 @@ div.stickythang div.maximisebutton {
     display: none;
     height:32px;
 	left:0;
-	margin-top: -5px;
-	margin-left: -3px;
-	opacity:0.75;
+	margin-top: -9px;
+	margin-left: -1px;
     position:absolute;
 	top:0;
     width: 32px;
@@ -262,8 +261,8 @@ div.stickythang div.maximisebutton {
 div.stickythang.minimise div.card  {
 	border-radius: 0 0 0 0;
 	box-shadow: 0px 0 0 rgba(0, 0, 0, 0);
-	max-width:25px;
-	max-height:27px;
+	max-height: 25px;
+	max-width: 23px;
 	min-height:0;
 	min-width:0;
 	padding:0;

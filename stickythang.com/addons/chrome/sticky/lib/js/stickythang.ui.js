@@ -140,7 +140,8 @@ window.stickythang={
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
-				'<label>Share with: <span>(commer or line seporated list)</span><textarea></textarea></label>'+
+				'<label>Share with: <span>(commer or line seporated list)</span><textarea disabled="true">@everyone</textarea></label>'+
+				'<input type="button" value="share" id="buttonShareSticky" />'+
 				'<div class="scope">Scope: '+
 				'<label><input type="radio" name="scope" class="path" value="path"> page</label>'+
 				'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
@@ -165,10 +166,11 @@ window.stickythang={
 				top: stickythang.util.random(stickythang.ops.css.top - stickythang.ops.css.topOffset , stickythang.ops.css.top + stickythang.ops.css.topOffset ) + Y.one("body").get("scrollTop"),
 			}
 			this.isNew = true;
-			this.scope = 'global'
+			this.scope = 'path';// default scope setting
 			this.timestamp = (new Date().getTime());
 			this.id = stickythang.user + '-' + this.timestamp;
 			this.html = '';
+			this.shared = '';
 		}
 		this.div = Y.Node.create('<div />');
 		this.div.Super = this;
@@ -274,7 +276,6 @@ stickythang.killById = function(id){
 stickythang.init = function(){
 	if (stickythang.isloaded){return}
 	stickythang.isloaded=true
-	stickythang.user = "me";
 	stickythang.log('myStickies loading...');
 	//stickythang.db.init();
 	var temp = localStorage.getItem(stickythang.ops.skey);
@@ -294,6 +295,7 @@ stickythang.init = function(){
 
 	    // stickythang.db.count();
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
+		  stickythang.user = response.user;
 		  stickythang.loadAll(response.list);
 		  stickythang.stickiesActive(response.stickiesActive);
 		});		
@@ -307,7 +309,7 @@ stickythang.Note.prototype = {
 		var self = this.div;
 //		self.ops.timestamp = (new Date().getTime());
 		var xy = self.getXY();
-		var ops = {ops:{
+		var ops = {ops:{// ops object saved as json string
 			className:self.getData('className')
 			,height:parseInt(self.one('div.card').getStyle('height'))
 			,left:xy[0]
@@ -316,19 +318,17 @@ stickythang.Note.prototype = {
 			,top:xy[1]
 			,width:parseInt(self.one('div.card').getStyle('width'))
 		}};
-		// YUI().use('node','json', function(Y) {
-			// console.log( Y.JSON.stringify( self.ops ) )
-			ops.className = self.getData('className');
-			ops.domain = window.location.host
-			ops.href = window.location.href
-			ops.json = stickythang.Y.JSON.stringify( ops.ops );
-			ops.id = self.get('id');
-			ops.html = self.one("div.edit").get('innerHTML');
-			ops.path = window.location.pathname
-			ops.querystring = window.location.search
-			ops.scope = self.getData('scope');
-			ops.user = "me";
-		// })		
+
+		ops.domain = window.location.host;
+		ops.href = window.location.href;
+		ops.json = stickythang.Y.JSON.stringify( ops.ops );
+		ops.id = self.get('id');
+		ops.html = self.one("div.edit").get('innerHTML');
+		ops.path = window.location.pathname;
+		ops.querystring = window.location.search;
+		ops.scope = self.getData('scope');
+		ops.shared = self.getData('shared')
+	
 		return ops;
 	},
 	
@@ -456,6 +456,9 @@ stickythang.Note.prototype = {
 				}
 	        }
 	    })(inner));			
+	},
+	shareMe:function(shared){
+		this.setData('shared',shared);
 	}	
 }
 
@@ -492,6 +495,7 @@ stickythang.createNoteYUI = function(result){
 			.setData('scope',note.scope || 'global')
 			.setData('state',note.ops.state || 'maximise')
 			.setData('ops',note.ops.json)
+			.setData('shared',note.shared)
 			.setContent("<div class='card'>"+stickythang.ops.template+"</div>")
 			.on('click',function(){note.edited = true; note.saveSoon()})
 		note.div.one("div.card").setStyles({
@@ -511,7 +515,7 @@ stickythang.createNoteYUI = function(result){
 		note.div.setStyle("webkitTransformOrigin","0 0");	
 		note.div.setStyle('webkitAnimationName' , 'stickyThangNoteCreate') ;
 		note.div.initForm = InitForm;
-		note.div.initForm();
+		note.div.initForm(note);
 
  		note.div.plug(Y.Plugin.Drag);
 		note.div.dd.addHandle('div.timestamp');	
@@ -603,6 +607,18 @@ stickythang.createNoteYUI = function(result){
 				var newClassName = e.currentTarget.get('value');
 				var currentClassName = self.getData('className');
 				self.setData('className',newClassName).replaceClass( currentClassName , newClassName )
+			})
+			if (self.getData('shared')=='true'){
+				self.one("#buttonShareSticky").set('value',"un-share")
+			}
+			self.one("#buttonShareSticky").on("click",function(e){
+				if (note.getData('shared')=='true'){
+					self.one("#buttonShareSticky").set('value',"un-share")
+					note.shareMe('false');
+				}else{
+					self.one("#buttonShareSticky").set('value',"share")
+					note.shareMe('true');
+				}				
 			})
 		}	
 } 
