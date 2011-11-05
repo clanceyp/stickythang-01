@@ -27,7 +27,8 @@ version: alpha 0.1
 			  chrome.tabs.sendRequest(tabId, {
 			  		action: "focus",
 					stickiesActive:stickythang.getLocalStorage('stickiesActive'),
-					notes:stickythang.db.listAll
+					notes:stickythang.db.listAll,
+					shares:stickythang.shares
 				}, function(response) {
 			    console.log(response.message);
 			  });
@@ -47,6 +48,9 @@ chrome.extension.onRequest.addListener(
 		case "getAll" : 
 			stickythang.db.count(sendResponse);
 		break;
+		case "getShares" : 
+			stickythang.db.getShares(sendResponse);
+		break;
 		case "remove" :
 			stickythang.db.remove(request.id,sendResponse);
 		break;
@@ -65,7 +69,7 @@ chrome.extension.onRequest.addListener(
 });	  
 
 window.stickythang = {
-	user:'',bespokeCSS:"",
+	user:'',bespokeCSS:"",shares:[],
 	getLocalStorage:function(key,def){
 		return localStorage[key] || def || ''
 	},
@@ -74,9 +78,11 @@ window.stickythang = {
 		stickythang.user = user;
 	}
 }	
-window.ids = [] 
+window.ids = []; 
 
-YUI().use("io-form", function(Y) {
+YUI().use("io","json", function(Y) {
+	
+	window.stickythang.Y = Y;
 	
 	function onFailure(transactionid, response, arguments) {
 	   console.log('not good'+ response.responseText)
@@ -124,7 +130,6 @@ stickythang.stickiesActive = function(state){
 	  });
 	});		
 }	
-
 stickythang.db = {
 		localdb:null,
 		version:"1.0",
@@ -175,7 +180,13 @@ stickythang.db = {
 						stickythang.db.listAll = list;
 					}
 					if (sendResponse)
-						sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user'),message:'success'})					
+						sendResponse({
+							list:list,
+							stickiesActive:stickythang.getLocalStorage('stickiesActive'),
+							user:stickythang.getLocalStorage('user'),
+							shares:stickythang.shares,
+							message:'success'
+						})					
 		        }, function(tx, error) {
 					if (sendResponse)
 			            sendResponse({message:error.massage,list:[]})
@@ -183,11 +194,10 @@ stickythang.db = {
 		        });
 		    });					
 		},
-		get:function(sendResponse,ops){
+		get:function(sendResponse){
 			console.log('Loading stickies');
-			ops = ops || {}
 		    stickythang.db.localdb.transaction(function(tx) {
-		        tx.executeSql("SELECT "+ (ops.select || '*') + " FROM "+ stickythang.db.tableName +" WHERE "+ ( ops.where || ' user=?' ),(ops.params || [stickythang.user]), function(tx, result) {
+		        tx.executeSql("SELECT * FROM "+ stickythang.db.tableName, [] , function(tx, result) {
 		        	console.log("loading stikies :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
@@ -226,12 +236,38 @@ stickythang.db = {
 		        });
 		    });					
 		},
+		getShares:function(sendResponse){
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT id, label, url FROM "+ stickythang.db.tableName +"_share", [], function(tx, result) {
+		        	console.log("returing list :"+ result.rows.length);
+					window.stickythang.shares = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						window.stickythang.shares.push({
+							id:result.rows.item(i).id,
+							label:result.rows.item(i).label,
+							url:result.rows.item(i).url
+						});
+					}		
+					if (sendResponse){
+						sendResponse({results:stickythang.shares});
+					}	
+		        }, function(tx, error) {
+		            console.log('Failed to retrieve notes from database - ' + error.message);
+					if (sendResponse){
+						sendResponse({results:[]});
+					}
+					
+		        });
+		    });				
+		},
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
+				tx.executeSql("DELETE FROM "+ stickythang.db.tableName + " where note = ''", []);
 		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
 		        	// count exists loading stickies
 					console.log('count - loading sticky-notes')
 					stickythang.db.getIds();
+		            stickythang.db.getShares();
 		            stickythang.db.getAll(sendResponse);
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
@@ -287,6 +323,34 @@ stickythang.db = {
 				});
 	        });			
 		},
+		updateShare:function(){
+			//var dataverson = stickythang.getLocalStorage('dataversion');
+			var Y = stickythang.Y;
+			console.log("updating share")
+			var uri = "http://stickythang.com/lib/test.js",
+				cfg = {
+			        sync: true
+			    };
+			var request = Y.io(uri, cfg);
+			var shareRS = Y.JSON.parse(request.responseText);
+			console.log("updating share...")
+			stickythang.db.localdb.transaction(function (trans){
+				trans.executeSql("delete from "+ stickythang.db.tableName +"_share",[],
+					function(){},
+					function(tx,error){
+						console.log(error.message)
+					});
+				for (name in shareRS){
+					rs = shareRS[name];
+		            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_share (id, label, url) VALUES (?, ?, ?)",[rs.id, rs.label, rs.url],
+					function(){},
+					function(tx,error){
+						console.log(error.message)
+					});
+				};
+				stickythang.db.getShares();// update the list
+			});
+		},
 		open: function(){
 			// open db assume it's the first time
 			stickythang.db.localdb.transaction(function(trans){
@@ -303,6 +367,15 @@ stickythang.db = {
 					'	url TEXT, '+
 					'	urlex TEXT, '+
 					'	user TEXT '+
+					');',[],function(){
+							console.log("db.open.trans connection open and returned")
+						},function(tx,e){
+							console.log("db.open.trans connection open and returned an error "+ tx +"\n"+ stickythang.explode(e))
+						});
+				trans.executeSql('CREATE TABLE IF NOT EXISTS '+ stickythang.db.tableName +'_share '+
+					'	(id TEXT, '+
+					'	label TEXT, '+
+					'	url TEXT '+
 					');',[],function(){
 							console.log("db.open.trans connection open and returned")
 						},function(tx,e){

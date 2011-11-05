@@ -12,7 +12,7 @@ version: alpha 0.1
 <base href="http://stickythang.com/"></base>
 <link rel="stylesheet" href="http://stickythang.com/assets/templates/drupify/style.css" type="text/css" />
 
-<script src="http://yui.yahooapis.com/3.4.0/build/yui/yui-min.js"></script>
+<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
 
  <style type="text/css">
  	div.content p {
@@ -127,6 +127,9 @@ div.circles {
 	padding:0 10px 1px 10px;
 	margin-bottom:10px;
 }
+#divFeedbackThanks {
+	display:none;
+}
  </style>
   </head>
   <body id="page_bg">
@@ -205,7 +208,7 @@ div.circles {
 
 							<label>Find buddies to add<span></span></label>
 							<p>
-								<input type="text" disabled="true" /> <input type="button" value="find" />
+								<input type="text" disabled="true" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
 							</p>
 							<div class="circles">				
 							<label>Manage circles (not implented)</label>
@@ -245,12 +248,13 @@ div.circles {
 					<div id="Feedback" class="unit">
 						<fieldset>
 							<legend>Feedback</legend>
+							<div id="divFeedbackThanks"><p>Thank you for your feedback</p></div>
 							<div id="divFeedback">
 								<input type="hidden" name="name" id="name" />
-								<input type="hidden" name="email" value="feedback@stickio.com" />							
+								<input type="hidden" name="email" value="feedback@stickythang.com" />							
 								
 								<label for="text">General feedback, bugs (please include steps to reproduce), feature requests etc...</label>
-								<textarea id="textareaFeedback" id="text"></textarea>
+								<textarea id="textareaFeedback" name="text"></textarea>
 								<label for="type" for="type">Type:</label>
 								<p>
 									
@@ -379,22 +383,26 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 	
 	
 	<script type="text/javascript">
-		YUI().use('node','yql','json-parse','node-load',function(Y){
-				Y.all("ul.menu a").on("click",function(e){
-					e.preventDefault();
-					var target = e.currentTarget;
-					
-					Y.all("ul.menu li").removeClass("active");
-					target.ancestor("li").addClass("active")
-					
-					Y.all("div.unit").addClass("off")
-					Y.one("#"+ target.get("className") ).removeClass("off");
-					
-				});		
-					
-		});	
 		
-		YUI().use("io-form","transition", function(Y) {
+		var background = chrome.extension.getBackgroundPage().window;
+		
+		background.stickythang.db.updateShare();
+		
+		
+		
+		YUI().use('node','yql','json-parse','node-load',"io-form","transition",function(Y){
+
+			Y.all("ul.menu a").on("click",function(e){
+				e.preventDefault();
+				var target = e.currentTarget;
+				
+				Y.all("ul.menu li").removeClass("active");
+				target.ancestor("li").addClass("active")
+				
+				Y.all("div.unit").addClass("off")
+				Y.one("#"+ target.get("className") ).removeClass("off");
+				
+			});		
 			
 			function onFailure(transactionid, response, arguments) {
 			   console.log('not good'+ response.responseText)
@@ -412,6 +420,11 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				Y.one("#divFeedback").transition({
 				    duration: 0.75, // seconds
 				    opacity: '0'
+				},function() {
+				   Y.one("#divFeedbackThanks").setStyles({'position':'absolute','display':'block','opacity':'0'}).transition({
+				   		duration:0.3,
+						opacity:1
+				   })
 				})
 				
 				var uri = "http://stickythang.com/index.php?id=3";
@@ -425,6 +438,58 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				Y.io(uri, cfg);
 			}
 			Y.one('#buttonFeedback').on('click',sendFeedback);
+			
+			
+			
+			
+			var updateShare = function(){
+				var dataverson = localStorage.dataversion;
+				var uri = "",
+					cfg = {
+				        sync: true
+				    };
+				//var request = Y.io(uri, cfg);
+				var obj = {
+					"1":{
+						"label":"all1"
+						,"url":"http://something.php?id=1"
+					},
+					"2":{
+						"label":"all2"
+						,"url":"http://something.php?id=2"
+					},
+					"3":{
+						"label":"all3",
+						"url":"http://something.php?id=3"
+					},
+					"4":{
+						"label":"all4"
+						,"url":"http://something.php?id=4"
+					}
+				};
+				
+				var temp = '{"1":{"id":"1","label":"all1","url":"http://something.php?id=1"},"2":{"id":"2","label":"all2","url":"http://something.php?id=2"},"3":{"id":"3","label":"all3","url":"http://something.php?id=3"},"4":{"id":"4","label":"all4","url":"http://something.php?id=4"}}';
+				
+				var shareRS = Y.JSON.parse(temp);
+				var rs = "",
+					temp1;
+					
+				rs = shareRS[name];
+				trans.executeSql("delete * from "+ stickythang.db.tableName +"_share");
+	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_share (id, label, url) VALUES (?, ?, ?)", 
+					[rs.id, rs.label, rs.url]);
+				
+				for (name in shareRS){
+					temp1 = shareRS[name]
+					rs+= name+":"+ temp1.label +"-" + temp1.url
+				}
+				alert(rs);
+			}
+			Y.one("#buttonUpdateBuddies").on('click',function(){
+					
+					background.stickthang.db.updateShare();
+				}
+			);	
 		})			
 	</script>
   </body>

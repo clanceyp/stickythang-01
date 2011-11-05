@@ -295,6 +295,7 @@ stickythang.init = function(){
 
 	    // stickythang.db.count();
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
+		  stickythang.shares = response.shares;
 		  stickythang.user = response.user;
 		  stickythang.loadAll(response.list);
 		  stickythang.stickiesActive(response.stickiesActive);

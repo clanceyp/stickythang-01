@@ -62,7 +62,7 @@ div.bottom a {
 			<div style="min-height:40px;">
 				<form id="feedback" action="http://stickythang.com/index.php?id=3" method="post">
 					<input type="hidden" name="name" id="name" />
-					<input type="hidden" name="email" value="feedback@stickio.com" />
+					<input type="hidden" name="email" value="feedback@stickthang.com" />
 					<p>
 						<label for="type">Type:</label>
 						<select id="type">
@@ -174,6 +174,7 @@ div.bottom a {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
 						loader.populateList(results);
+						console.log(results.list[0].note)
 					},
 					populateList:function(response){
 						var rs = response.list,
@@ -185,8 +186,9 @@ div.bottom a {
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
 							url = rs[i].url
-							if (note && note!="undefined" && url && url!="undefined")
+							if (note && note!="undefined" && url && url!="undefined"){
 								html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+							}
 			            }
 						Y.one("#stickyList").setContent(html);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -318,7 +320,7 @@ div.bottom a {
 		                if (r && r.query && r.query.results) {
 		                    
 			                var html = '',
-								obj = {},
+								obj = {name:"blah",content:'blah blah'},
 								str,
 								array = [];
 		                    
@@ -332,7 +334,7 @@ div.bottom a {
 										if (v.author && v.author.name){
 											v.name = v.author.name;
 										}
-										obj = Y.JSON.parse( v.content );
+										//obj = Y.JSON.parse( v.content );
 										//if (obj.text)
 		                                array.push( Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', obj) );
 		                            }
