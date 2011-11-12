@@ -160,9 +160,9 @@ stickythang.db = {
 		    });					
 		},
 		getAll:function(sendResponse){
-			console.log('Loading stickies');
+			console.log('Loading stickies from getAll');
 		    stickythang.db.localdb.transaction(function(tx) {
-		        tx.executeSql("SELECT id, domain, note, ops, path, scope, timestamp, urlextenal, user FROM "+ stickythang.db.tableName, [], function(tx, result) {
+		        tx.executeSql("SELECT * FROM "+ stickythang.db.tableName, [], function(tx, result) {
 		        	console.log("loading stikies :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
@@ -174,19 +174,21 @@ stickythang.db = {
 							,path:result.rows.item(i).path
 							,scope:result.rows.item(i).scope
 							,timestamp:result.rows.item(i).timestamp
-							,urlex:result.rows.item(i).urlextenal
+							,urlex:result.rows.item(i).urlex
 							,user:result.rows.item(i).user
 						});
 						stickythang.db.listAll = list;
 					}
-					if (sendResponse)
+					if (sendResponse) {
 						sendResponse({
-							list:list,
-							stickiesActive:stickythang.getLocalStorage('stickiesActive'),
-							user:stickythang.getLocalStorage('user'),
-							shares:stickythang.shares,
-							message:'success'
-						})					
+							list: stickythang.db.listAll,
+							stickiesActive: stickythang.getLocalStorage('stickiesActive'),
+							user: stickythang.getLocalStorage('user','me'),
+							shares: stickythang.shares,
+							message: 'success'
+						})
+					}
+									
 		        }, function(tx, error) {
 					if (sendResponse)
 			            sendResponse({message:error.massage,list:[]})
@@ -210,7 +212,7 @@ stickythang.db = {
 							,scope:result.rows.item(i).scope
 							,timestamp:result.rows.item(i).timestamp
 							,url:result.rows.item(i).url
-							,urlex:result.rows.item(i).urlextenal
+							,urlex:result.rows.item(i).urlex
 							,user:result.rows.item(i).user
 						});
 						stickythang.db.listAll = list;
@@ -309,7 +311,10 @@ stickythang.db = {
 	        });			
 		},
 		saveNew:function(note,sendResponse){			
-			console.log('trying to save a new note')
+			console.log('trying to save a new note');
+			if (!note.html || note.html == ''){
+				//sendResponse({message:'!!!!note empty, not creating'})
+			}
 	        stickythang.db.localdb.transaction(function (trans){
 	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
 					[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , stickythang.user],

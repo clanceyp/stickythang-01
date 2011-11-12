@@ -174,7 +174,6 @@ div.bottom a {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
 						loader.populateList(results);
-						console.log(results.list[0].note)
 					},
 					populateList:function(response){
 						var rs = response.list,
@@ -183,6 +182,7 @@ div.bottom a {
 							mxlen = 140,
 							url;
 			            for (var i = 0; i < rs.length; ++i) {
+							if (!rs[i].note){continue}
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
 							url = rs[i].url

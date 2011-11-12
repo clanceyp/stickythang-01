@@ -1,7 +1,9 @@
 
 (function(){
 	
-
+YUI_config = {
+    ignore : [ "querystring-stringify-simple" ]
+};
 		
 	if (!YUI){
 		console.log('ooch yui not loaded')

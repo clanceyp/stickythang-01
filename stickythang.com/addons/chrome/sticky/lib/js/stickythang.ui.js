@@ -178,16 +178,23 @@ window.stickythang={
 	}
 } 
 stickythang.loadAll = function(list){
+	stickythang.log('stickythang.getAll('+ list.length+')');
     for (var i = 0; i < list.length; ++i) {
-		stickythang.log('getAll: loading note '+ i +":"+list[i].scope +":"+ list[i].path +":"+ list[i].domain)
+		stickythang.log('stickythang.getAll: checking note '+ i );
 		if (list[i].scope == 'global'){
+			stickythang.log('stickythang.getAll: creating global note '+ i)
 			stickythang.createNoteYUI( list[i] );
 		} else if (list[i].scope == 'domain' && list[i].domain == window.location.hostname){
+			stickythang.log('stickythang.getAll: creating domain note '+ i )
 			stickythang.createNoteYUI( list[i] );
 		} else if (list[i].scope == 'path' && list[i].domain == window.location.hostname){
+			stickythang.log('stickythang.getAll: creating path note '+ list[i].path )
 			stickythang.createNoteYUI( list[i] );
 		} else if (list[i].path == window.location.href){
+			stickythang.log('stickythang.getAll: creating href match note ')
 			stickythang.createNoteYUI( list[i] );
+		} else {
+			stickythang.log('stickythang.getAll: ignoring note '+i )
 		}
     }	
 }
@@ -269,7 +276,7 @@ stickythang.killById = function(id){
 			}
 			break;
 		}else{
-			stickythang.log("idNO MATCH")
+			stickythang.log("stickythang.killById:id NO MATCH")
 		}
 	}	
 }
@@ -281,7 +288,7 @@ stickythang.init = function(){
 	var temp = localStorage.getItem(stickythang.ops.skey);
 	
 	
-	YUI().use('node','dd-plugin','resize','yql','json','transition', function(Y) {
+	YUI().use('node','node-load','dd-plugin','resize','json','transition', function(Y) {
 		stickythang.Y  = Y;
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
@@ -295,6 +302,7 @@ stickythang.init = function(){
 
 	    // stickythang.db.count();
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
+		  stickythang.log('response recieved loading shares and stickies:'+ response.message);
 		  stickythang.shares = response.shares;
 		  stickythang.user = response.user;
 		  stickythang.loadAll(response.list);
@@ -366,10 +374,11 @@ stickythang.Note.prototype = {
 		ops.timestamp = note.timestamp = (new Date().getTime());
 		note.div.one("div.timestamp").setContent( stickythang.util.modifiedString(note.timestamp, note.isNew) );
 		if(note.isNew){
-			stickythang.log('adding node:'+ops.id)			
+			stickythang.log('adding node:'+ops.id)	
 			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
-			  if(window.stickythang.debug)
+			  if(window.stickythang.debug){
 				console.log(response.message)
+				}
 			});				
 			note.isNew = false;
 		}else{
@@ -420,43 +429,12 @@ stickythang.Note.prototype = {
 		this.div.remove();
 	},
 	loadExtenal: function(url){
-		var inner = this.div.one("div.edit");
-		inner.set('innerHTML','trying to load content:'+url)
-		Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=2"', (function(inner) {
-			return function(r) {
-				//var inner = mod.one('div.inner')
-	            if (r && r.query && r.query.results && 0) {
-	                
-	                var html = '',
-						obj = {},
-						str,
-						array = [];
-	                
-	                //Walk the list and create the news list
-	                Y.each(r.query.results, function(items) {
-	                    Y.each(items, function(v, k) {
-	                        if (k < items.length-1) {
-	                            if (v.content && v.content.content) {
-	                               v.content = v.content.content.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"");
-	                            }
-								if (v.author && v.author.name){
-									v.name = v.author.name;
-								}
-								//obj = Y.JSON.parse( v.content );
-								//if (obj.text)
-	                            	array.push(Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', v));
-								//html+= "<li><textarea>"+ obj.className +"\n"+ temp  +"\n"+ (v.content == temp) +"</textarea></li>"
-	                        }
-	                    });
-	                });
-					html = array.reverse().join('')
-	                //Set the innerHTML of the module
-	                inner.set('innerHTML', '<ul>' + html + '</ul>');
-	            }else{
-					inner.set('innerHTML', '<ul>problems :( </ul>');
-				}
-	        }
-	    })(inner));			
+		var inner = this.div.one("div.edit"),
+			Y = stickythang.Y;
+		stickythang.log('Shared note, load content');
+		// inner.set('innerHTML','trying to load content:'+url);
+		var iframe = "<iframe src='"+url+"'></iframe>"
+		this.div.one("div.edit").setContent(iframe);
 	},
 	shareMe:function(shared){
 		this.setData('shared',shared);
@@ -474,7 +452,11 @@ stickythang.stickiesActive = function(stickiesActive){
 }
 
 stickythang.createNoteYUI = function(result){
-		stickythang.log('trying to creat note');
+		stickythang.log('stickythang.createNoteYUI() trying to creat note');
+		if (!stickythang.Y){
+			stickythang.log('ERROR: Y has not been defined');
+			return; 
+		}
 		var Y = stickythang.Y;
 		var note = new stickythang.Note(result);
 		
