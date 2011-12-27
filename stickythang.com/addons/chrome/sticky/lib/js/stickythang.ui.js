@@ -141,7 +141,7 @@ window.stickythang={
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
 				'<label>Share with: <span>(commer or line seporated list)</span><textarea disabled="true">@everyone</textarea></label>'+
-				'<input type="button" value="share" id="buttonShareSticky" />'+
+				'<input type="button" value="share" id="buttonShareSticky" /><span id="buttonShareStickyNote"></span>'+
 				'<div class="scope">Scope: '+
 				'<label><input type="radio" name="scope" class="path" value="path"> page</label>'+
 				'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
@@ -289,7 +289,7 @@ stickythang.init = function(){
 	
 	
 	YUI().use('node','node-load','dd-plugin','resize','json','transition', function(Y) {
-		stickythang.Y  = Y;
+		// stickythang.Y  = Y;
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
@@ -337,6 +337,7 @@ stickythang.Note.prototype = {
 		ops.querystring = window.location.search;
 		ops.scope = self.getData('scope');
 		ops.shared = self.getData('shared')
+		ops.user = stickythang.user;
 	
 		return ops;
 	},
@@ -437,7 +438,17 @@ stickythang.Note.prototype = {
 		this.div.one("div.edit").setContent(iframe);
 	},
 	shareMe:function(shared){
-		this.setData('shared',shared);
+		this.div.setData('shared',shared);
+		var ops = this.createOps(),
+			str;
+		//alert('trying to share note:'+str.length+":"+str)
+		delete ops.ops;
+		ops.id = stickythang.user + '-' + (new Date().getTime());
+		str = stickythang.Y.JSON.stringify(ops);
+		
+		chrome.extension.sendRequest({action:"newPost", ops:{message:str,subject:ops.html} }, function(response) {
+		 	console.log(response.message)
+		});		
 	}	
 }
 
@@ -567,7 +578,7 @@ stickythang.createNoteYUI = function(result){
 		instance.on('resize:end',function(){
 			note.save();
 		});
-		function InitForm(){
+		function InitForm(note){
 			var self = this;
 			stickythang.log("ST!InitForm()")
 			self.one("input."+self.getData('scope')).setAttribute('checked','checked');
@@ -594,15 +605,23 @@ stickythang.createNoteYUI = function(result){
 			if (self.getData('shared')=='true'){
 				self.one("#buttonShareSticky").set('value',"un-share")
 			}
-			self.one("#buttonShareSticky").on("click",function(e){
-				if (note.getData('shared')=='true'){
-					self.one("#buttonShareSticky").set('value',"un-share")
-					note.shareMe('false');
-				}else{
-					self.one("#buttonShareSticky").set('value',"share")
-					note.shareMe('true');
-				}				
-			})
+			if (stickythang.user == 'me'){
+				// user not logged in
+				self.one("#buttonShareSticky").setStyle('display','none')
+				self.one("#buttonShareStickyNote").setContent('Login via options page, to share sticky')
+			} else {
+				self.one("#buttonShareSticky").set('value','Share as '+ stickythang.user)
+				self.one("#buttonShareSticky").on("click",function(e){
+					if (self.getData('shared')=='true'){
+						// self.one("#buttonShareSticky").set('value',"un-share")
+						// self.shareMe('false');
+					}else{
+						console.log('trying to share')
+						// self.one("#buttonShareSticky").set('value',"share")
+						note.shareMe('true');
+					}				
+				})
+			}
 		}	
 } 
 

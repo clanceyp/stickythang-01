@@ -315,9 +315,10 @@ div.stickythang legend {
 	margin:0;
 	padding:16px 0 8px 0;
 }
-div.stickythang div.scope2 input {
-	margin:0 3px -1px 1px;
-	vertical-align:bottom;
+div.stickythang div.scope input {
+	margin:0;
+	padding:0;
+	width:auto;
 }
 
 div.stickythang div.timestamp {

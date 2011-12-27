@@ -130,6 +130,32 @@ div.circles {
 #divFeedbackThanks {
 	display:none;
 }
+
+
+#ulBuddiesList {
+	list-style:none;
+	margin:0 0 14px 0;
+	max-height:200px;
+	overflow-y:scroll;
+	padding:0;
+}
+#ulBuddiesList li {
+	background-color:#eee;
+	border-left:1px solid #ccc;
+	border-right:1px solid #ccc;
+	display:block;
+	padding:3px 14px;
+}
+#ulBuddiesList li:nth-child(odd){
+	background-color:#ccc;
+}
+#ulBuddiesList li:first-child{
+	border-radius:5px 0 0 0;
+}
+#ulBuddiesList li:last-child{
+	border-radius:0 0 0 5px;
+	border-bottom:1px solid #ccc;
+}
  </style>
   </head>
   <body id="page_bg">
@@ -187,13 +213,14 @@ div.circles {
 					<ul class="menu" dir="rtl">
 						<li class=""><a class="Advanced"><span>Advanced settings</span></a></li>
 						<li class=""><a class="Options"><span>Options</span></a></li>
-						<li class="active"><a class="Feedback"><span>Feedback</span></a></li>
+						<li class=""><a class="Feedback"><span>Feedback</span></a></li>
+						<li class="active"><a class="Signup"><span>Sign up</span></a></li>
 					</ul>
 					<form id="formSettings">
 					<div id="Options" class="unit off">
 					
 						<fieldset>
-							<legend>Settings, friends and circles (not implented)</legend>
+							<legend>Settings, friends and circles</legend>
 							
 
 							
@@ -206,12 +233,16 @@ div.circles {
 								<option disabled="true">Viberant</option>
 							</select></p>
 
-							<label>Find buddies to add<span></span></label>
+							<label>Add/remove buddy <span>(people I'm following)</span></label>
 							<p>
-								<input type="text" disabled="true" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
+								<input type="text" id="inputAddBuddy" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
 							</p>
+							<p>People I'm following...</p>
+							<ul id="ulBuddiesList">
+								
+							</ul>
 							<div class="circles">				
-							<label>Manage circles (not implented)</label>
+							<label>Manage my circles (not implented)</label>
 							<table class="data">
 								<tr>
 									<th>Buddies</th>
@@ -245,7 +276,7 @@ div.circles {
 							</p>							
 						</fieldset>
 					</div>
-					<div id="Feedback" class="unit">
+					<div id="Feedback" class="unit off">
 						<fieldset>
 							<legend>Feedback</legend>
 							<div id="divFeedbackThanks"><p>Thank you for your feedback</p></div>
@@ -284,6 +315,12 @@ div.circles {
 							</p>
 						</fieldset>
 						
+					</div>	
+					<div id="Signup" class="unit">
+						<iframe id="" src="http://stickythang.com/phpBB3/ucp.php" frameborder="0" style="width:100%;height:420px;margin:0;padding:0;">
+							
+							
+						</iframe>
 					</div>		
 						
 					</form>
@@ -385,9 +422,21 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 	<script type="text/javascript">
 		
 		var background = chrome.extension.getBackgroundPage().window;
-		
-		background.stickythang.db.updateShare();
-		
+		background.stickythang.checkLoggedInUser();
+
+	    if (!background.stickythang.db.localdb){
+			background.stickythang.db.init();
+		}		
+		if (!background.stickythang.db.listBuddies.length){
+			background.stickythang.db.getBuddies();
+		}
+		// background.stickythang.db.updateShare();
+		var stickythang = {
+			setUserDetails:function(ops){
+				alert(ops.user +"-"+ops.pass);
+			}
+			
+		}
 		
 		
 		YUI().use('node','yql','json-parse','node-load',"io-form","transition",function(Y){
@@ -401,6 +450,10 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				
 				Y.all("div.unit").addClass("off")
 				Y.one("#"+ target.get("className") ).removeClass("off");
+				
+				if (target.get("className") == "Options"){
+					BuildBuddyList();
+				}
 				
 			});		
 			
@@ -485,11 +538,43 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				}
 				alert(rs);
 			}
-			Y.one("#buttonUpdateBuddies").on('click',function(){
-					
-					background.stickthang.db.updateShare();
+			
+			
+			/* buddies bit */
+			function BuildBuddyList(ops){
+				// background.stickythang.db.getBuddies();
+				if (ops && ops.message){
+					console.log('build buddy list:'+ ops.message)
 				}
-			);	
+				var buddies = background.stickythang.db.listBuddies;
+				console.log('trying to build buddy list:'+ buddies.length)
+				Y.one("#ulBuddiesList").empty();
+				for (var i = 0;i<buddies.length;i++){
+					Y.one("#ulBuddiesList").append("<li>"+ buddies[i] +"</li>")
+				}	
+			}
+			function UpdateBuddyList(){
+					var buddy = Y.one("#inputAddBuddy").get('value');
+					// console.log('buddy:'+ buddy)
+					if (!buddy){return}
+					if (background.stickythang.isBuddy( buddy )){
+						console.log('is buddy:'+ buddy)
+						background.stickythang.db.removeBuddy( buddy , BuildBuddyList )
+					}else{
+						console.log('is NOT buddy:'+ buddy)
+						background.stickythang.db.saveNewBuddy( buddy , BuildBuddyList )
+					}
+					
+				
+			}
+			Y.one("#buttonUpdateBuddies").on('click',UpdateBuddyList);	
+			
+			
+			
+			Y.one("#formSettings").on("submit",function(e){
+				e.preventDefault();
+				UpdateBuddyList();
+			})
 		})			
 	</script>
   </body>

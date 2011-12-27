@@ -8,7 +8,7 @@ version: alpha 0.1
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-		<title>popup</title>
+		<title>stickythang popup</title>
 		<script src="lib/yui/3.4.0/build/yui/yui-min.js"></script>
 		<link href="lib/css/popup.css" rel="stylesheet" />
 		
@@ -56,9 +56,33 @@ div.bottom a {
 		<ul class="menu" dir="rtl">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
 			<li class=""><a class="AllStickies"><span>Friends stickies</span></a></li>
-			<li><a class="LoginForm"><span>Feedback / Login</span></a></li>
+			<li><a class="LoginForm"><span>Login/Feedback </span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
+			<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" target="hiddenframe" method="post" id="login">
+				<input type="hidden" name="redirect" value="index.php"/>
+				<p id="loginStatus">
+					<label>Login with...</label>
+					<select disabled="true">
+						<option>StickyThang!</option>
+						<option>Google</option>
+						<option>Facebook</option>
+						<option>Yahoo</option>
+					</select>
+				</p>
+				<div id="loginInputArea">					
+				<p>
+					<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
+				</p>
+				<p>
+					<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
+				</p>
+				<p class="centre">
+					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
+				</p>
+				</div>
+			</form>
+			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
 			<div style="min-height:40px;">
 				<form id="feedback" action="http://stickythang.com/index.php?id=3" method="post">
 					<input type="hidden" name="name" id="name" />
@@ -78,28 +102,6 @@ div.bottom a {
 				</form>
 				<h2 style="opacity:0;display:none;" id="h2feedbackthanks">Thanks your for feedback</h2>
 			</div>
-			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
-			<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" target="hiddenframe" method="post" id="login">
-				<input type="hidden" name="redirect" value="index.php"/>
-				<p>
-					<label>Login with...</label>
-					<select disabled="true">
-						<option>StickyThang!</option>
-						<option>Google</option>
-						<option>FaceBook</option>
-						<option>Yahoo</option>
-					</select>
-				</p>
-				<p>
-					<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
-				</p>
-				<p>
-					<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
-				</p>
-				<p class="centre">
-					<input type="submit" disabled="true" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
-				</p>
-			</form>
 			
 		</div>
 		<div id="MyStickies" class="on unit">
@@ -133,7 +135,7 @@ div.bottom a {
 			<div>
 				<h2>Friends stickies</h2>
 				<div id="allList" class="menu">
-					
+					<ul id="ulAllList"></ul>
 				</div>
 	
 			</div>
@@ -145,18 +147,22 @@ div.bottom a {
 		</div>
 	</body>
 		<script>
-			var background = chrome.extension.getBackgroundPage().window;
+			var background = chrome.extension.getBackgroundPage().window,
+				username = background.stickythang.getLoggedInUser();
+			
+				console.log('current user:'+username);
+				
 			
 			YUI().use('node','yql','io-form','json-parse','node-load','transition',function(Y){
-				
-				if (!background.stickythang.getLocalStorage('user')){
+				/*
+				if ( 1 || !background.stickythang.getLocalStorage('user') ){
 					
 					Y.one("#divUpdateUserName").setStyle("display","block");
 					Y.one("#setUserName").on("submit",function(e){
 						e.preventDefault();
-						var user = Y.one("#userNameInput").get('value');
-						background.stickythang.updateUser(user);
-						Y.one("#username").set('value',user);
+						var u = Y.one("#userNameInput").get('value');
+						background.stickythang.updateUser(u);
+						Y.one("#username").set('value',u);
 						Y.one("#divUpdateUserName").transition({
 							duration:0.5,
 							opacity:0
@@ -168,8 +174,10 @@ div.bottom a {
 				} else {
 					Y.one("#username").set('value',background.stickythang.getLocalStorage('user'));
 				}
-				
-				
+				*/
+				if (window.username){
+					Y.one("#username").set('value',username);
+				}
 				var loader = {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
@@ -194,6 +202,7 @@ div.bottom a {
 						// Y.one("#domainLable").setContent(response.domain)
 					}	
 				}
+
 				background.stickythang.db.get(loader.LoadList);
 
 				/*
@@ -205,8 +214,8 @@ div.bottom a {
 				}
 				*/
 				
-				Y.one('#allList')
-					.setContent("<div class=centre><img src='lib/i/8-0.gif' /></div>")
+				Y.one('#ulAllList')
+					.setContent("<li id=liAllListLoading class=centre><img src='lib/i/8-0.gif' /></li>")
 					//.load("http://stickythang.com/phpBB3/search.php?keywords=&terms=all",null,function(){
 						// Y.one('#allList').setContent( this.get("id") );
 					//})	
@@ -245,7 +254,7 @@ div.bottom a {
 				}else {
 					console.log(background.stickythang.getLocalStorage('stickiesActive'))
 				}
-				Y.one("#name").set("value",background.stickythang.user);
+				// Y.one("#name").set("value",background.stickythang.getLocalStorage('user'));
 				Y.one("#feedback").on('submit',function(e){
 					e.preventDefault();
 					var uri = Y.one("#feedback").getAttribute("action");
@@ -280,7 +289,6 @@ div.bottom a {
 				})
 				Y.one("#loginButton").on('click',function(e){
 					e.preventDefault();
-					return
 					// Y.one("#loginButton").set('value',typeof background.window)
 					// return;
 					try {
@@ -304,6 +312,25 @@ div.bottom a {
 					}
 					
 				})
+	
+				function CheckLoginStatus(){
+					console.log('checking login status:')
+					Y.one("#loginInputArea").setStyle('display','none');
+					var html = "",
+						u = background.stickythang.getLoggedInUser('user');
+						
+						if ( !u ){// it's a sticky thang response
+							html = 'Not logged in, <a target="_blank" href="options.html">Login/Register</a>';
+							// Y.one("#loginInputArea").setStyle('display','block');
+						} else {
+							// html = 'Status, unknown';
+							html = 'Logged in as, '+ u;
+							// Y.one("#loginInputArea").setStyle('display','block');
+							Y.one("#loginStatus").setContent(html);
+						}						
+				}
+				CheckLoginStatus()
+
 				/*
 				chrome.tabs.getSelected(null, function(tab) {
 				  chrome.tabs.sendRequest(tab.id, {action: "get-list", tabid: tab.id}, function(response) {
@@ -314,7 +341,9 @@ div.bottom a {
 
 				//populateList()
 				
-				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=4"', (function(inner) {
+//				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=4"', (function(inner) {
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?mode=topics"', (function(inner) {
+					
 					return function(r) {
 						//var inner = mod.one('div.inner')
 		                if (r && r.query && r.query.results) {
@@ -323,31 +352,58 @@ div.bottom a {
 								obj = {name:"blah",content:'blah blah'},
 								str,
 								array = [];
+								
+								inner.one("#liAllListLoading").remove();
 		                    
 		                    //Walk the list and create the news list
 		                    Y.each(r.query.results, function(items) {
 		                        Y.each(items, function(v, k) {
-		                            if (k < items.length-1) {
+		                            if (k < items.length) {
 		                                if (v.content && v.content.content) {
 		                                   v.content = v.content.content //.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"").replace(/<(.|\n)*?>/g,"");
 		                                }
 										if (v.author && v.author.name){
 											v.name = v.author.name;
 										}
-										//obj = Y.JSON.parse( v.content );
-										//if (obj.text)
-		                                array.push( Y.Lang.sub('<li><strong>{name}:</strong> {content}</li>', obj) );
+										if (v.title && v.title.content){
+											v.title = v.title.content.replace(/&amp;nbsp;/g,' ')
+										}
+										if (v.id && v.id.content){
+											v.id = v.id.content;
+										}
+										try {
+											obj = Y.JSON.parse(v.content.replace(/&quot;/g,'"'));
+											obj.name = v.name;
+											obj.title = v.title || "";
+											obj.urlex = v.id || ""; 
+											
+											if (obj && obj.name != window.username && obj.id && background.stickythang.db.isBubby(obj.name) ){
+												array.push(Y.Lang.sub('<li><strong>{name}:</strong> <a href="{href}" target="_blank" title="{stURI}">{title}</a></li>', obj));
+												inner.append(Y.Lang.sub('<li><strong>{name}:</strong> <a id="link-to-{id}" ref="{href}" target="_blank" title="link-to-{id}">{title}</a></li>', obj))
+												var O = obj;
+												Y.one("#link-to-"+O.id).on('click',function(e){
+													e.preventDefault();
+													console.log( "#link-to-"+O.id )
+													if ( Y.one("#link-to-"+O.id) ){
+														console.log('trying to save new note with id:'+ O.id)
+														background.stickythang.saveNewIfNotExists(O);
+													}
+												})
+											}
+										}catch(e){
+											// array.push('<li>'+ e +':'+ '</li>');
+										}
 		                            }
 		                        });
 		                    });
 							html = array.reverse().join('')
 		                    //Set the innerHTML of the module
-		                    inner.set('innerHTML', '<ul>' + html + '</ul>');
+		                    //inner.set('innerHTML', '<ul>' + html + '</ul>');
 		                }else{
-							inner.set('innerHTML', '<ul>problems :( </ul>');
+							inner.set('innerHTML', '<li>problems :( </li>');
 						}
 		            }
-		        })(Y.one("#allList")));	
+		        })(Y.one("#ulAllList")));	
 			        
 			      
 			});

@@ -1,18 +1,21 @@
 {
   // Required
   "name": "StickyThang! ALPHA",
-  "version": "0.7",
+  "version": "0.9",
   "update_url": "http://stickythang.com/extentions/chrome/update.xml",
+  "homepage_url": "http://stickythang.com",
   "background_page": "background.html",
+  "options_page": "options.html",
+  
 
   // Recommended
   "description": "Syndicate your notes with your friends, work colleagues and study buddies"
   ,"icons": { 
-		"16": "icon16x.png" 
+		"16": "icon16.png" 
 		,"48": "icon48.png" 
   }
   ,"page_action": {
-    "default_icon": "icon16x.png", // optional
+    "default_icon": "icon16.png", // optional
     "default_title": "StickyThang!",    // optional; shown in tooltip
     "default_popup": "popup.html"    // optional
   }
@@ -89,6 +92,7 @@
 			,"lib/yui/3.4.0/build/resize-constrain/resize-constrain-min.js"
 			,"lib/yui/3.4.0/build/selector-native/selector-native-min.js"
 			,"lib/yui/3.4.0/build/selector/selector-min.js"
+			,"lib/yui/3.4.0/build/querystring-stringify-simple/querystring-stringify-simple-min.js"
 			,"lib/yui/3.4.0/build/substitute/substitute-min.js"
 			,"lib/yui/3.4.0/build/transition/transition-min.js"
 			,"lib/yui/3.4.0/build/widget-base/widget-base-min.js"
@@ -115,6 +119,7 @@
 		"tabs" 
 		,"http://stickythang.com/"
 		,"http://yui.yahooapis.com/"
+		,"unlimitedStorage"
   ]
 
 }
