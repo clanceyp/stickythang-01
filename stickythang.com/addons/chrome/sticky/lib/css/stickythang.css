@@ -62,7 +62,9 @@ div#stickythangFormContainer *.fade {
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-duration:0.75s;
 }
-
+div.stickythang div.card form.externalShare div.share {
+	display:none;
+}
 
 
 
@@ -290,8 +292,8 @@ div.stickythang div.edit {
 }
 div.stickythang div.edit iframe {
 	border:0 none;
-	height:inherit;
-	width:inherit;
+	height:99%;
+	width:99%;
 }
 div.stickythang div.scope2, 
 div.stickythang div.timestamp {

@@ -35,6 +35,7 @@ window.stickythang={
 	log:function(message){if(stickythang.debug){console.log(message)}},
 	debug:true,
 	activeids:[],
+	forumID:2,//check in background page
 	backgroundnotes:[],
 	currentids:[],
 	currentnotes:[],
@@ -140,9 +141,10 @@ window.stickythang={
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
 				'<label>Colour <select></select></label>'+
+				'<div class="share">'+
 				'<label>Share with: <span>(commer or line seporated list)</span><textarea disabled="true">@everyone</textarea></label>'+
 				'<input type="button" value="share" id="buttonShareSticky" /><span id="buttonShareStickyNote"></span>'+
-				'<div class="scope">Scope: '+
+				'</div><div class="scope">Scope: '+
 				'<label><input type="radio" name="scope" class="path" value="path"> page</label>'+
 				'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
 				'<label><input class="global" name="scope" type="radio" value="global"> everwhere</label></div>'+
@@ -151,11 +153,12 @@ window.stickythang={
 	Note:function(result){// note object set defaults here
 		var Y = stickythang.Y;
 		if (result) {// it's a record from the db parse ops 
-			this.ops = Y.JSON.parse( result.ops );
+			this.html = result.note;
 			this.id = result.id;
+			this.ops = Y.JSON.parse( result.ops );
 			this.scope = result.scope;
 			this.timestamp = result.timestamp;
-			this.html = result.note;
+			this.user = result.user;
 			this.urlex = result.urlex;
 		}
 		else {// default ops for new notes
@@ -332,7 +335,7 @@ stickythang.Note.prototype = {
 		ops.href = window.location.href;
 		ops.json = stickythang.Y.JSON.stringify( ops.ops );
 		ops.id = self.get('id');
-		ops.html = self.one("div.edit").get('innerHTML');
+		ops.html = this.getHTML();
 		ops.path = window.location.pathname;
 		ops.querystring = window.location.search;
 		ops.scope = self.getData('scope');
@@ -341,7 +344,16 @@ stickythang.Note.prototype = {
 	
 		return ops;
 	},
-	
+	getHTML:function(){
+		var html,
+			self = this;
+		if (self.urlex){
+			html = self.html;
+		}else{
+			html = self.div.one("div.edit").get('innerHTML');
+		}
+		return html;
+	},
     saveSoon: function()
     {
         this.cancelPendingSave();
@@ -430,12 +442,10 @@ stickythang.Note.prototype = {
 		this.div.remove();
 	},
 	loadExtenal: function(url){
-		var inner = this.div.one("div.edit"),
-			Y = stickythang.Y;
-		stickythang.log('Shared note, load content');
+		var Y = stickythang.Y,
+			uri = this.urlex.replace("viewtopic.php?","posting.php?mode=reply&f="+stickythang.forumID+"&")
 		// inner.set('innerHTML','trying to load content:'+url);
-		var iframe = "<iframe src='"+url+"'></iframe>"
-		this.div.one("div.edit").setContent(iframe);
+		this.div.one("div.edit").append("<iframe src='"+ uri +"' />");
 	},
 	shareMe:function(shared){
 		this.div.setData('shared',shared);
@@ -517,7 +527,8 @@ stickythang.createNoteYUI = function(result){
 	
 		if (note.urlex){
 			note.div.one("div.edit").addClass("externalURL");
-			note.loadExtenal(note.urlex);					
+			note.div.one("div.timestamp").setContent( "Shared by "+ note.user);
+			note.loadExtenal();					
 		} else {
 			note.div.one("div.edit")
 				.setAttribute( 'contenteditable' , 'true' )
@@ -581,6 +592,9 @@ stickythang.createNoteYUI = function(result){
 		function InitForm(note){
 			var self = this;
 			stickythang.log("ST!InitForm()")
+			if (note.urlex){
+				self.one("form").addClass("externalShare");
+			}
 			self.one("input."+self.getData('scope')).setAttribute('checked','checked');
 			self.one("form").on('click',function(e){
 				var scope = self.one("input:checked").getAttribute("value");

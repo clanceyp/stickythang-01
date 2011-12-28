@@ -118,7 +118,7 @@ div.bottom a {
 				<p class="button">
 					<input type="button" id="addNote" value=" Add a new Sticky! " />
 				</p>
-				<h2>My stickies <span id="domainLable"></span></h2>				
+				<h2>Recent stickies <span id="domainLable"></span></h2>				
 				<div style="max-height:240px;overflow:auto">
 				<ul id="stickyList">
 					
@@ -133,7 +133,7 @@ div.bottom a {
 		</div>
 		<div id="AllStickies" class="off unit">
 			<div>
-				<h2>Friends stickies</h2>
+				<h2 id="h2buddyTitle">Friends stickies</h2>
 				<div id="allList" class="menu">
 					<ul id="ulAllList"></ul>
 				</div>
@@ -148,7 +148,9 @@ div.bottom a {
 	</body>
 		<script>
 			var background = chrome.extension.getBackgroundPage().window,
-				username = background.stickythang.getLoggedInUser();
+				username = background.stickythang.getLoggedInUser(),
+				buddies = background.stickythang.db.getBuddies(),
+				debug = 0;
 			
 				console.log('current user:'+username);
 				
@@ -341,11 +343,13 @@ div.bottom a {
 
 				//populateList()
 				
-//				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2&t=4"', (function(inner) {
-				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?mode=topics"', (function(inner) {
+				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(inner) {
+//				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?mode=topics"', (function(inner) {
 					
 					return function(r) {
 						//var inner = mod.one('div.inner')
+						var count = 0;
+						
 		                if (r && r.query && r.query.results) {
 		                    
 			                var html = '',
@@ -354,14 +358,30 @@ div.bottom a {
 								array = [];
 								
 								inner.one("#liAllListLoading").remove();
+								
 		                    
 		                    //Walk the list and create the news list
 		                    Y.each(r.query.results, function(items) {
 		                        Y.each(items, function(v, k) {
-		                            if (k < items.length) {
+									
+		                          //  if (k < items.length) {
 		                                if (v.content && v.content.content) {
-		                                   v.content = v.content.content //.replace(/&quot;/g,'"').replace(/(\r\n|\n|\r)/g,"").replace(/<(.|\n)*?>/g,"");
-		                                }
+		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/\n/g,"").replace(/(\r\n|\r)/g,"").replace(/<(.|\n)*?>/g,"");
+		                                	/*v.content = '{
+												"domain":"www.guardian.co.uk"
+												,"href":"http://www.guardian.co.uk/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report?fb=native"
+												,"json":"{\"className\":\"silver\",\"height\":260,\"left\":65,\"scope\":\"path\",\"state\":\"maximise\",\"top\":276,\"width\":230}"
+												,"id":"tester-1324677469523"
+												,"html":"Reading the riots; LSE + Guardian report on the summer 2011 riots."
+												,"path":"/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report"
+												,"querystring":"?fb=native"
+												,"scope":"path"
+												,"shared":"true"
+												,"user":"tester"}';
+												*/
+												//v.content = '{"domain":"www.guardian.co.uk","href":"http://www.guardian.co.uk/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report?fb=native","json":"","id":"tester-1324677469523","html":"Reading the riots; LSE + Guardian report on the summer 2011 riots.","path":"/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report","querystring":"?fb=native","scope":"path","shared":"true","user":"tester"}';
+												//v.content = '{"key":333}';
+										}
 										if (v.author && v.author.name){
 											v.name = v.author.name;
 										}
@@ -371,36 +391,57 @@ div.bottom a {
 										if (v.id && v.id.content){
 											v.id = v.id.content;
 										}
+										
+										
 										try {
-											obj = Y.JSON.parse(v.content.replace(/&quot;/g,'"'));
+											obj = Y.JSON.parse(v.content);
 											obj.name = v.name;
-											obj.title = v.title || "";
+											obj.title = obj.html || v.title || "";
 											obj.urlex = v.id || ""; 
-											
-											if (obj && obj.name != window.username && obj.id && background.stickythang.db.isBubby(obj.name) ){
-												array.push(Y.Lang.sub('<li><strong>{name}:</strong> <a href="{href}" target="_blank" title="{stURI}">{title}</a></li>', obj));
-												inner.append(Y.Lang.sub('<li><strong>{name}:</strong> <a id="link-to-{id}" ref="{href}" target="_blank" title="link-to-{id}">{title}</a></li>', obj))
-												var O = obj;
-												Y.one("#link-to-"+O.id).on('click',function(e){
-													e.preventDefault();
-													console.log( "#link-to-"+O.id )
-													if ( Y.one("#link-to-"+O.id) ){
-														console.log('trying to save new note with id:'+ O.id)
-														background.stickythang.saveNewIfNotExists(O);
-													}
-												})
+											if (obj){											
+												if (obj.name != window.username && obj.id && obj.urlex && background.stickythang.isBuddy(obj.name) ){
+													array.push(Y.Lang.sub('<li><strong>{name}:</strong> <a href="{href}" target="_blank" title="{stURI}">{title}</a></li>', obj));
+													inner.append(Y.Lang.sub('<li><strong>{name}:</strong> <a id="link-to-{id}" href="{href}" target="_blank" title="link-to-{id}">{title}</a></li>', obj))
+													var O = obj;
+													Y.one("#link-to-"+O.id).on('click',function(e){
+														// e.preventDefault();
+														console.log( "#link-to-"+O.id )
+														if ( Y.one("#link-to-"+O.id) ){
+															console.log('trying to save new note with id:'+ O.id)
+															background.stickythang.db.saveNewIfNotExists(O);
+														}
+													});
+													count++;
+												} else {
+													if (debug)
+														inner.append( '<li><strong>No name match:</strong> "'+ obj.name +':'+window.username+':'+ obj.id +':'+obj.urlex+'"</li>' )
+												}
+											}else{
+												if (debug)
+												inner.append('<li>obj not exists</li>');
 											}
 										}catch(e){
-											// array.push('<li>'+ e +':'+ '</li>');
+											if (debug)
+											inner.append('<li>wrong format: '+ e.message + '</li>');
 										}
-		                            }
+		                           // }
 		                        });
 		                    });
-							html = array.reverse().join('')
+							//html = array.reverse().join('')
 		                    //Set the innerHTML of the module
 		                    //inner.set('innerHTML', '<ul>' + html + '</ul>');
-		                }else{
-							inner.set('innerHTML', '<li>problems :( </li>');
+						}
+						Y.one("#h2buddyTitle").append("<span style=color:#999;display:inline-block;padding-left:4px>("+background.stickythang.db.listBuddies.join(", ")+")</span>")
+						if (count == 0){
+							var names = background.stickythang.db.listBuddies,
+								html = '<li>Nothing to show</li>';
+								
+							inner.append(html);	
+							if (names.length == 0){
+								inner.append("<li>You are not following anyone, go to the <a href=options.html target=_blank>options page</a> to add buddies</li>")
+							}else{
+								
+							}
 						}
 		            }
 		        })(Y.one("#ulAllList")));	

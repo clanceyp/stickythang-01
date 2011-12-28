@@ -28,6 +28,7 @@ version: alpha 0.1
 			  		action: "focus",
 					stickiesActive:stickythang.getLocalStorage('stickiesActive'),
 					notes:stickythang.db.listAll,
+					forumID:2,// check in stickythang.ops too
 					shares:stickythang.shares // may be depricated, check!
 				}, function(response) {
 			    console.log(response.message);
@@ -405,7 +406,7 @@ stickythang.db = {
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
 				tx.executeSql("DELETE FROM "+ stickythang.db.tableName + " where note = ''", []);
-		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
+		        tx.executeSql("SELECT COUNT(id) as count FROM "+ stickythang.db.tableName, [], function(tx,result) {
 		        	// count exists loading stickies
 					console.log('count - loading sticky-notes')
 					stickythang.db.getIds();
@@ -517,9 +518,36 @@ stickythang.db = {
 				//sendResponse({message:'!!!!note empty, not creating'})
 			}
 	        stickythang.db.localdb.transaction(function (trans){
-	            trans.executeSql("SELECT COUNT(id) from "+ stickythang.db.tableName +" where id = ?", 
+	            trans.executeSql("SELECT COUNT(id) as count from "+ stickythang.db.tableName +" where id = ?", 
 					[note.id],
-					function(){
+					function(tx, result){
+						if (result){
+							console.log('result ');
+						}
+						if (result && result.rows){
+							console.log('result.rows ');
+						}
+						if (result && result.rows[0] ){
+							console.log('result && result.rows[0] ');
+						}
+						if (result && result.rows[0] && result.rows[0].count ){
+							console.log('Note exists already: '+ note.id);
+						}else{
+							console.log('Note NOT exists, we need to add it: '+ note.id);
+				            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+								[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , note.user, note.urlex],
+								function(){
+									stickythang.db.getAll();
+									console.log("inserted new item")
+									//sendResponse({message:'inserted new item'})
+								},
+								function(tx,error){
+									console.log(error.message)
+									//sendResponse(error);
+							});							
+						}
+		
+						
 						/* / count exists so no need to do anything
 						sendResponse({
 							message: "record exists, ignore instert"
@@ -528,6 +556,7 @@ stickythang.db = {
 					},
 					function(tx,error){
 						// no records returned so instert
+						console.log('Adding note: '+ note.id);
 			            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
 							[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , note.user, note.urlex],
 							function(){
