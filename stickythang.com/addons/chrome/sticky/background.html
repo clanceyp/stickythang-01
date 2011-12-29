@@ -28,7 +28,8 @@ version: alpha 0.1
 			  		action: "focus",
 					stickiesActive:stickythang.getLocalStorage('stickiesActive'),
 					notes:stickythang.db.listAll,
-					shares:stickythang.shares
+					forumID:2,// check in stickythang.ops too
+					shares:stickythang.shares // may be depricated, check!
 				}, function(response) {
 			    console.log(response.message);
 			  });
@@ -60,9 +61,12 @@ chrome.extension.onRequest.addListener(
 		case "saveNew" :
 			stickythang.db.saveNew(request.ops,sendResponse);
 		break;
+		case "newPost" :
+			stickythang.newPost(request.ops,sendResponse);
+		break;
 		case "updateUser" :
-			stickythang.updateUser(request.user)
-			sendResponse({message:"set"})
+			//stickythang.updateUser(request.user)
+			sendResponse({message:"depricated method, please check code"})
 		break;
 	}
 
@@ -70,12 +74,30 @@ chrome.extension.onRequest.addListener(
 
 window.stickythang = {
 	user:'',bespokeCSS:"",shares:[],
+	ops:{
+		uriUserName:"http://stickythang.com/phpBB3/ucp.php?i=profile&mode=reg_details",
+		uriLogin:"http://stickythang.com/phpBB3/ucp.php?mode=login",
+		uriNewPost:"http://stickythang.com/phpBB3/posting.php?mode=post&f=2"
+	},
 	getLocalStorage:function(key,def){
 		return localStorage[key] || def || ''
+	},
+	setLocalStorage:function(key,val){
+		localStorage[key] = val || localStorage[key] || '';
+		return val;
 	},
 	updateUser:function(user){
 		localStorage["user"] = user;
 		stickythang.user = user;
+	},
+	isBuddy:function(buddy){
+		var buddies = stickythang.db.listBuddies;
+		for (var i = buddies.length;i>0;i--){
+			if (buddies[i-1] == buddy){
+				return true;
+			}
+		}
+		return false;
 	}
 }	
 window.ids = []; 
@@ -85,40 +107,137 @@ YUI().use("io","json", function(Y) {
 	window.stickythang.Y = Y;
 	
 	function onFailure(transactionid, response, arguments) {
-	   console.log('not good'+ response.responseText)
+	   console.log('not good:'+ response.responseText +','+response.statusText+','+response.status)
 	}
 	// Subscribe to "io.failure".
 	Y.on('io:failure', onFailure, Y, 'Transaction Failed');
 	
 	function onSuccess(transactionid, response, arguments) {
-	   console.log('good:'+ response.responseText.match("You have been successfully logged in") +"\n\n"+ response.responseText)
-	   return response.responseText.match("You have been successfully logged in")
+	   console.log('good:'+ response.responseText)
 	}	
 	Y.on('io:success', onSuccess, Y, true);		
 		
-	stickythang.login = function(ops){
-		
-		localStorage.user = ops.user 
-		localStorage.pass = ops.pass 
-		console.log("ST!login{user:'"+ localStorage.user +"',pass:'"+ localStorage.pass +"'}")
-		if (!localStorage.user || !localStorage.pass){
-			return {responseText:'ST!invalid'}
+	window.stickythang.login = function(ops){
+
+		if (!ops || !ops.user || !ops.pass){
+			var user = stickythang.getLoggedInUser();
+			if (user){
+				return {responseText:'Logged in, user name '+ user, st:'true'}
+			}else{
+				return {responseText:'Not logged in and user name and/or password not set',st:'true'}
+			}
+		} else {
+			stickythang.setLocalStorage('user',ops.user)
 		}
 			
 		// Subscribe to "io.success".
 		
-		var uri = "http://stickythang.com/phpBB3/ucp.php?mode=login";
-	    var cfg = {
+		var uri = stickythang.ops.uriLogin,
+	    	cfg = {
 	        method: 'POST',
 			sync: true,
 	        form: {
 				id : Y.one("#login"),
-	            username: localStorage.user,
-	            password: localStorage.pass,
+	            username: ops.user,
+	            password: ops.pass,
 				redirect: "index.php"
 	        }
 	    };
 		return Y.io(uri, cfg);
+	}
+	window.stickythang.newPost = function(ops,sendResponse){
+		/*
+		 * 
+	<form id="newPost" action="http://stickythang.com/phpBB3/posting.php?mode=post&amp;f=2" method="post" name="postform">
+	
+		<input type="radio" class="radio" name="icon" value="0" checked="checked" />
+		<input class="post" type="text" name="subject" id="newSubject" size="45" tabindex="2" value="" />
+		<textarea name="message" rows="15" cols="76" tabindex="3" id="newMessage"></textarea>
+		<input type="checkbox" class="radio" name="disable_magic_url" value="true" />
+		<input class="btnmain" type="submit" accesskey="s" tabindex="11" name="post" value="Submit" />
+		<input type="hidden" name="creation_time" value="1324223761" />
+		<!-- input type="hidden" name="form_token" value="9e41de49441b5622f5d5a495740f69e409cc0603" / -->
+
+	</form>
+	 
+		 */
+		
+		try {
+			var uri = stickythang.ops.uriNewPost,
+				f = Y.io(uri,{sync:true}),
+				form_token = /"form_token" value="(.+)"/.exec(f.responseText)[1],
+				creation_time = (new Date().getTime()),
+		    	cfg = {
+			        method: 'POST',
+					sync: true,
+			        form: {
+						name:'postform',
+						id:Y.one("#newPost")
+			        }
+			    };
+
+				Y.one("#newSubject").set('value',ops.subject);	
+				Y.one("#newMessage").set('value',ops.message);				
+				Y.one("#creation_time").set('value',creation_time);				
+				Y.one("#form_token").set('value',form_token);				
+				Y.one("#form_origin_st").set('value','sticky');				
+					
+				var request = Y.io(uri,cfg);
+				
+				console.log(request.responseText)
+				sendResponse({message:"request to save note sent to stickythang.com"});
+			
+		}catch(e){
+			sendResponse({message:e.message+": couldn't save note :( user may not be logged in."});
+		}
+	}
+	window.stickythang.getLoggedInUser = function(){// sync get the logged in user name
+		var user = 'nnothing',
+			uri = stickythang.ops.uriUserName,
+	    	cfg = {sync:true},
+	        request,
+			obj;
+	   
+	    request = Y.io(uri, cfg);
+		try {
+			var i = request.responseText.indexOf("user");
+			if (i > 0 && i < 5 ){
+				obj = Y.JSON.parse(request.responseText);	
+			}
+			if (obj && obj.user){
+				user = obj.user
+				window.stickythang.setLocalStorage('user',user);
+			}
+		}catch(e){user="Error getting user info:"+e.message}
+		
+		return user;
+	}
+	window.stickythang.checkLoggedInUser = function(){// lazy get the logged in user name
+		var user = '',
+			uri = stickythang.ops.uriUserName,
+	    	cfg = {sync:false},
+	        request,
+			obj,
+			on = {success:function(id,request){
+				var i = request.responseText.indexOf("user"),
+					obj,
+					user;
+				if (i > 0 && i < 5 ){
+					try{
+						obj = Y.JSON.parse(request.responseText);
+					}catch(e){
+						console.log( 'not logged in, or error:' + e.message )
+					}		
+				}else{
+					console.log( 'not logged in' )
+				}
+				if (obj && obj.user){
+					window.stickythang.setLocalStorage('user',obj.user);
+				}				
+			}};
+	   
+	    Y.io(uri, cfg);
+		
 	}
 })
 stickythang.stickiesActive = function(state){
@@ -135,6 +254,7 @@ stickythang.db = {
 		version:"1.0",
 		tableName:"stickies",
 		listAll:[],
+		listBuddies:[],
 		
 		init: function(){
 
@@ -200,7 +320,7 @@ stickythang.db = {
 			console.log('Loading stickies');
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT * FROM "+ stickythang.db.tableName, [] , function(tx, result) {
-		        	console.log("loading stikies :"+ result.rows.length);
+		        	console.log("loading stickies :"+ result.rows.length);
 					var list = [];
 					for (var i = 0; i < result.rows.length; ++i) {
 						list.push({
@@ -220,6 +340,27 @@ stickythang.db = {
 					sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user'),message:'success'})					
 		        }, function(tx, error) {
 		            sendResponse({message:error.massage,list:[]})
+		        });
+		    });					
+		},
+		getBuddies:function(sendResponse){
+			console.log('getting buddies')
+		    stickythang.db.localdb.transaction(function(tx) {
+		        tx.executeSql("SELECT buddy FROM "+ stickythang.db.tableName +"_buddies order by buddy", [], function(tx, result) {
+		        	console.log("returing list :"+ result.rows.length);
+					stickythang.db.listBuddies = [];
+					for (var i = 0; i < result.rows.length; ++i) {
+						stickythang.db.listBuddies.push(result.rows.item(i).buddy);
+					}	
+					if (sendResponse){
+						sendResponse({message:"buddies list updated"})
+					} else {
+						return	stickythang.db.listBuddies;	
+					}
+					
+		        }, function(tx, error) {
+		            console.log('Failed to retrieve notes from database - ' + error.message);
+					// sendResponse({results:[]});
 		        });
 		    });					
 		},
@@ -265,7 +406,7 @@ stickythang.db = {
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
 				tx.executeSql("DELETE FROM "+ stickythang.db.tableName + " where note = ''", []);
-		        tx.executeSql("SELECT COUNT(*) FROM "+ stickythang.db.tableName, [], function(result) {
+		        tx.executeSql("SELECT COUNT(id) as count FROM "+ stickythang.db.tableName, [], function(tx,result) {
 		        	// count exists loading stickies
 					console.log('count - loading sticky-notes')
 					stickythang.db.getIds();
@@ -297,6 +438,23 @@ stickythang.db = {
 				});
 	        });			
 		},
+		removeBuddy:function(buddy,sendResponse){	
+			if (!stickythang.isBuddy( buddy )){
+				stickythang.db.getBuddies();
+				sendResponse({message:'ignore removeBuddy as buddy not in DB'});
+				return;
+			}		
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("DELETE from "+ stickythang.db.tableName +"_buddies WHERE buddy = ?", 
+					[buddy],
+					function(){
+						stickythang.db.getBuddies(sendResponse);
+					},
+					function(tx,error){
+						sendResponse(error)
+				});
+	        });			
+		},
 		save:function(note,sendResponse){			
 	        stickythang.db.localdb.transaction(function (trans){
 	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET note = ?, ops = ?, scope = ?, timestamp = ? WHERE id = ?", 
@@ -309,6 +467,14 @@ stickythang.db = {
 						sendResponse(error)
 				});
 	        });			
+		},
+		share:function(note,sendResponse){			
+			// presume we are logged in so post new message to wall
+			var uri = "http://stickythang.com/lib/test.js",
+				cfg = {
+			        sync: true
+			    };
+			var request = Y.io(uri, cfg);	        			
 		},
 		saveNew:function(note,sendResponse){			
 			console.log('trying to save a new note');
@@ -328,10 +494,89 @@ stickythang.db = {
 				});
 	        });			
 		},
+		saveNewBuddy:function(buddy,sendResponse){			
+			console.log('trying to save a new buddy');
+			if (stickythang.isBuddy( buddy ) || !buddy){
+				sendResponse({message:'ignore saveNewBuddy as buddy already in DB, or empty'});
+				return;
+			}
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_buddies (id,label,buddy) VALUES (?, ?, ?)", 
+					["","",buddy],
+					function(){
+						stickythang.db.getBuddies(sendResponse);
+					},
+					function(tx,error){
+						console.log(error.message)
+						sendResponse(error)
+				});
+	        });			
+		},
+		saveNewIfNotExists:function(note){			
+			console.log('trying to save a new note from an external source, called by popup.html');
+			if (!note.html || note.html == ''){
+				//sendResponse({message:'!!!!note empty, not creating'})
+			}
+	        stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("SELECT COUNT(id) as count from "+ stickythang.db.tableName +" where id = ?", 
+					[note.id],
+					function(tx, result){
+						if (result){
+							console.log('result ');
+						}
+						if (result && result.rows){
+							console.log('result.rows ');
+						}
+						if (result && result.rows[0] ){
+							console.log('result && result.rows[0] ');
+						}
+						if (result && result.rows[0] && result.rows[0].count ){
+							console.log('Note exists already: '+ note.id);
+						}else{
+							console.log('Note NOT exists, we need to add it: '+ note.id);
+				            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+								[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , note.user, note.urlex],
+								function(){
+									stickythang.db.getAll();
+									console.log("inserted new item")
+									//sendResponse({message:'inserted new item'})
+								},
+								function(tx,error){
+									console.log(error.message)
+									//sendResponse(error);
+							});							
+						}
+		
+						
+						/* / count exists so no need to do anything
+						sendResponse({
+							message: "record exists, ignore instert"
+						})
+						*/
+					},
+					function(tx,error){
+						// no records returned so instert
+						console.log('Adding note: '+ note.id);
+			            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+							[note.id, note.domain, note.html, note.json, note.path, note.querystring, note.scope, note.timestamp, note.href , note.user, note.urlex],
+							function(){
+								stickythang.db.getAll();
+								console.log("inserted new item")
+								//sendResponse({message:'inserted new item'})
+							},
+							function(tx,error){
+								console.log(error.message)
+								//sendResponse(error);
+						});
+				});
+	        });			
+		},
 		updateShare:function(){
 			//var dataverson = stickythang.getLocalStorage('dataversion');
 			var Y = stickythang.Y;
-			console.log("updating share")
+			console.log("updating share depricated!!!!")
+			return;
+			/*
 			var uri = "http://stickythang.com/lib/test.js",
 				cfg = {
 			        sync: true
@@ -355,6 +600,7 @@ stickythang.db = {
 				};
 				stickythang.db.getShares();// update the list
 			});
+			*/
 		},
 		open: function(){
 			// open db assume it's the first time
@@ -377,12 +623,22 @@ stickythang.db = {
 						},function(tx,e){
 							console.log("db.open.trans connection open and returned an error "+ tx +"\n"+ stickythang.explode(e))
 						});
-				trans.executeSql('CREATE TABLE IF NOT EXISTS '+ stickythang.db.tableName +'_share '+
+				trans.executeSql('CREATE TABLE IF NOT EXISTS '+ stickythang.db.tableName +'_buddies '+
 					'	(id TEXT, '+
 					'	label TEXT, '+
-					'	url TEXT '+
+					'	buddy TEXT '+
 					');',[],function(){
-							console.log("db.open.trans connection open and returned")
+						/*
+							trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_buddies (id, label, buddy) VALUES (?,?,?)",["","","andrew"],
+									function(){stickythang.db.getBuddies();},
+									function(tx,error){console.log(error.message)});
+							trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_buddies (id, label, buddy) VALUES (?,?,?)",["","","patrick"],
+									function(){stickythang.db.getBuddies();},
+									function(tx,error){console.log(error.message)});
+							trans.executeSql("INSERT INTO "+ stickythang.db.tableName +"_buddies (id, label, buddy) VALUES (?,?,?)",["","","tester"],
+									function(){stickythang.db.getBuddies();},
+									function(tx,error){console.log(error.message)});
+						*/
 						},function(tx,e){
 							console.log("db.open.trans connection open and returned an error "+ tx +"\n"+ stickythang.explode(e))
 						});
@@ -422,25 +678,44 @@ stickythang.db = {
 
   </head>
 
-<body><form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="login">
-				<input type="hidden" name="redirect" value="index.php"/>
-				<p>
-					<label>Login with...</label>
-					<select>
-						<option>StickyThang!</option>
-						<option>Google</option>
-						<option>FaceBook</option>
-						<option>Yahoo</option>
-					</select>
-				</p>
-				<p>
-					<label for="username">User:</label><input value="tester" type="text" tabindex="1" name="username" id="username"/>
-				</p>
-				<p>
-					<label for="password">Password:</label><input value="password" type="password" tabindex="2" id="password" name="password"/>
-				</p>
-				<p class="centre">
-					<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
-				</p>
-			</form></body>
+<body>
+	
+	
+	<form id="newPost" action="http://stickythang.com/phpBB3/posting.php?mode=post&amp;f=2" method="post" name="postform">
+	
+		<input type="text" name="icon" value="0" />
+		<input type="text" name="subject" id="newSubject" value="" />
+		<input type="text" name="message" id="newMessage" />
+		<input type="text" name="disable_magic_url" value="true" />
+		<input type="text" name="post" value="Submit" />
+		<input type="text" name="creation_time" id="creation_time" value="" />
+		<input type="text" name="form_token" id="form_token" value="" />
+		<input type="text" name="form_origin_st" id="form_origin_st" value="" />
+
+	</form>
+	
+			
+	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="login">
+		<input type="hidden" name="redirect" value="index.php"/>
+		<p>
+			<label>Login with...</label>
+			<select>
+				<option>StickyThang!</option>
+				<option>Google</option>
+				<option>FaceBook</option>
+				<option>Yahoo</option>
+			</select>
+		</p>
+		<p>
+			<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
+		</p>
+		<p>
+			<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
+		</p>
+		<p class="centre">
+			<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
+		</p>
+	</form>
+			
+	</body>
 </html>
