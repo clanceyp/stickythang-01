@@ -62,7 +62,9 @@ div#stickythangFormContainer *.fade {
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-duration:0.75s;
 }
-
+div.stickythang div.card form.externalShare div.share {
+	display:none;
+}
 
 
 
@@ -290,8 +292,8 @@ div.stickythang div.edit {
 }
 div.stickythang div.edit iframe {
 	border:0 none;
-	height:inherit;
-	width:inherit;
+	height:99%;
+	width:99%;
 }
 div.stickythang div.scope2, 
 div.stickythang div.timestamp {
@@ -310,15 +312,15 @@ div.stickythang form {
 	padding:0 12px;
 }
 div.stickythang legend {
+	color:#fff;
 	font-size:14px;
+	margin:0;
 	padding:16px 0 8px 0;
 }
-div.stickythang div.scope label {
-	font-size:11px;
-}
-div.stickythang div.scope2 input {
-	margin:0 3px -1px 1px;
-	vertical-align:bottom;
+div.stickythang div.scope input {
+	margin:0;
+	padding:0;
+	width:auto;
 }
 
 div.stickythang div.timestamp {
@@ -338,7 +340,11 @@ div.stickythang div.timestamp {
 }
 div.stickythang form label {
 	display:block;
+	font-size:13px;
 	margin-bottom:3px;
+}
+div.stickythang div.scope label {
+	font-size:11px;
 }
 div.stickythang.form-hide form  {
 	visibility:hidden;
