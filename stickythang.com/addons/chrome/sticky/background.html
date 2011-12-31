@@ -50,7 +50,6 @@ chrome.extension.onRequest.addListener(
 			stickythang.db.count(sendResponse);
 		break;
 		case "getShares" : 
-			console.log('call to depricated method getShares')
 			stickythang.db.getShares(sendResponse);
 		break;
 		case "remove" :
@@ -132,16 +131,15 @@ YUI().use("io","json", function(Y) {
 		}
 			
 		// Subscribe to "io.success".
-		
+		Y.one("#loginFormUsername").set('value',ops.user);
+		Y.one("#loginFormPassword").set('value',ops.pass);
 		var uri = stickythang.ops.uriLogin,
+			formObject = Y.one("#loginForm"),
 	    	cfg = {
 	        method: 'POST',
 			sync: true,
 	        form: {
-				id : Y.one("#login"),
-	            username: ops.user,
-	            password: ops.pass,
-				redirect: "index.php"
+				id : formObject
 	        }
 	    };
 		return Y.io(uri, cfg);
@@ -193,7 +191,7 @@ YUI().use("io","json", function(Y) {
 		}
 	}
 	window.stickythang.getLoggedInUser = function(){// sync get the logged in user name
-		var user = 'nnothing',
+		var user = '',
 			uri = stickythang.ops.uriUserName,
 	    	cfg = {sync:true},
 	        request,
@@ -381,13 +379,6 @@ stickythang.db = {
 		    });					
 		},
 		getShares:function(sendResponse){
-			console.log('getShare; depricated method...')
-			if (sendResponse)
-			sendResponse({
-				results:new array,
-				message:'depricated method'
-			});
-			/*
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT id, label, url FROM "+ stickythang.db.tableName +"_share", [], function(tx, result) {
 		        	console.log("returing list :"+ result.rows.length);
@@ -409,23 +400,17 @@ stickythang.db = {
 					}
 					
 		        });
-		    });		
-		    */		
+		    });				
 		},
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
 				tx.executeSql("DELETE FROM "+ stickythang.db.tableName + " where note = ''", []);
 		        tx.executeSql("SELECT COUNT(id) as count FROM "+ stickythang.db.tableName, [], function(tx,result) {
 		        	// count exists loading stickies
-					if (result && result.rows && result.rows.item(0) && result.rows.item(0).count) {
-						console.log('count - loading sticky-notes')
-						stickythang.db.getIds();
-			            stickythang.db.getShares();
-			            stickythang.db.getAll(sendResponse);
-					}
-					else {
-						
-					}
+					console.log('count - loading sticky-notes')
+					stickythang.db.getIds();
+		            stickythang.db.getShares();
+		            stickythang.db.getAll(sendResponse);
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
 		                //stickythang.loadNotes(); 
@@ -535,8 +520,17 @@ stickythang.db = {
 	            trans.executeSql("SELECT COUNT(id) as count from "+ stickythang.db.tableName +" where id = ?", 
 					[note.id],
 					function(tx, result){
-						if (result && result.rows && result.rows.item(0) && result.rows.item(0).count ){
-							console.log(result.rows.item(0).count +' exists already: '+ note.id);
+						if (result){
+							console.log('result ');
+						}
+						if (result && result.rows){
+							console.log('result.rows ');
+						}
+						if (result && result.rows[0] ){
+							console.log('result && result.rows[0] ');
+						}
+						if (result && result.rows[0] && result.rows[0].count ){
+							console.log('Note exists already: '+ note.id);
 						}else{
 							console.log('Note NOT exists, we need to add it: '+ note.id);
 				            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -547,10 +541,12 @@ stickythang.db = {
 									//sendResponse({message:'inserted new item'})
 								},
 								function(tx,error){
-									console.log(error.message);
+									console.log(error.message)
 									//sendResponse(error);
 							});							
 						}
+		
+						
 						/* / count exists so no need to do anything
 						sendResponse({
 							message: "record exists, ignore instert"
@@ -698,26 +694,14 @@ stickythang.db = {
 	</form>
 	
 			
-	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="login">
-		<input type="hidden" name="redirect" value="index.php"/>
-		<p>
-			<label>Login with...</label>
-			<select>
-				<option>StickyThang!</option>
-				<option>Google</option>
-				<option>FaceBook</option>
-				<option>Yahoo</option>
-			</select>
-		</p>
-		<p>
-			<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
-		</p>
-		<p>
-			<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
-		</p>
-		<p class="centre">
-			<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
-		</p>
+	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="loginForm">
+
+		<input type="text" name="username" id="loginFormUsername"/>
+		<input type="password" name="password" id="loginFormPassword"/>
+		<input type="checkbox" name="autologin" checked="true"/>
+		<input type="submit" name="login" value="Login"/>
+		<input type="hidden" name="redirect" value="./index.php?"/>
+
 	</form>
 			
 	</body>
