@@ -524,7 +524,18 @@ stickythang.createNoteYUI = function(result){
  		note.div.plug(Y.Plugin.Drag);
 		note.div.dd.addHandle('div.timestamp');	
 		note.div.dd.addHandle('div.maximisebutton');	
-	
+		
+		/* stop google form stealing the key press */
+		function StopPropagation(e){
+			// Stop the event's default behavior
+			// e.preventDefault();
+			
+			// Stop the event from bubbling up the DOM tree
+			e.stopPropagation();
+		}
+		note.div.on('keypress',StopPropagation);
+		note.div.on('keydown',StopPropagation);
+
 		if (note.urlex){
 			note.div.one("div.edit").addClass("externalURL");
 			note.div.one("div.timestamp").setContent( "Shared by "+ note.user);
@@ -533,7 +544,7 @@ stickythang.createNoteYUI = function(result){
 			note.div.one("div.edit")
 				.setAttribute( 'contenteditable' , 'true' )
 				.set('innerHTML', note.html)
-				.on('keyup',function(){note.edited=true;note.saveSoon();});
+				.on('keyup',function(e){note.edited=true;note.saveSoon();});
 		}	
 		
 		note.div.on("focus",function(e){
