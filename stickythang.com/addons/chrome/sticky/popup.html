@@ -192,7 +192,7 @@ div.bottom a {
 							mxlen = 140,
 							url;
 			            for (var i = 0; i < rs.length; ++i) {
-							if (!rs[i].note){continue}
+							if (!rs[i].note || rs[i].urlex){continue}
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
 							url = rs[i].url
