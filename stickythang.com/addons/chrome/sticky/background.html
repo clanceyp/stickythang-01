@@ -131,16 +131,15 @@ YUI().use("io","json", function(Y) {
 		}
 			
 		// Subscribe to "io.success".
-		
+		Y.one("#loginFormUsername").set('value',ops.user);
+		Y.one("#loginFormPassword").set('value',ops.pass);
 		var uri = stickythang.ops.uriLogin,
+			formObject = Y.one("#loginForm"),
 	    	cfg = {
 	        method: 'POST',
 			sync: true,
 	        form: {
-				id : Y.one("#login"),
-	            username: ops.user,
-	            password: ops.pass,
-				redirect: "index.php"
+				id : formObject
 	        }
 	    };
 		return Y.io(uri, cfg);
@@ -192,7 +191,7 @@ YUI().use("io","json", function(Y) {
 		}
 	}
 	window.stickythang.getLoggedInUser = function(){// sync get the logged in user name
-		var user = 'nnothing',
+		var user = '',
 			uri = stickythang.ops.uriUserName,
 	    	cfg = {sync:true},
 	        request,
@@ -695,26 +694,14 @@ stickythang.db = {
 	</form>
 	
 			
-	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="login">
-		<input type="hidden" name="redirect" value="index.php"/>
-		<p>
-			<label>Login with...</label>
-			<select>
-				<option>StickyThang!</option>
-				<option>Google</option>
-				<option>FaceBook</option>
-				<option>Yahoo</option>
-			</select>
-		</p>
-		<p>
-			<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
-		</p>
-		<p>
-			<label for="password">Password:</label><input value="" type="password" tabindex="2" id="password" name="password"/>
-		</p>
-		<p class="centre">
-			<input type="submit" id="loginButton" name="login" tabindex="6"  value="log me in to StickyThang!" />
-		</p>
+	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="loginForm">
+
+		<input type="text" name="username" id="loginFormUsername"/>
+		<input type="password" name="password" id="loginFormPassword"/>
+		<input type="checkbox" name="autologin" checked="true"/>
+		<input type="submit" name="login" value="Login"/>
+		<input type="hidden" name="redirect" value="./index.php?"/>
+
 	</form>
 			
 	</body>

@@ -87,9 +87,10 @@ div.bottom a {
 				<form id="feedback" action="http://stickythang.com/index.php?id=3" method="post">
 					<input type="hidden" name="name" id="name" />
 					<input type="hidden" name="email" value="feedback@stickthang.com" />
+					<legend>Give feedback</legend>
 					<p>
 						<label for="type">Type:</label>
-						<select id="type">
+						<select id="type" name="type">
 							<option>General</option>
 							<option>Bug</option>
 							<option>Suggestion / feature request</option>
@@ -289,7 +290,7 @@ div.bottom a {
 						})
 					})		
 				})
-				Y.one("#loginButton").on('click',function(e){
+				function Login(e){
 					e.preventDefault();
 					// Y.one("#loginButton").set('value',typeof background.window)
 					// return;
@@ -299,37 +300,40 @@ div.bottom a {
 							,pass:Y.one("#password").get('value')
 						})
 						if ( v.responseText == 'ST!invalid'){
-							Y.one("#loginButton").set('value','Please add your details')
+							Y.one("#loginButton").set('value','Incorrect username or password')
 						} else if ( v.responseText.match("You have been successfully logged in") ){
-							Y.one("#loginButton").set('value','Login successful!')
+							Y.one("#loginButton").set('value','Login successful')
 						} else if ( v.responseText.match("<title>stickythang.com &bull; Index page</title>") ) {
-							Y.one("#loginButton").set('value','You alredy have an active session').setAttribute('disabled','disabled')
+							// user aleady had a logged in session, get logged in user name
+							var u = background.stickythang.getLoggedInUser();
+							Y.one("#loginButton").set('value','Logged in as '+u);
 						} else {
-							Y.one("#loginButton").set('value','Not sure what the status is : ( ');
+							Y.one("#loginButton").set('value','Could not login : ( ');
 							console.log(v.responseText)
 						}
 						
 					}catch(e){
 						Y.one("#loginButton").set('value','e:'+e.message)
-					}
-					
-				})
+					}				
+				}
+				Y.one("#login").on('submit',Login);
 	
 				function CheckLoginStatus(){
 					console.log('checking login status:')
-					Y.one("#loginInputArea").setStyle('display','none');
+					
+					
 					var html = "",
-						u = background.stickythang.getLoggedInUser('user');
+						u = background.stickythang.getLoggedInUser();
 						
 						if ( !u ){// it's a sticky thang response
-							html = 'Not logged in, <a target="_blank" href="options.html">Login/Register</a>';
+							html = 'To share stickies you need to login below or <a target="_blank" href="options.html">register</a>.';
 							// Y.one("#loginInputArea").setStyle('display','block');
 						} else {
 							// html = 'Status, unknown';
 							html = 'Logged in as, '+ u;
-							// Y.one("#loginInputArea").setStyle('display','block');
-							Y.one("#loginStatus").setContent(html);
-						}						
+							Y.one("#loginInputArea").setStyle('display','none');
+						}
+						Y.one("#loginStatus").setContent(html);						
 				}
 				CheckLoginStatus()
 
