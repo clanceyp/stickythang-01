@@ -50,6 +50,7 @@ chrome.extension.onRequest.addListener(
 			stickythang.db.count(sendResponse);
 		break;
 		case "getShares" : 
+			console.log('call to depricated method getShares')
 			stickythang.db.getShares(sendResponse);
 		break;
 		case "remove" :
@@ -380,6 +381,13 @@ stickythang.db = {
 		    });					
 		},
 		getShares:function(sendResponse){
+			console.log('getShare; depricated method...')
+			if (sendResponse)
+			sendResponse({
+				results:new array,
+				message:'depricated method'
+			});
+			/*
 		    stickythang.db.localdb.transaction(function(tx) {
 		        tx.executeSql("SELECT id, label, url FROM "+ stickythang.db.tableName +"_share", [], function(tx, result) {
 		        	console.log("returing list :"+ result.rows.length);
@@ -401,17 +409,23 @@ stickythang.db = {
 					}
 					
 		        });
-		    });				
+		    });		
+		    */		
 		},
 		count:function(sendResponse){
 		    stickythang.db.localdb.transaction(function(tx) {
 				tx.executeSql("DELETE FROM "+ stickythang.db.tableName + " where note = ''", []);
 		        tx.executeSql("SELECT COUNT(id) as count FROM "+ stickythang.db.tableName, [], function(tx,result) {
 		        	// count exists loading stickies
-					console.log('count - loading sticky-notes')
-					stickythang.db.getIds();
-		            stickythang.db.getShares();
-		            stickythang.db.getAll(sendResponse);
+					if (result && result.rows && result.rows.item(0) && result.rows.item(0).count) {
+						console.log('count - loading sticky-notes')
+						stickythang.db.getIds();
+			            stickythang.db.getShares();
+			            stickythang.db.getAll(sendResponse);
+					}
+					else {
+						
+					}
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
 		                //stickythang.loadNotes(); 
@@ -521,17 +535,8 @@ stickythang.db = {
 	            trans.executeSql("SELECT COUNT(id) as count from "+ stickythang.db.tableName +" where id = ?", 
 					[note.id],
 					function(tx, result){
-						if (result){
-							console.log('result ');
-						}
-						if (result && result.rows){
-							console.log('result.rows ');
-						}
-						if (result && result.rows[0] ){
-							console.log('result && result.rows[0] ');
-						}
-						if (result && result.rows[0] && result.rows[0].count ){
-							console.log('Note exists already: '+ note.id);
+						if (result && result.rows && result.rows.item(0) && result.rows.item(0).count ){
+							console.log(result.rows.item(0).count +' exists already: '+ note.id);
 						}else{
 							console.log('Note NOT exists, we need to add it: '+ note.id);
 				            tx.executeSql("INSERT INTO "+ stickythang.db.tableName +" (id, domain, note, ops, path, querystring, scope, timestamp, url, user, urlex) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
@@ -542,12 +547,10 @@ stickythang.db = {
 									//sendResponse({message:'inserted new item'})
 								},
 								function(tx,error){
-									console.log(error.message)
+									console.log(error.message);
 									//sendResponse(error);
 							});							
 						}
-		
-						
 						/* / count exists so no need to do anything
 						sendResponse({
 							message: "record exists, ignore instert"
