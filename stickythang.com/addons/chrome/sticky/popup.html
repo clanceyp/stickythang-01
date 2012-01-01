@@ -192,7 +192,7 @@ div.bottom a {
 							note = "",
 							mxlen = 140,
 							url;
-			            for (var i = 0; i < rs.length; ++i) {
+			            for (var i = rs.length-1; i >= 0; i--) {
 							if (!rs[i].note){continue}
 							note = rs[i].note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
