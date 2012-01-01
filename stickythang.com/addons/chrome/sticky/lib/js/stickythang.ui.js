@@ -183,17 +183,17 @@ window.stickythang={
 stickythang.loadAll = function(list){
 	stickythang.log('stickythang.getAll('+ list.length+')');
     for (var i = 0; i < list.length; ++i) {
-		stickythang.log('stickythang.getAll: checking note '+ i );
+		stickythang.log('stickythang.getAll: checking note['+ i +'].scope '+ list[i].scope );
 		if (list[i].scope == 'global'){
 			stickythang.log('stickythang.getAll: creating global note '+ i)
 			stickythang.createNoteYUI( list[i] );
 		} else if (list[i].scope == 'domain' && list[i].domain == window.location.hostname){
 			stickythang.log('stickythang.getAll: creating domain note '+ i )
 			stickythang.createNoteYUI( list[i] );
-		} else if (list[i].scope == 'path' && list[i].domain == window.location.hostname){
+		} else if (list[i].scope == 'path' && list[i].path == window.location.pathname){
 			stickythang.log('stickythang.getAll: creating path note '+ list[i].path )
 			stickythang.createNoteYUI( list[i] );
-		} else if (list[i].path == window.location.href){
+		} else if (list[i].url == window.location.href){
 			stickythang.log('stickythang.getAll: creating href match note ')
 			stickythang.createNoteYUI( list[i] );
 		} else {
