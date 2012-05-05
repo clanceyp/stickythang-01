@@ -290,6 +290,12 @@ div.stickythang div.edit {
 	overflow-y: auto;
 	padding:0 10px;
 }
+div.stickythang div.edit textarea {
+	background-color:transparent;
+	border:0 none;
+	height:90%;
+	width:94%;
+}
 div.stickythang div.edit.externalURL {
 	overflow-y:hidden;
 	padding-right:0;
