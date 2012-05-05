@@ -12,7 +12,7 @@ version: alpha 0.1
 <base href="http://stickythang.com/"></base>
 <link rel="stylesheet" href="http://stickythang.com/assets/templates/drupify/style.css" type="text/css" />
 
-<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
+<script src="http://yui.yahooapis.com/3.5.0/build/yui/yui-min.js"></script>
 
  <style type="text/css">
  	div.content p {
@@ -43,6 +43,9 @@ version: alpha 0.1
 		font-size:120%;
 		margin:0;
 		padding:0;
+	}
+	input.long {
+		width:280px;
 	}
 	table.data {
 		border-collapse:collapse;
@@ -212,30 +215,23 @@ div.circles {
 					
 					<ul class="menu" dir="rtl">
 						<li class=""><a class="Advanced"><span>Advanced settings</span></a></li>
-						<li class=""><a class="Options"><span>Options</span></a></li>
 						<li class=""><a class="Feedback"><span>Feedback</span></a></li>
+						<li class=""><a class="Options"><span>Friends and buddies</span></a></li>
 						<li class="active"><a class="Signup"><span>Sign up</span></a></li>
 					</ul>
 					<form id="formSettings">
 					<div id="Options" class="unit off">
 					
 						<fieldset>
-							<legend>Settings, friends and circles</legend>
+							<legend>Friends, buddies and circles</legend>
 							
 
 							
-							<label>Note themes (not implented)</label>
-							<p><select>
-								<option>Pastel (default)</option>
-								<option disabled="true">Aqua</option>
-								<option disabled="true">Jungle</option>
-								<option disabled="true">Monochrome</option>
-								<option disabled="true">Viberant</option>
-							</select></p>
 
-							<label>Add/remove buddy <span>(people I'm following)</span></label>
+
+							<label>Add/remove buddy <span>(add the email address of someone you what to follow)</span></label>
 							<p>
-								<input type="text" id="inputAddBuddy" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
+								<input type="text" id="inputAddBuddy" class="long" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
 							</p>
 							<p>People I'm following...</p>
 							<ul id="ulBuddiesList">
@@ -306,6 +302,14 @@ div.circles {
 					<div id="Advanced" class="unit off">
 						<fieldset>
 							<legend>Advanced settings <span>(not implented)</span></legend>
+							<label>Note themes (not implented)</label>
+							<p><select>
+								<option>Pastel (default)</option>
+								<option disabled="true">Aqua</option>
+								<option disabled="true">Jungle</option>
+								<option disabled="true">Monochrome</option>
+								<option disabled="true">Viberant</option>
+							</select></p>
 							<label>Enable submit to Bugzilla <input type="checkbox" disabled="true" /></label>
 							<label>Enable submit to JIRA <input type="checkbox" disabled="true" /></label>							
 							<label>Custom CSS</label>
@@ -313,11 +317,12 @@ div.circles {
 							<p>
 								<input type="button" value="update" />
 							</p>
+							
 						</fieldset>
 						
 					</div>	
 					<div id="Signup" class="unit">
-						<iframe id="" src="http://stickythang.com/phpBB3/ucp.php" frameborder="0" style="width:100%;height:420px;margin:0;padding:0;">
+						<iframe id="iframeSignUp" src="http://stickio.com/signup" frameborder="0" style="width:100%;height:420px;margin:0;padding:0;">
 							
 							
 						</iframe>
