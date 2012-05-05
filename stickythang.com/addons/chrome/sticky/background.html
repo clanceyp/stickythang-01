@@ -76,8 +76,8 @@ chrome.extension.onRequest.addListener(
 window.stickythang = {
 	user:'',bespokeCSS:"",shares:[],
 	ops:{
-		uriUserName:"http://stickythang.com/phpBB3/ucp.php?i=profile&mode=reg_details",
-		uriLogin:"http://stickythang.com/phpBB3/ucp.php?mode=login",
+		uriUserName:"http://www.stickio.com/login",
+		uriLogin:"http://www.stickio.com/login",
 		uriNewPost:"http://stickythang.com/phpBB3/posting.php?mode=post&f=2"
 	},
 	getLocalStorage:function(key,def){
@@ -698,15 +698,31 @@ stickythang.db = {
 	</form>
 	
 			
-	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="loginForm">
+	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="xloginForm">
 
-		<input type="text" name="username" id="loginFormUsername"/>
-		<input type="password" name="password" id="loginFormPassword"/>
+		<input type="text" name="username" id="xloginFormUsername"/>
+		<input type="password" name="password" id="xloginFormPassword"/>
 		<input type="checkbox" name="autologin" checked="true"/>
 		<input type="submit" name="login" value="Login"/>
 		<input type="hidden" name="redirect" value="./index.php?"/>
 
 	</form>
+	
+	<form id="loginForm" action="http://www.stickio.com/login" method="post">
+            <fieldset class="loginLoginFieldset">
+                <label class="loginUsernameLabel">
+                    <input id="loginFormUsername" class="loginUsername" type="text" name="username">
+                </label>
+                
+                <label class="loginPasswordLabel">
+                    <input id="loginFormPassword" class="loginPassword" type="password" name="password">
+                </label>
+                <input class="returnUrl" type="hidden" name="returnUrl" value="/login">
+
+                <input class="loginLoginValue" type="hidden" name="service" value="login">
+                <span class="loginLoginButton"><input type="submit" name="Login" value="Login"></span>
+            </fieldset>
+        </form>	
 			
 	</body>
 </html>	
