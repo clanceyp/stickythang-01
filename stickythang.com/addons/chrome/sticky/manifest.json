@@ -2,7 +2,7 @@
   // Required
   "name": "StickyThang! ALPHA",
   "version": "0.3",
-  "update_url": "http://stickythang.com/addons/chrome/update.xml",
+  "update_url": "http://stickythang.com/extentions/chrome/update.xml",
   "homepage_url": "http://stickythang.com",
   "background_page": "background.html",
   "options_page": "options.html",
@@ -119,6 +119,7 @@
   ,"permissions": [
 		"tabs" 
 		,"http://stickythang.com/"
+		,"http://www.stickio.com/"
 		,"http://yui.yahooapis.com/"
 		,"unlimitedStorage"
   ]

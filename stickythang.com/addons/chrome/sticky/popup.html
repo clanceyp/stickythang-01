@@ -292,6 +292,7 @@ div.bottom a {
 				})
 				function Login(e){
 					e.preventDefault();
+					
 					// Y.one("#loginButton").set('value',typeof background.window)
 					// return;
 					try {
@@ -303,10 +304,10 @@ div.bottom a {
 							Y.one("#loginButton").set('value','Incorrect username or password')
 						} else if ( v.responseText.match("You have been successfully logged in") ){
 							Y.one("#loginButton").set('value','Login successful')
-						} else if ( v.responseText.match("<title>stickythang.com &bull; Index page</title>") ) {
+						} else if ( v.responseText.indexOf('{"user":') == 0 ) {
+							var obj = Y.JSON.parse(v.responseText)
 							// user aleady had a logged in session, get logged in user name
-							var u = background.stickythang.getLoggedInUser();
-							Y.one("#loginButton").set('value','Logged in as '+u);
+							Y.one("#loginButton").set('value','Logged in as '+obj.user);
 						} else {
 							Y.one("#loginButton").set('value','Could not login : ( ');
 							console.log(v.responseText)

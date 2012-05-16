@@ -143,7 +143,7 @@ window.stickythang={
 				'<label>Colour <select></select></label>'+
 				'<div class="share">'+
 				'<label>Share with: <span>(commer or line seporated list)</span><textarea disabled="true">@everyone</textarea></label>'+
-				'<input type="button" value="share" id="buttonShareSticky" /><span id="buttonShareStickyNote"></span>'+
+				'<input type="button" value="share" class="buttonShareSticky" /><span class="buttonShareStickyNote"></span>'+
 				'</div><div class="scope">Scope: '+
 				'<label><input type="radio" name="scope" class="path" value="path"> page</label>'+
 				'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
@@ -350,7 +350,7 @@ stickythang.Note.prototype = {
 		if (self.urlex){
 			html = self.html;
 		}else{
-			html = self.div.one("div.edit").get('innerHTML');
+			html = self.div.one("div.edit textarea").get('value');
 		}
 		return html;
 	},
@@ -390,7 +390,7 @@ stickythang.Note.prototype = {
 			stickythang.log('adding node:'+ops.id)	
 			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
 			  if(window.stickythang.debug){
-				console.log(response.message)
+				 console.log(response.message)
 				}
 			});				
 			note.isNew = false;
@@ -445,7 +445,7 @@ stickythang.Note.prototype = {
 		var Y = stickythang.Y,
 			uri = this.urlex.replace("viewtopic.php?","posting.php?mode=reply&f="+stickythang.forumID+"&")
 		// inner.set('innerHTML','trying to load content:'+url);
-		this.div.one("div.edit").append("<iframe src='"+ uri +"' />");
+		this.div.one("div.edit").empty().append("<iframe src='"+ uri +"' />");
 	},
 	shareMe:function(shared){
 		this.div.setData('shared',shared);
@@ -543,7 +543,7 @@ stickythang.createNoteYUI = function(result){
 		} else {
 			note.div.one("div.edit")
 				.setAttribute( 'contenteditable' , 'true' )
-				.set('innerHTML', note.html)
+				.set('innerHTML', '<textarea>'+note.html+'</textarea>')
 				.on('keyup',function(e){note.edited=true;note.saveSoon();});
 		}	
 		
@@ -628,20 +628,21 @@ stickythang.createNoteYUI = function(result){
 				self.setData('className',newClassName).replaceClass( currentClassName , newClassName )
 			})
 			if (self.getData('shared')=='true'){
-				self.one("#buttonShareSticky").set('value',"un-share")
+				self.one("input.buttonShareSticky").set('value',"un-share")
 			}
-			if (stickythang.user == 'me'){
+			if (stickythang.user == 'me' || !stickythang.user){
 				// user not logged in
-				self.one("#buttonShareSticky").setStyle('display','none')
-				self.one("#buttonShareStickyNote").setContent('Login via options page, to share sticky')
+				self.one("input.buttonShareSticky").setStyle('display','none')
+				self.one("span.buttonShareStickyNote").setContent('To share this sticky, please log in to StickyThang, if you have please refresh the page and try again.')
 			} else {
-				self.one("#buttonShareSticky").set('value','Share as '+ stickythang.user)
-				self.one("#buttonShareSticky").on("click",function(e){
+				self.one("input.buttonShareSticky").set('value','Share as '+ stickythang.user)
+				self.one("input.buttonShareSticky").on("click",function(e){
 					if (self.getData('shared')=='true'){
 						// self.one("#buttonShareSticky").set('value',"un-share")
 						// self.shareMe('false');
 					}else{
 						console.log('trying to share')
+						self.one("input.buttonShareSticky").set('value','Bamb... Thanks for sharing!')
 						// self.one("#buttonShareSticky").set('value',"share")
 						note.shareMe('true');
 					}				
