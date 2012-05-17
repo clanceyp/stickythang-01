@@ -76,9 +76,9 @@ chrome.extension.onRequest.addListener(
 window.stickythang = {
 	user:'',bespokeCSS:"",shares:[],
 	ops:{
-		uriUserName:"http://www.stickio.com/login",
-		uriLogin:"http://www.stickio.com/login",
-		uriNewPost:"http://stickythang.com/phpBB3/posting.php?mode=post&f=2"
+		uriUserName:"http://www.stickthang.com/login",
+		uriLogin:"http://www.stickthang.com/login",
+		uriNewPost:"http://stickythang.com/"
 	},
 	getLocalStorage:function(key,def){
 		return localStorage[key] || def || ''
@@ -708,7 +708,7 @@ stickythang.db = {
 
 	</form>
 	
-	<form id="loginForm" action="http://www.stickio.com/login" method="post">
+	<form id="loginForm" action="http://www.stickythang.com/login" method="post">
             <fieldset class="loginLoginFieldset">
                 <label class="loginUsernameLabel">
                     <input id="loginFormUsername" class="loginUsername" type="text" name="username">
