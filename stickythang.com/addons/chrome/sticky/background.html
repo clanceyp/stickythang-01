@@ -69,6 +69,13 @@ chrome.extension.onRequest.addListener(
 			//stickythang.updateUser(request.user)
 			sendResponse({message:"depricated method, please check code"})
 		break;
+		case "loginUser" :
+			stickythang.loginUser(request.ops,sendResponse);
+		break;
+		case "checkLoggedInUser" :
+			//sendResponse({"message":"its the message"})
+			stickythang.checkLoggedInUser(request.ops,sendResponse);
+		break;
 	}
 
 });	  
@@ -76,9 +83,10 @@ chrome.extension.onRequest.addListener(
 window.stickythang = {
 	user:'',bespokeCSS:"",shares:[],
 	ops:{
-		uriUserName:"http://www.stickthang.com/login",
-		uriLogin:"http://www.stickthang.com/login",
-		uriNewPost:"http://stickythang.com/"
+		uriUserName:"http://www.stickythang.com/login",
+		uriLogin:"http://www.stickythang.com/login",
+		uriNewPost:"http://www.stickythang.com/notes/add.php",
+		urlListNots:"http://www.stickythang.com/notes/list.php"
 	},
 	getLocalStorage:function(key,def){
 		return localStorage[key] || def || ''
@@ -99,6 +107,34 @@ window.stickythang = {
 			}
 		}
 		return false;
+	},
+	getBuddyList:function(){
+		stickythang.db.getBuddies();
+		var buddies = stickythang.db.listBuddies;
+		return "'"+ buddies.join("','") +"'";
+	},
+	getList:function(){
+		var uri = stickythang.ops.urlListNots,
+			Y = stickythang.Y,
+			formObject = Y.one("#getList"),
+	    	cfg = {
+				method: 'POST',
+		        form: {
+					id : formObject
+		        },
+				on: {
+					complete:function(id,request){
+						var obj = Y.JSON.parse(request.responseText);
+						console.log(obj["notes"].length)
+					}
+				}
+		    },
+			buddies = 
+		Y.one("#inputAuthors").set("value",stickythang.getBuddyList())	
+		Y.io(uri, cfg);
+	},
+	loginUser:function(ops,sendResponse){
+		window.stickythang.login(ops,sendResponse);
 	}
 }	
 window.ids = []; 
@@ -116,10 +152,10 @@ YUI().use("io","json", function(Y) {
 	function onSuccess(transactionid, response, arguments) {
 	   console.log('good:'+ response.responseText)
 	}	
-	Y.on('io:success', onSuccess, Y, true);		
+	// Y.on('io:success', onSuccess, Y, true);		
 		
-	window.stickythang.login = function(ops){
-
+	window.stickythang.login = function(ops,sendResponse){
+		var sync = (sendResponse) ? false : true;
 		if (!ops || !ops.user || !ops.pass){
 			var user = stickythang.getLoggedInUser();
 			if (user){
@@ -138,54 +174,64 @@ YUI().use("io","json", function(Y) {
 			formObject = Y.one("#loginForm"),
 	    	cfg = {
 	        method: 'POST',
-			sync: true,
+			sync: sync,
 	        form: {
 				id : formObject
 	        }
 	    };
-		return Y.io(uri, cfg);
+		if (!sync) {
+			cfg.on = {
+				complete:function(id,request){
+					var i = request.responseText.indexOf("user"),obj,user = 'me';
+					if (i > 0 && i < 5 ){
+						obj = Y.JSON.parse(request.responseText);	
+					}
+					if (obj && obj.user){
+						user = obj.user
+						window.stickythang.setLocalStorage('user',user);
+					}
+					sendResponse({'message':'from login','user':user,'ops':ops});
+				}
+			}
+			Y.io(uri, cfg);
+		} else {
+			return Y.io(uri, cfg);
+		}
 	}
 	window.stickythang.newPost = function(ops,sendResponse){
-		/*
-		 * 
-	<form id="newPost" action="http://stickythang.com/phpBB3/posting.php?mode=post&amp;f=2" method="post" name="postform">
-	
-		<input type="radio" class="radio" name="icon" value="0" checked="checked" />
-		<input class="post" type="text" name="subject" id="newSubject" size="45" tabindex="2" value="" />
-		<textarea name="message" rows="15" cols="76" tabindex="3" id="newMessage"></textarea>
-		<input type="checkbox" class="radio" name="disable_magic_url" value="true" />
-		<input class="btnmain" type="submit" accesskey="s" tabindex="11" name="post" value="Submit" />
-		<input type="hidden" name="creation_time" value="1324223761" />
-		<!-- input type="hidden" name="form_token" value="9e41de49441b5622f5d5a495740f69e409cc0603" / -->
-
-	</form>
-	 
-		 */
 		
 		try {
 			var uri = stickythang.ops.uriNewPost,
-				f = Y.io(uri,{sync:true}),
-				form_token = /"form_token" value="(.+)"/.exec(f.responseText)[1],
-				creation_time = (new Date().getTime()),
+				user = stickythang.getLoggedInUser(),
 		    	cfg = {
 			        method: 'POST',
-					sync: true,
+					sync: false,
 			        form: {
-						name:'postform',
 						id:Y.one("#newPost")
-			        }
+			        },
+					on: {
+						complete:function(id,request){
+							// TODO; handle errors
+							sendResponse({message:"request to save note recived by stickythang.com"});
+						}
+					}
 			    };
-
-				Y.one("#newSubject").set('value',ops.subject);	
-				Y.one("#newMessage").set('value',ops.message);				
-				Y.one("#creation_time").set('value',creation_time);				
-				Y.one("#form_token").set('value',form_token);				
-				Y.one("#form_origin_st").set('value','sticky');				
+				if (user && user != 'me' && ops.message && ops.subject){
+					Y.one("#postAuthor").set('value', user);	
+					Y.one("#postOps").set('value',ops.message);	
+					Y.one("#postNote").set('value',ops.subject);
+					console.log('Trying to submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
+					request = Y.io(uri,cfg);
+				} else {
+					console.log('Could not submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
+					sendResponse({message:"Could not save sticky",error:"user not logged in, or content error"});
+				}
 					
-				var request = Y.io(uri,cfg);
+					
 				
-				console.log(request.responseText)
-				sendResponse({message:"request to save note sent to stickythang.com"});
+				
+				
+				
 			
 		}catch(e){
 			sendResponse({message:e.message+": couldn't save note :( user may not be logged in."});
@@ -212,30 +258,41 @@ YUI().use("io","json", function(Y) {
 		
 		return user;
 	}
-	window.stickythang.checkLoggedInUser = function(){// lazy get the logged in user name
-		var user = '',
-			uri = stickythang.ops.uriUserName,
-	    	cfg = {sync:false},
-	        request,
+	window.stickythang.checkLoggedInUser = function(ops,sendResponse){// lazy get the logged in user name
+		var uri = stickythang.ops.uriUserName,
+			request,
 			obj,
-			on = {success:function(id,request){
+			cfg = {on:{complete:function(id,request){
+				console.log('got user name:'+ request.responseText);
 				var i = request.responseText.indexOf("user"),
 					obj,
 					user;
 				if (i > 0 && i < 5 ){
-					try{
+					try {
 						obj = Y.JSON.parse(request.responseText);
-					}catch(e){
-						console.log( 'not logged in, or error:' + e.message )
-					}		
+					} 
+					catch (e) {
+						console.log('not logged in, or error:' + e.message);
+					}finally {
+						console.log('user:'+user)
+					}
 				}else{
-					console.log( 'not logged in' )
+					console.log( 'not logged in' );
+					user = "me";
 				}
 				if (obj && obj.user){
 					window.stickythang.setLocalStorage('user',obj.user);
-				}				
-			}};
-	   
+					user = obj.user;
+					console.log("obj and obj.user :"+ user);
+				} else {
+					console.log("some sort of issue");
+				}
+				if (sendResponse){
+					ops.user = user;
+					ops.message = "response from server";
+					sendResponse(ops)
+				}
+			}}};
 	    Y.io(uri, cfg);
 		
 	}
@@ -303,7 +360,7 @@ stickythang.db = {
 						sendResponse({
 							list: stickythang.db.listAll,
 							stickiesActive: stickythang.getLocalStorage('stickiesActive'),
-							user: stickythang.getLocalStorage('user','me'),
+							// user: stickythang.getLocalStorage('user','me'),
 							shares: stickythang.shares,
 							message: 'success'
 						})
@@ -683,30 +740,19 @@ stickythang.db = {
 
 <body>
 	
-	
-	<form id="newPost" action="http://stickythang.com/phpBB3/posting.php?mode=post&amp;f=2" method="post" name="postform">
-	
-		<input type="text" name="icon" value="0" />
-		<input type="text" name="subject" id="newSubject" value="" />
-		<input type="text" name="message" id="newMessage" />
-		<input type="text" name="disable_magic_url" value="true" />
-		<input type="text" name="post" value="Submit" />
-		<input type="text" name="creation_time" id="creation_time" value="" />
-		<input type="text" name="form_token" id="form_token" value="" />
-		<input type="text" name="form_origin_st" id="form_origin_st" value="" />
-
+	<form id="getList" method="POST">
+		<input type="hidden" name="authors" id="inputAuthors" />
+		<input type="hidden" name="offset" value="0" id="inputOffset" />
 	</form>
 	
-			
-	<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" method="post" id="xloginForm">
-
-		<input type="text" name="username" id="xloginFormUsername"/>
-		<input type="password" name="password" id="xloginFormPassword"/>
-		<input type="checkbox" name="autologin" checked="true"/>
-		<input type="submit" name="login" value="Login"/>
-		<input type="hidden" name="redirect" value="./index.php?"/>
-
+	<form id="newPost" method="POST" action="http://stickythang.com/notes/add.php">
+		<input type="hidden" name="offset" value="0"/>
+		<input type="hidden" name="author" id="postAuthor" />
+		<input type="hidden" name="ops" id="postOps" />
+		<input type="hidden" name="note" id="postNote" />
 	</form>
+		
+
 	
 	<form id="loginForm" action="http://www.stickythang.com/login" method="post">
             <fieldset class="loginLoginFieldset">
