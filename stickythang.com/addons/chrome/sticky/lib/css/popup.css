@@ -1,9 +1,11 @@
 	
 html {
 	border-radius:5px;
-	background: #5670A1 url(http://stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
+	background: #5670A1 url(http://www.stickythang.com/assets/templates/drupify/images/bg.png) 0 0 repeat-x;
+	width:344px;
 }	
 body {
+	display:block;
 	margin:0;
 	padding:10px;
 	width:324px;
