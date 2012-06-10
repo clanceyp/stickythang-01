@@ -28,22 +28,24 @@ version: alpha 0.1
 			label.auto {
 				width:auto;
 			}
+			div.bottom {
+				background: #121A28 url(http://stickythang.com/assets/templates/drupify/images/bottom-bg.png) 0 0 repeat-x;
+				border-radius:0 0 10px 10px ;
+				color:#888;
+				font-size:120%;
+				padding:14px 0 10px;
+				text-align:center;
+			}
+			div.bottom a {
+				color:inherit
+			}
+			body {display: block;}
 			
-
-div.bottom {
-	background: #121A28 url(http://stickythang.com/assets/templates/drupify/images/bottom-bg.png) 0 0 repeat-x;
-	border-radius:0 0 10px 10px ;
-	color:#888;
-	font-size:120%;
-	padding:14px 0 10px;
-	text-align:center;
-}
-div.bottom a {
-	color:inherit
-}
-h1 {display:none}			
-			
-			
+			h1 {
+				height:2px;
+				overflow:hidden;
+				visibility:hidden;
+			}
 		</style>
 		
 	</head>
@@ -56,7 +58,7 @@ h1 {display:none}
 			<li><a class="LoginForm"><span>Login/Feedback </span></a></li>
 		</ul>
 		<div id="LoginForm" class="off unit">
-			<form action="http://stickythang.com/phpBB3/ucp.php?mode=login" target="hiddenframe" method="post" id="login">
+			<form action="/" target="hiddenframe" method="post" id="login">
 				<input type="hidden" name="redirect" value="index.php"/>
 				<p id="loginStatus">
 					<label>Login with...</label>
@@ -67,7 +69,7 @@ h1 {display:none}
 						<option>Yahoo</option>
 					</select>
 				</p>
-				<div id="loginInputArea">					
+				<div id="loginInputArea">
 				<p>
 					<label for="username">User:</label><input value="" type="text" tabindex="1" name="username" id="username"/>
 				</p>
@@ -81,9 +83,9 @@ h1 {display:none}
 			</form>
 			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
 			<div style="min-height:40px;">
-				<form id="feedback" action="http://stickythang.com/index.php?id=3" method="post">
+				<form id="feedback" action="http://stickythang.com/contact" method="post">
 					<input type="hidden" name="name" id="name" />
-					<input type="hidden" name="email" value="feedback@stickthang.com" />
+					<input type="hidden" name="email" value="feedback@stickythang.com" />
 					<legend>Give feedback</legend>
 					<p>
 						<label for="type">Type:</label>
@@ -218,9 +220,6 @@ h1 {display:none}
 				
 				Y.one('#ulAllList')
 					.setContent("<li id=liAllListLoading class=centre><img src='lib/i/8-0.gif' /></li>")
-					//.load("http://stickythang.com/phpBB3/search.php?keywords=&terms=all",null,function(){
-						// Y.one('#allList').setContent( this.get("id") );
-					//})	
 				
 				Y.one("#addNote").on('click',function(e){
 					e.preventDefault();
@@ -328,6 +327,7 @@ h1 {display:none}
 						if ( !u ){// it's a sticky thang response
 							html = 'To share stickies you need to login below or <a target="_blank" href="options.html">register</a>.';
 							// Y.one("#loginInputArea").setStyle('display','block');
+							Y.one('#ulAllList').setContent('<li>You need to login to see your friends stickies</li><li><a target="_blank" href="options.html">register</a></li>')
 						} else {
 							// html = 'Status, unknown';
 							html = 'Logged in as, '+ u;
