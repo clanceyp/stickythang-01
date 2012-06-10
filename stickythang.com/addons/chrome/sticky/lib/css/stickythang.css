@@ -80,7 +80,7 @@ div.stickythang div.card{
 	height:170px;
     min-height: 80px;
     min-width: 80px;
-	padding:30px 0 20px 0; 
+	padding:23px 0 20px 0; 
     width: 240px;
 }
 
@@ -88,13 +88,16 @@ div.stickythang{
 	font-family:"MS Sans Serif", Geneva, sans-serif;
 	max-height:27px;
 	max-width:25px;
-	
-	/* -webkit-transform-style: preserve-3d; */		
+	-webkit-perspective: 1000;
+	-webkit-perspective-origin: 50% 50%;
+/*	
+	-webkit-transform-style: preserve-3d;
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-timing-function:ease;
 	-webkit-animation-duration:0.5s;
 	-webkit-perspective: 1000;
-
+	-webkit-backface-visibility: hidden;
+ */
 }
 div.stickythang.in-flip {
 	max-height:1000px;
@@ -102,11 +105,11 @@ div.stickythang.in-flip {
 }
 div.stickythang div.card {
 	
-	-webkit-transform-style: preserve-3d;		
+	-webkit-transform-style: preserve-3d;
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-timing-function:ease;
 	-webkit-animation-duration:0.5s;
-
+	-webkit-perspective: 1000;
 }
 div.stickythang.stickythangInDrag div.card {
 	zoom:1.1;
@@ -294,6 +297,7 @@ div.stickythang div.edit textarea {
 	background-color:transparent;
 	border:0 none;
 	height:90%;
+	resize: none;
 	width:94%;
 }
 div.stickythang div.edit.externalURL {
@@ -319,13 +323,14 @@ div.stickythang div.timestamp {
 div.stickythang form {
 	color:#fff;
 	overflow:auto;
+	margin-top:-10px;
 	padding:0 12px;
 }
 div.stickythang legend {
 	color:#fff;
 	font-size:14px;
 	margin:0;
-	padding:16px 0 8px 0;
+	padding:0;
 }
 div.stickythang div.scope input {
 	margin:0;
@@ -339,8 +344,8 @@ div.stickythang div.timestamp {
 	    left bottom,
 	    left top,
 	    color-stop(0, rgb(70,70,70)),
-	    color-stop(0.50, rgb(100,100,100)),
-	    color-stop(1, rgb(70,70,70))
+	    color-stop(0.50, rgb(100,100,100))
+	    /*,color-stop(1, rgb(70,70,70))*/
 	);
 	border-radius: 5px 5px 0 0 ;
 	cursor:move;
@@ -353,9 +358,11 @@ div.stickythang form label {
 	font-size:13px;
 	margin-bottom:3px;
 }
+/*
 div.stickythang div.scope label {
 	font-size:11px;
 }
+*/
 div.stickythang.form-hide form  {
 	visibility:hidden;
 }
@@ -363,10 +370,13 @@ div.stickythang form label span {
 	display:block;
 	font-size:80%;
 }
+/*
 div.stickythang form textarea {
-	width:190px;
 	min-height:50px;
+	resize: none;
+	width:190px;
 }
+*/
 div.stickythang form div.scope label {
 	padding-left:20px;
 }	
