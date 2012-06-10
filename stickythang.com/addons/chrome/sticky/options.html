@@ -216,22 +216,23 @@ div.circles {
 					<ul class="menu" dir="rtl">
 						<li class=""><a class="Advanced"><span>Advanced settings</span></a></li>
 						<li class=""><a class="Feedback"><span>Feedback</span></a></li>
-						<li class=""><a class="Options"><span>Friends and buddies</span></a></li>
+						<li class=""><a class="Options"><span>Friends</span></a></li>
 						<li class="active"><a class="Signup"><span>Sign up</span></a></li>
 					</ul>
 					<form id="formSettings">
 					<div id="Options" class="unit off">
 					
 						<fieldset>
-							<legend>Friends, buddies and circles</legend>
+							<legend>Friends and circles</legend>
 							
 
 							
 
 
-							<label>Add/remove buddy <span>(add the email address of someone you what to follow)</span></label>
+							<label>Add/remove friend <span>(add the email address of someone you what to follow)</span></label>
 							<p>
-								<input type="text" id="inputAddBuddy" class="long" /> <input type="button" value="update list" id="buttonUpdateBuddies" />
+								<input type="text" id="inputAddBuddy" class="long" /> 
+								<input type="button" value="update list" id="buttonUpdateBuddies" />
 							</p>
 							<p>People I'm following...</p>
 							<ul id="ulBuddiesList">
@@ -241,17 +242,17 @@ div.circles {
 							<label>Manage my circles (not implented)</label>
 							<table class="data">
 								<tr>
-									<th>Buddies</th>
+									<th>Friends</th>
 									<th>Circle members</th>
 									<th>Circles</th>
 								</tr>
 								<tr>
 									<th><select multiple="multiple" disabled="true">
-										<option>Name of buddy</option>
+										<option>Name of friend</option>
 										
 									</select></th>
 									<td>
-										<div class="circle-edit">Drag buddies here</div>
+										<div class="circle-edit">Drag friends here</div>
 									</td>
 									<th><select multiple="multiple" disabled="true">
 										<option>Circle name</option>
@@ -322,7 +323,7 @@ div.circles {
 						
 					</div>	
 					<div id="Signup" class="unit">
-						<iframe id="iframeSignUp" src="http://stickio.com/signup" frameborder="0" style="width:100%;height:420px;margin:0;padding:0;">
+						<iframe id="iframeSignUp" src="http://www.stickythang.com/signup" frameborder="0" style="width:100%;height:420px;margin:0;padding:0;">
 							
 							
 						</iframe>
@@ -429,7 +430,7 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 		var background = chrome.extension.getBackgroundPage().window;
 		background.stickythang.checkLoggedInUser();
 
-	    if (!background.stickythang.db.localdb){
+		if (!background.stickythang.db.localdb){
 			background.stickythang.db.init();
 		}		
 		if (!background.stickythang.db.listBuddies.length){
@@ -485,7 +486,7 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 				   })
 				})
 				
-				var uri = "http://stickythang.com/index.php?id=3";
+				var uri = "http://www.stickythang.com/contact";
 			    var cfg = {
 			        method: 'POST',
 					sync: false,
@@ -572,8 +573,17 @@ Design by <a href="http://www.rockettheme.com/">RocketTheme</a>
 					
 				
 			}
+			function RemoveBuddy(e){
+				var target = e.target,
+					buddy = target.getContent();
+				
+				target.blur();
+				if (confirm("Delete "+ buddy + " from list")){
+					background.stickythang.db.removeBuddy( buddy , BuildBuddyList );
+				}
+			}
 			Y.one("#buttonUpdateBuddies").on('click',UpdateBuddyList);	
-			
+			Y.one("#ulBuddiesList").delegate("dblclick", RemoveBuddy, "li");
 			
 			
 			Y.one("#formSettings").on("submit",function(e){
