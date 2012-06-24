@@ -189,20 +189,29 @@ version: alpha 0.1
 					},
 					populateList:function(response){
 						var rs = response.list,
-							html = "",
-							note = "",
-							mxlen = 140,
-							url;
-			            for (var i = rs.length-1; i >= 0; i--) {
-							if (!rs[i].note || rs[i].urlex){continue}
-							note = rs[i].note.replace(/<[^>]*>?/g," ");
-							note = note.length > mxlen ? note.substring(0,mxlen)+"..." : note;
-							url = rs[i].url
-							if (note && note!="undefined" && url && url!="undefined"){
-								html+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+							myStickies = "",
+							buddiesStickies = "",
+							mxlen = 140;
+						for (var i = rs.length-1; i >= 0; i--) {
+							var sticky = rs[i],
+								note="",
+								url="",
+								user;
+							if (!sticky.note){continue}
+							note = sticky.note.replace(/<[^>]*>?/g," ");
+							note = note.length > mxlen ? note.substring(0,mxlen) + "..." : note;
+							url = sticky.url;
+							user = sticky.user || "";
+							if (note && sticky.urlex){
+								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ user +'; '+ note  +'</a></li>';
+							} else if (note){
+								myStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
 							}
-			            }
-						Y.one("#stickyList").setContent(html);
+						}
+						if (!myStickies){myStickies = "<li>You have no saved stickies</li>"}
+						if (!buddiesStickies){buddiesStickies = "<li>No stickies found</li>"}
+						Y.one("#stickyList").setContent(myStickies);
+						Y.one('#ulAllList').setContent(buddiesStickies);
 						// Y.one("#domainLable").setContent(response.domain)
 					}	
 				}
@@ -327,13 +336,13 @@ version: alpha 0.1
 						if ( !u ){// it's a sticky thang response
 							html = 'To share stickies you need to login below or <a target="_blank" href="options.html">register</a>.';
 							// Y.one("#loginInputArea").setStyle('display','block');
-							Y.one('#ulAllList').setContent('<li>You need to login to see your friends stickies</li><li><a target="_blank" href="options.html">register</a></li>')
+							// Y.one('#ulAllList').setContent('<li>You need to login to see your friends stickies</li><li><a target="_blank" href="options.html">register</a></li>')
 						} else {
 							// html = 'Status, unknown';
 							html = 'Logged in as, '+ u;
 							Y.one("#loginInputArea").setStyle('display','none');
 						}
-						Y.one("#loginStatus").setContent(html);						
+						Y.one("#loginStatus").setContent(html);
 				}
 				CheckLoginStatus()
 
@@ -347,9 +356,9 @@ version: alpha 0.1
 
 				//populateList()
 				
-				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?f=2"', (function(inner) {
+				Y.YQL('select * from feed where url="http://www.stickythang.com/notes/feed.php?f=2"', (function(inner) {
 //				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?mode=topics"', (function(inner) {
-					
+					return;
 					return function(r) {
 						//var inner = mod.one('div.inner')
 						var count = 0;

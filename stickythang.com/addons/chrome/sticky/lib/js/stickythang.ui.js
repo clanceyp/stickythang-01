@@ -18,6 +18,8 @@ if (chrome && chrome.extension){
 				stickythang.backgroundnotes = request.notes;
 				stickythang.checkforchanges();
 				stickythang.stickiesActive(request.stickiesActive);
+				stickythang.urlSingleNote = request.urlSingleNote;
+				console.log('setting urlsingle to '+ request.urlSingleNote)
 				sendResponse({message:'thank you, Im checking:'+request.stickiesActive});
 			break;			
 			case "css" :
@@ -35,11 +37,13 @@ window.stickythang={
 	log:function(message){if(stickythang.debug){console.log(message)}},
 	debug:true,
 	activeids:[],
-	forumID:2,//check in background page
+	urlSingleNote:"",
 	backgroundnotes:[],
 	currentids:[],
 	currentnotes:[],
 	user:"",
+	getUser:function(){return stickythang.user || "me"},
+	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') },
 	settings:{
 		save:function(Y,node){
 			var xy = node.getXY();
@@ -123,29 +127,34 @@ window.stickythang={
 						Y.one("#tempLogin"+time).on('click',function(e){
 							Y.one("#tempLogin"+time).set('value','logging in');
 							chrome.extension.sendRequest({
-										action:"loginUser",
-										ops:{
-											'noteId':note.get("id"),
-											'user':Y.one("#tempName"+time).get('value'),
-											'pass':Y.one("#tempPassword"+time).get('value')
-									}}, function(response) {
-										if (response.user != "me"){
-											stickythang.user = response.user;
-											note.one("span.buttonShareStickyNote").setStyle('display','none');
-											note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.user);
-										} else {
-											console.log("humm"+Y.JSON.stringify(response))
-											Y.one("#tempLogin"+time).set('value','Sorry, try again');
-										}
-									});
+									action:"loginUser",
+									ops:{
+										'noteId':note.get("id"),
+										'user':Y.one("#tempName"+time).get('value'),
+										'pass':Y.one("#tempPassword"+time).get('value')
+								}}, function(response) {
+									console.log("humm  "+Y.JSON.stringify(response))
+									if (response.user != "me"){
+										stickythang.user = response.user;
+										note.one("span.buttonShareStickyNote").setStyle('display','none');
+										note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.getUser());
+									} else {
+										console.log("user me "+Y.JSON.stringify(response))
+										Y.one("#tempLogin"+time).set('value','Sorry, try again');
+									}
+								});
 							})
 					} else {
 						stickythang.user = response.user;
-						note.one("input.buttonShareSticky").set('value','Share as '+ stickythang.user);
+						if (note.getData('shared') == 'true') {
+							note.one("input.buttonShareSticky").set('value','Already shared');
+						} else {
+							note.one("input.buttonShareSticky").set('value','Share as '+ stickythang.getUser());
+						}
+						
 						note.one("input.buttonShareSticky").on("click",function(e){
 							if (note.getData('shared') == 'true') {
-							// self.one("#buttonShareSticky").set('value',"un-share")
-							// self.shareMe('false');
+								return;
 							}
 							else {
 								console.log('trying to share')
@@ -162,17 +171,17 @@ window.stickythang={
 				note.addClass('form-hide').addClass('in-flip').one('div.card').setStyle("webkitAnimationName","stickyThangNoteFlip");
 				setTimeout(function(){
 					note.addClass("flippingTemp")
-				},dur/2)
+				},dur/2);
 				setTimeout(function(){
 					note.removeClass('in-flip').replaceClass("flippingTemp","flipped").setData('flipped','true').one('div.card').setStyle("webkitAnimationName","");
 					note.one('div.card').transition({
-					    easing: 'ease-both',
-					    duration: 0.75,
-					    width: '230px',
-					    height: '180px',
+						easing: 'ease-both',
+						duration: 0.75,
+						width: '230px',
+						height: '180px',
 						on:{end:function(){note.removeClass('form-hide')}}
 					});
-				},dur)
+				},dur);
 			},
 			turnBack:function(note,dur){
 				note.addClass('in-flip').one('div.card').setStyle("webkitAnimationName","stickyThangNoteFlip");
@@ -187,7 +196,7 @@ window.stickythang={
 	},
 	ops:{
 		captured:null
-		,className:["yellow","green","blue","red","gold","purple","silver","cornflowerblue","white"]
+		,className:["black","blue","cornflowerblue","gold","green","purple","red","silver","slate","white","yellow"]
 		,count:0
 		,css:{left:350,leftOffset:120,top:50,topOffset:40}
 		,defultsettings:{button:{left:0,top:50}}
@@ -197,9 +206,10 @@ window.stickythang={
 		,skey:'stickythang.settings'
 		,template:'<div class="closebutton"></div><div class="minimisebutton"></div><div class="maximisebutton"></div><div class="resizebutton hide-back hide-flip"></div><div class="flipbutton hide-flip"></div><div class="timestamp"></div><div class="edit front"></div>' +
 			'<form class="settings back"><legend>Note settings:</legend>'+
-				'<label>Colour <select name="colour"></select></label>'+
+				'<label title="the background colour">Colour <select name="colour"></select></label>'+
 				//'<div class="scope">'+
-				'<label>Scope <select name="scope"><option value="path">page</option><option value="domain">website</option><option value="global">everywhere</option></select></label>'+
+				'<label title="pin sticky to browser (css:position fixed)">Pin <input type="checkbox" name="pin" /></label>'+
+				'<label title="when to show the sticky (applies to personal stickies only)">Scope <select name="scope"><option value="path">page</option><option value="domain">website</option><option value="global">everywhere</option></select></label>'+
 				//'<label><input class="path" name="scope" type="radio" value="path"> page</label>'+
 				//'<label><input class="domain" name="scope" type="radio" value="domain"> site</label>'+
 				//'<label><input class="global" name="scope" type="radio" value="global"> everwhere</label>'+
@@ -220,6 +230,7 @@ window.stickythang={
 			this.timestamp = result.timestamp;
 			this.user = result.user;
 			this.urlex = result.urlex;
+			this.shared = result.shared;
 		}
 		else {// default ops for new notes
 			this.ops = {
@@ -231,7 +242,7 @@ window.stickythang={
 			this.isNew = true;
 			this.scope = 'path';// default scope setting
 			this.timestamp = (new Date().getTime());
-			this.id = stickythang.user + '-' + this.timestamp;
+			this.id = stickythang.getUser() + '-' + this.timestamp;
 			this.html = '';
 			this.shared = '';
 		}
@@ -351,12 +362,13 @@ stickythang.init = function(){
 	var temp = localStorage.getItem(stickythang.ops.skey);
 	
 	
-	YUI().use('node','node-load','dd-plugin','resize','json','transition', function(Y) {
+	YUI().use('node','node-load','event-key','dd-plugin','resize','json','transition', function(Y) {
 		// stickythang.Y  = Y;
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
 		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
+		Y.one("html").on("key",stickythang.stickiesMinimizeAll,"esc");
 		
 
 		
@@ -367,9 +379,10 @@ stickythang.init = function(){
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
 		  stickythang.log('response recieved loading shares and stickies:'+ response.message);
 		  stickythang.shares = response.shares;
-		  stickythang.user = response.user || "me";
-		  stickythang.loadAll(response.list);
+		  stickythang.user = response.user;
+		  stickythang.urlSingleNote = response.urlSingleNote;
 		  stickythang.stickiesActive(response.stickiesActive);
+		  stickythang.loadAll(response.list);
 		});		
 	})
 
@@ -387,6 +400,8 @@ stickythang.Note.prototype = {
 			,left:xy[0]
 			,scope:self.getData('scope')
 			,state:self.getData('state')
+			,shared:self.getData('shared')
+			,position:self.getData('position')
 			,top:xy[1]
 			,width:parseInt(self.one('div.card').getStyle('width'))
 		}};
@@ -400,7 +415,7 @@ stickythang.Note.prototype = {
 		ops.querystring = window.location.search;
 		ops.scope = self.getData('scope');
 		ops.shared = self.getData('shared')
-		ops.user = stickythang.user;
+		ops.user = stickythang.getUser();
 	
 		return ops;
 	},
@@ -471,11 +486,12 @@ stickythang.Note.prototype = {
 		this.div.one('div.card').setStyle("webkitTransformOrigin","100% 0")
 				.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
 		
-		var id = this.id;
-		stickythang.log('remove:'+ id )
+		var id = this.id,
+			action = (this.urlex) ? "disable" : "remove";
+		stickythang.log('sticky '+action + ':'+ id )
 		removeFormPageArrays(id)
 		//stickythang.db.remove(id);
-		chrome.extension.sendRequest({action:"remove", id:id }, function(response) {
+		chrome.extension.sendRequest({action:action, id:id }, function(response) {
 		  stickythang.log(response.message)
 		});			
 		
@@ -501,9 +517,8 @@ stickythang.Note.prototype = {
 	destroy: function(){
 		this.div.remove();
 	},
-	loadExtenal: function(url){
-		var Y = stickythang.Y,
-			uri = this.urlex.replace("viewtopic.php?","posting.php?mode=reply&f="+stickythang.forumID+"&")
+	loadExtenal: function(){
+		var uri = stickythang.getShareUrl(this);
 		// inner.set('innerHTML','trying to load content:'+url);
 		this.div.one("div.edit").empty().append("<iframe src='"+ uri +"' />");
 	},
@@ -513,12 +528,12 @@ stickythang.Note.prototype = {
 			str;
 		//alert('trying to share note:'+str.length+":"+str)
 		delete ops.ops;
-		ops.id = stickythang.user + '-' + (new Date().getTime());
+		ops.id = stickythang.getUser() + '-' + (new Date().getTime());
 		str = stickythang.Y.JSON.stringify(ops);
 		
 		chrome.extension.sendRequest({action:"newPost", ops:{message:str,subject:ops.html} }, function(response) {
 		 	console.log(response.message)
-		});		
+		});
 	}	
 }
 
@@ -532,6 +547,15 @@ stickythang.stickiesActive = function(stickiesActive){
 	
 }
 
+stickythang.stickiesMinimizeAll = function(toggle){
+	for (var i = 0; i < stickythang.currentnotes.length; i++ ){
+		var note = stickythang.currentnotes[i].div;
+		if (note.getData('state') === 'maximise')
+			stickythang.util.state.min(note);
+	}
+}
+
+
 stickythang.createNoteYUI = function(result){
 		stickythang.log('stickythang.createNoteYUI() trying to creat note');
 		if (!stickythang.Y){
@@ -544,10 +568,11 @@ stickythang.createNoteYUI = function(result){
 		stickythang.currentids.push(note.id);
 		stickythang.currentnotes.push(note);
 
-		// console.log( Y.JSON.stringify( note.state ) )
+		console.log( Y.JSON.stringify( note.ops ) )
 		
 		note.div.set('id',note.id)
 			.addClass("stickythang")
+			.addClass(note.ops.position)
 			.addClass(note.ops.state)
 			.addClass(note.ops.className)
 			.setStyles({
@@ -558,8 +583,9 @@ stickythang.createNoteYUI = function(result){
 			.setData('className',note.ops.className)
 			.setData('scope',note.scope || 'global')
 			.setData('state',note.ops.state || 'maximise')
+			.setData('position',note.ops.position || 'absolute')
 			.setData('ops',note.ops.json)
-			.setData('shared',note.shared)
+			.setData('shared',note.ops.shared)
 			.setContent("<div class='card'>"+stickythang.ops.template+"</div>")
 			.on('click',function(){note.edited = true; note.saveSoon()})
 			
@@ -622,8 +648,8 @@ stickythang.createNoteYUI = function(result){
 			note.div.removeClass('stickythangInDrag')
 			note.edited = true;
 			note.save();
-		})		
-	    document.getElementById( note.id ).addEventListener('webkitAnimationEnd', function() { 
+		})
+		document.getElementById( note.id ).addEventListener('webkitAnimationEnd', function() { 
 			var animation = note.div.one('div.card').getStyle('webkitAnimationName');
 			note.div.one('div.card').setStyle('webkitAnimationName', '') ;
 			
@@ -694,6 +720,12 @@ stickythang.createNoteYUI = function(result){
 				var currentClassName = self.getData('className');
 				self.setData('className',newClassName).replaceClass( currentClassName , newClassName )
 			})
+			self.one("input[name='pin']")
+				.set("checked", (self.getData('position') == 'fixed') )
+				.on('click',function(){
+					var position = self.one("input[name='pin']").get("checked") ? 'fixed':'absolute';
+					self.removeClass("fixed").addClass(position).setData('position',position);
+				})
 		}	
 } 
 

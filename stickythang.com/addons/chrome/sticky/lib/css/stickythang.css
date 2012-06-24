@@ -74,6 +74,9 @@ div.stickythang {
     position: absolute;
 	text-align:left;
 }
+div.stickythang.fixed {
+    position: fixed;
+}
 div.stickythang div.card{
 	border-radius: 5px 5px 0 12px ;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
@@ -198,6 +201,20 @@ div.stickythang.white div.card,
 div.stickythang option.white {
 	background-color:rgba(256,256,256, 0.9); /* #FCCAF9 */ 
 } 
+div.stickythang.slate div.card,
+div.stickythang option.slate {
+	background-color:rgba(56,56,56, 0.9); /* #FCCAF9 */ 
+	color:#fff;
+} 
+div.stickythang.black div.card,
+div.stickythang option.slate {
+	background-color:rgba(30,30,30, 0.9); /* #FCCAF9 */ 
+	color:#fff;
+} 
+div.stickythang.black textarea, 
+div.stickythang.slate textarea {
+	color:#fff;
+}
 
 
 div.stickythang div.flipbutton {
@@ -307,23 +324,23 @@ div.stickythang div.edit.externalURL {
 div.stickythang div.edit iframe {
 	border:0 none;
 	height:99%;
-	width:99%;
+	width:97%;
 }
 div.stickythang div.scope2, 
 div.stickythang div.timestamp {
-    background-color: #888;
-    color: white;
-    font-size: 9px;
-    left: 0;
-    padding: 2px 4px;
-    position: absolute;
-    right: 0;
-    text-align: center;
+	background-color: #888;
+	color: white;
+	font-size: 9px;
+	left: 0;
+	padding: 2px 4px;
+	position: absolute;
+	right: 0;
+	text-align: center;
 }
 div.stickythang form {
 	color:#fff;
 	overflow:auto;
-	margin-top:-10px;
+	margin-top:0;
 	padding:0 12px;
 }
 div.stickythang legend {
