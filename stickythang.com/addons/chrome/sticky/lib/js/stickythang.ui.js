@@ -19,13 +19,20 @@ if (chrome && chrome.extension){
 				stickythang.checkforchanges();
 				stickythang.stickiesActive(request.stickiesActive);
 				stickythang.urlSingleNote = request.urlSingleNote;
+				stickythang.online = request.online;
 				console.log('setting urlsingle to '+ request.urlSingleNote)
 				sendResponse({message:'thank you, Im checking:'+request.stickiesActive});
-			break;			
+			break;
 			case "css" :
 				stickythang.stickiesActive(request.stickiesActive);
 				sendResponse({message:'thank you, amending'});
 			break;	
+			case "checkforchanges" :
+			console.log("something changed, check for updates")
+				stickythang.backgroundnotes = request.notes;
+				stickythang.checkforchanges();
+				sendResponse({message:'thank you, checking'})
+			break;
 		}
 		// sendResponse({message:'thank you'});
 	});
@@ -34,6 +41,7 @@ if (chrome && chrome.extension){
  
 window.stickythang={
 	isloaded:false,
+	online:"false",
 	log:function(message){if(stickythang.debug){console.log(message)}},
 	debug:true,
 	activeids:[],
@@ -108,66 +116,74 @@ window.stickythang={
 			},
 			turnOver:function(note,dur){
 				stickythang.log( "flipping note:" )
-				chrome.extension.sendRequest({action:"checkLoggedInUser",ops:{noteId:note.get("id")}}, function(response) {
-					stickythang.log( "flipping note: got response from server ("+ response.noteId +","+ response.user+")")
-					var Y = stickythang.Y,
-						note = Y.one("#"+ response.noteId);
-					
-					if (!note || !response.user || response.user == 'me'){
-						// user not logged in
-						note.one("input.buttonShareSticky").setStyle('display','none')
-						//note.one("span.buttonShareStickyNote").setContent('<iframe frameborder="0" scrolling="no" src="http://www.stickythang.com/small/login" id="iframeLogin00"></iframe>')
-						//Y.one("#iframeLogin00").setStyles({'margin':'0','height':'70px','width':'200px','border':'0 none'}).on('load',function(){
-						//	console.log('loaded');
-						//})
-						var time = (new Date()).getTime();
-						note.one("span.buttonShareStickyNote").setContent('<input type="text" value="name" id="tempName'+time+'"/><input type="text" value="password" id="tempPassword'+time+'" /><input style="display:block" type="button" value="login to share" id="tempLogin'+time+'" />');
-						Y.one("#tempName"+time).on('focus',function(e){if (e.target.get('value')=='name') {e.target.set('value','')}})
-						Y.one("#tempPassword"+time).on('focus',function(e){e.target.set('type','password').set('value','')})
-						Y.one("#tempLogin"+time).on('click',function(e){
-							Y.one("#tempLogin"+time).set('value','logging in');
-							chrome.extension.sendRequest({
-									action:"loginUser",
-									ops:{
-										'noteId':note.get("id"),
-										'user':Y.one("#tempName"+time).get('value'),
-										'pass':Y.one("#tempPassword"+time).get('value')
-								}}, function(response) {
-									console.log("humm  "+Y.JSON.stringify(response))
-									if (response.user != "me"){
-										stickythang.user = response.user;
-										note.one("span.buttonShareStickyNote").setStyle('display','none');
-										note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.getUser());
-									} else {
-										console.log("user me "+Y.JSON.stringify(response))
-										Y.one("#tempLogin"+time).set('value','Sorry, try again');
-									}
-								});
-							})
-					} else {
-						stickythang.user = response.user;
-						if (note.getData('shared') == 'true') {
-							note.one("input.buttonShareSticky").set('value','Already shared');
+				if (note.getData("shared") == "true"){
+					note.one("input.buttonShareSticky").setStyle('display','none')
+					note.one("span.buttonShareStickyNote").setContent("This sticky is shared, well done!")
+				}else{
+					chrome.extension.sendRequest({action:"checkLoggedInUser",ops:{noteId:note.get("id")}}, function(response) {
+						stickythang.log( "flipping note: got response from server ("+ response.noteId +","+ response.user+")")
+						stickythang.online = response.online;
+						var Y = stickythang.Y,
+							note = Y.one("#"+ response.noteId);
+						if (stickythang.online == 'false'){
+							note.one("input.buttonShareSticky").setStyle('display','none')
+							note.one("span.buttonShareStickyNote").setContent("Sorry, StickyThang! is currently offline, maybe the clearer unpluged the server again. Rest assured our team of crack techies are on the job")
+						} else if (!note || !response.user || response.user == 'me'){
+							// user not logged in
+							note.one("input.buttonShareSticky").setStyle('display','none')
+							//note.one("span.buttonShareStickyNote").setContent('<iframe frameborder="0" scrolling="no" src="http://www.stickythang.com/small/login" id="iframeLogin00"></iframe>')
+							//Y.one("#iframeLogin00").setStyles({'margin':'0','height':'70px','width':'200px','border':'0 none'}).on('load',function(){
+							//	console.log('loaded');
+							//})
+							var time = Y.Lang.now();
+							note.one("span.buttonShareStickyNote").setContent('<input type="text" value="name" id="tempName'+time+'"/><input type="text" value="password" id="tempPassword'+time+'" /><input style="display:block" type="button" value="login to share" id="tempLogin'+time+'" />');
+							Y.one("#tempName"+time).on('focus',function(e){if (e.target.get('value')=='name') {e.target.set('value','')}})
+							Y.one("#tempPassword"+time).on('focus',function(e){e.target.set('type','password').set('value','')})
+							Y.one("#tempLogin"+time).on('click',function(e){
+								Y.one("#tempLogin"+time).set('value','logging in');
+								chrome.extension.sendRequest({
+										action:"loginUser",
+										ops:{
+											'noteId':note.get("id"),
+											'user':Y.one("#tempName"+time).get('value'),
+											'pass':Y.one("#tempPassword"+time).get('value')
+									}}, function(response) {
+										console.log("humm  "+Y.JSON.stringify(response))
+										if (response.user != "me"){
+											stickythang.user = response.user;
+											note.one("span.buttonShareStickyNote").setStyle('display','none');
+											note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.getUser());
+										} else {
+											console.log("user me "+Y.JSON.stringify(response))
+											Y.one("#tempLogin"+time).set('value','Sorry, try again');
+										}
+									});
+								})
 						} else {
-							note.one("input.buttonShareSticky").set('value','Share as '+ stickythang.getUser());
-						}
-						
-						note.one("input.buttonShareSticky").on("click",function(e){
+							stickythang.user = response.user;
 							if (note.getData('shared') == 'true') {
-								return;
+								note.one("input.buttonShareSticky").set('value','Already shared');
+							} else {
+								note.one("input.buttonShareSticky").set('value','Share as '+ stickythang.getUser());
 							}
-							else {
-								console.log('trying to share')
-								note.one("input.buttonShareSticky").set('value', 'Setting public...')
-								setTimeout(function(){
-									note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
-								},1000)
-								// self.one("#buttonShareSticky").set('value',"share")
-								note.Super.shareMe('true');
-							}	
-						})
-					}
-				})
+							
+							note.one("input.buttonShareSticky").on("click",function(e){
+								if (note.getData('shared') == 'true') {
+									return;
+								}
+								else {
+									console.log('trying to share')
+									note.one("input.buttonShareSticky").set('value', 'Setting public...')
+									setTimeout(function(){
+										note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
+									},1000)
+									// self.one("#buttonShareSticky").set('value',"share")
+									note.Super.shareMe('true');
+								}	
+							})
+						}
+					})
+				}
 				note.addClass('form-hide').addClass('in-flip').one('div.card').setStyle("webkitAnimationName","stickyThangNoteFlip");
 				setTimeout(function(){
 					note.addClass("flippingTemp")
@@ -380,10 +396,11 @@ stickythang.init = function(){
 		  stickythang.log('response recieved loading shares and stickies:'+ response.message);
 		  stickythang.shares = response.shares;
 		  stickythang.user = response.user;
+		  stickythang.online = response.online;
 		  stickythang.urlSingleNote = response.urlSingleNote;
 		  stickythang.stickiesActive(response.stickiesActive);
 		  stickythang.loadAll(response.list);
-		});		
+		});
 	})
 
  };

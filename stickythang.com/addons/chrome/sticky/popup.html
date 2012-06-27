@@ -46,6 +46,21 @@ version: alpha 0.1
 				overflow:hidden;
 				visibility:hidden;
 			}
+			div.menu li span.del {
+				background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAADtSURBVHjajFC7DkFREJy9iXg0t+EHRKJDJSqRuIVaJT7AF+jR+xuNRiJyS8WlRaHWeOU+kBy7eyKhs8lkJrOzZ3OWzMAD15gxYhB+yzAm0ndez+eYMYLngdkIf2vpSYbCfsNkOx07n8kgWa1UpptNII5VR/M56Nyt6Qq33bbhQsHy6aR0WSyEyEmiCG6vR2ffB65X4HCwYC2e9CTjJGGok4/7Hcjl+ImLBWv1uCRDu3peV5eGQ2C5/P1zq4X9dGpXP+LYhmYz4HbDMQgUosWTnmQoKKf0htVKBZvtFsx6S9bm48ktaV3EXwd/CzAAVjt+gHT5me0AAAAASUVORK5CYII=);
+				display:inline-block;
+				float:right;
+				height:10px;
+				margin-top:2px;
+				width:10px;
+			}
+			#ulAllList div.menu li a {
+				display:block;
+				padding: 2px 10px 4px 0;
+			}
+			#ulAllList div.menu li {
+				padding: 0;
+			}
 		</style>
 		
 	</head>
@@ -203,7 +218,7 @@ version: alpha 0.1
 							url = sticky.url;
 							user = sticky.user || "";
 							if (note && sticky.urlex){
-								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ user +'; '+ note  +'</a></li>';
+								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'"><span id="span'+rs[i].id+'" class="del"></span>'+ user +'; '+ note  +'</a></li>';
 							} else if (note){
 								myStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
 							}
@@ -213,6 +228,15 @@ version: alpha 0.1
 						Y.one("#stickyList").setContent(myStickies);
 						Y.one('#ulAllList').setContent(buddiesStickies);
 						// Y.one("#domainLable").setContent(response.domain)
+						Y.one('#ulAllList').delegate('click',function(e){
+							e.preventDefault()
+							var id = e.currentTarget.getAttribute('id').substring(4),
+								li = e.currentTarget.ancestor('li');
+								
+							li.setStyle('overflow','hidden').transition({height:0,opacity:0},function(){this.remove()})
+							console.log("deleting item with id:"+id)
+							background.stickythang.db.disable(id,null);
+						},"span.del");
 					}	
 				}
 
@@ -345,121 +369,6 @@ version: alpha 0.1
 						Y.one("#loginStatus").setContent(html);
 				}
 				CheckLoginStatus()
-
-				/*
-				chrome.tabs.getSelected(null, function(tab) {
-				  chrome.tabs.sendRequest(tab.id, {action: "get-list", tabid: tab.id}, function(response) {
-				    populateList(response);
-				  });
-				});	
-				*/
-
-				//populateList()
-				
-				Y.YQL('select * from feed where url="http://www.stickythang.com/notes/feed.php?f=2"', (function(inner) {
-//				Y.YQL('select * from feed where url="http://stickythang.com/phpBB3/feed.php?mode=topics"', (function(inner) {
-					return;
-					return function(r) {
-						//var inner = mod.one('div.inner')
-						var count = 0;
-						
-		                if (r && r.query && r.query.results) {
-		                    
-			                var html = '',
-								obj = {name:"blah",content:'blah blah'},
-								str,
-								array = [];
-								
-								inner.one("#liAllListLoading").remove();
-								
-		                    
-		                    //Walk the list and create the news list
-		                    Y.each(r.query.results, function(items) {
-		                        Y.each(items, function(v, k) {
-									
-		                          //  if (k < items.length) {
-		                                if (v.content && v.content.content) {
-		                                   v.content = v.content.content.replace(/&quot;/g,'"').replace(/\n/g,"").replace(/(\r\n|\r)/g,"").replace(/<(.|\n)*?>/g,"");
-		                                	/*v.content = '{
-												"domain":"www.guardian.co.uk"
-												,"href":"http://www.guardian.co.uk/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report?fb=native"
-												,"json":"{\"className\":\"silver\",\"height\":260,\"left\":65,\"scope\":\"path\",\"state\":\"maximise\",\"top\":276,\"width\":230}"
-												,"id":"tester-1324677469523"
-												,"html":"Reading the riots; LSE + Guardian report on the summer 2011 riots."
-												,"path":"/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report"
-												,"querystring":"?fb=native"
-												,"scope":"path"
-												,"shared":"true"
-												,"user":"tester"}';
-												*/
-												//v.content = '{"domain":"www.guardian.co.uk","href":"http://www.guardian.co.uk/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report?fb=native","json":"","id":"tester-1324677469523","html":"Reading the riots; LSE + Guardian report on the summer 2011 riots.","path":"/uk/interactive/2011/dec/14/reading-the-riots-investigating-england-s-summer-of-disorder-full-report","querystring":"?fb=native","scope":"path","shared":"true","user":"tester"}';
-												//v.content = '{"key":333}';
-										}
-										if (v.author && v.author.name){
-											v.name = v.author.name;
-										}
-										if (v.title && v.title.content){
-											v.title = v.title.content.replace(/&amp;nbsp;/g,' ')
-										}
-										if (v.id && v.id.content){
-											v.id = v.id.content;
-										}
-										
-										
-										try {
-											obj = Y.JSON.parse(v.content);
-											obj.name = v.name;
-											obj.title = obj.html || v.title || "";
-											obj.urlex = v.id || ""; 
-											if (obj){											
-												if (obj.name != window.username && obj.id && obj.urlex && background.stickythang.isBuddy(obj.name) ){
-													array.push(Y.Lang.sub('<li><strong>{name}:</strong> <a href="{href}" target="_blank" title="{stURI}">{title}</a></li>', obj));
-													inner.append(Y.Lang.sub('<li><strong>{name}:</strong> <a id="link-to-{id}" href="{href}" target="_blank" title="link-to-{id}">{title}</a></li>', obj))
-													var O = obj;
-													Y.one("#link-to-"+O.id).on('click',function(e){
-														// e.preventDefault();
-														console.log( "#link-to-"+O.id )
-														if ( Y.one("#link-to-"+O.id) ){
-															console.log('trying to save new note with id:'+ O.id)
-															background.stickythang.db.saveNewIfNotExists(O);
-														}
-													});
-													count++;
-												} else {
-													if (debug)
-														inner.append( '<li><strong>No name match:</strong> "'+ obj.name +':'+window.username+':'+ obj.id +':'+obj.urlex+'"</li>' )
-												}
-											}else{
-												if (debug)
-												inner.append('<li>obj not exists</li>');
-											}
-										}catch(e){
-											if (debug)
-											inner.append('<li>wrong format: '+ e.message + '</li>');
-										}
-		                           // }
-		                        });
-		                    });
-							//html = array.reverse().join('')
-		                    //Set the innerHTML of the module
-		                    //inner.set('innerHTML', '<ul>' + html + '</ul>');
-						}
-						Y.one("#h2buddyTitle").append("<span style=color:#999;display:inline-block;padding-left:4px>("+background.stickythang.db.listBuddies.join(", ")+")</span>")
-						if (count == 0){
-							var names = background.stickythang.db.listBuddies,
-								html = '<li>Nothing to show</li>';
-								
-							inner.append(html);	
-							if (names.length == 0){
-								inner.append("<li>You are not following anyone, go to the <a href=options.html target=_blank>options page</a> to add buddies</li>")
-							}else{
-								
-							}
-						}
-		            }
-		        })(Y.one("#ulAllList")));	
-			        
-			      
 			});
 		</script>	
 </html>

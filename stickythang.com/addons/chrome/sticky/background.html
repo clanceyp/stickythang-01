@@ -14,7 +14,7 @@ version: alpha 0.1
       function checkForValidUrl(tabId, changeInfo, tab) {
         // If the letter 'g' is found in the tab's URL...
         if ( tab.url.indexOf('chrome://') == 0 ) {
-          // don't show on chome pages
+          // don't show on chrome pages
         } else {
           chrome.pageAction.show(tabId);
 		}
@@ -61,7 +61,7 @@ chrome.extension.onRequest.addListener(
 		case "remove" : // delete a sticky
 			stickythang.db.remove(request.id,sendResponse);
 		break;
-		case "disable" : // delete a sticky
+		case "disable" : // disable a sticky
 			stickythang.db.disable(request.id,sendResponse);
 		break;
 		case "save" : // update a sticky
@@ -212,7 +212,7 @@ YUI().use("io","json", function(Y) {
 	Y.on('io:failure', onFailure, Y, 'Transaction Failed');
 	
 	function onSuccess(transactionid, response, arguments) {
-		stickythang.setLocalStorage('online','false');
+		stickythang.setLocalStorage('online','true');
 		console.log('good:'+ response.responseText)
 	}	
 	Y.on('io:success', onSuccess, Y, true);		
@@ -370,7 +370,7 @@ stickythang.stickiesActive = function(state){
 	  chrome.tabs.sendRequest(tab.id, {action: "css", stickiesActive: state ,tabid: tab.id}, function(response) {
 		console.log(response.message);
 	  });
-	});		
+	});
 }
 stickythang.initGetUpdates = function(){
 	var updateInterval = parseInt(stickythang.getLocalStorage('updateInterval',30),10) * 60000;
@@ -577,8 +577,22 @@ stickythang.db = {
 	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET state=? WHERE id = ?", 
 					[0,id],
 					function(){
-						stickythang.db.getAll();
-						sendResponse({message:'removed'})
+						for (var i=0;i<stickythang.db.listAll.length;i++){
+							if (stickythang.db.listAll[i].id == id){
+								stickythang.db.listAll.splice(i,1);
+								break;
+							}
+						}
+						if (sendResponse){
+							sendResponse({message:'removed'})
+						} else {
+							
+							chrome.tabs.getSelected(null, function(tab) {
+							  chrome.tabs.sendRequest(tab.id, {action: "checkforchanges",notes:stickythang.db.listAll}, function(response) {
+								console.log(response.message);
+							  });
+							});
+						}
 					},
 					function(tx,error){
 						sendResponse(error)
@@ -591,7 +605,16 @@ stickythang.db = {
 					[id],
 					function(){
 						stickythang.db.getAll();
-						sendResponse({message:'removed'})
+						if (sendResponse){
+							sendResponse({message:'removed'})
+						} else {
+							chrome.tabs.getSelected(null, function(tab) {
+							  chrome.tabs.sendRequest(tab.id, {action: "checkforchanges"}, function(response) {
+								console.log(response.message);
+							  });
+							});
+						}
+						
 					},
 					function(tx,error){
 						sendResponse(error)
