@@ -3,7 +3,7 @@
 Copyright (c) 2011, P Clancey. All rights reserved.
 Code licensed under the BSD License:
 http://www.opensource.org/licenses/bsd-license.php
-version: alpha 0.1
+version: 0.1
 -->
 <html>
   <head>
@@ -30,6 +30,7 @@ version: alpha 0.1
 					online:stickythang.getLocalStorage('online'),
 					notes:stickythang.db.listAll,
 					urlSingleNote:stickythang.ops.urlSingleNote,
+					debug:stickythang.getLocalStorage('debug','false'),
 					shares:stickythang.shares // may be depricated, check!
 				}, function(response) {
 				console.log(response.message);
@@ -584,7 +585,7 @@ stickythang.db = {
 							}
 						}
 						if (sendResponse){
-							sendResponse({message:'removed'})
+							sendResponse({message:'disabled'})
 						} else {
 							
 							chrome.tabs.getSelected(null, function(tab) {

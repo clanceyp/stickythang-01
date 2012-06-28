@@ -11,16 +11,20 @@ if (count($array) > 1){
 // $authors = "'" + implode("','", $array) + "'";
 $offset = (empty($_POST["offset"])) ? 0 : (int)$_POST["offset"] ;
 $offsetEnd = $offset + 100;
-$from = $_POST["from"];
+// $from = $_POST["from"];
+$mil = (int)$_POST["from"];
+$seconds = $mil / 1000;
+$from = date("Y-m-d H:i:s", $seconds);
 
 if (!empty($_GET["users"]) && $_GET["users"] == "all"){
 	$authors = "value";
 	$sql = "SELECT id, author, note, ops, updated FROM `sticky_notes` WHERE `parent-id` is null and state = 1 LIMIT 0 , 300";
 } else if (!empty($_GET["users"])){
-	$authors = $_GET["users"];	
+	//$authors = $_GET["users"];
+	$authors = "";	
 	$sql = "SELECT id, author, note, ops, updated FROM `sticky_notes` WHERE `parent-id` is null and state = 1 and author in ($authors) limit $offset, $offsetEnd";
 } else {
-	$sql = "SELECT id, author, note, ops, updated FROM `sticky_notes` WHERE `parent-id` is null and state = 1 and updated > '". $from ."' and author in ($authors) limit $offset, $offsetEnd";
+	$sql = "SELECT id, author, note, ops, updated FROM `sticky_notes` WHERE `parent-id` is null and state = 1 and updated >= '". $from ."' and author in ($authors) limit $offset, $offsetEnd";
 }
 
 // echo $sql;

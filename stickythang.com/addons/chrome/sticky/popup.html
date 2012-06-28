@@ -3,7 +3,7 @@
 Copyright (c) 2011, P Clancey. All rights reserved.
 Code licensed under the BSD License:
 http://www.opensource.org/licenses/bsd-license.php
-version: alpha 0.1
+version: 0.1
 */ -->	
 <html>
 	<head>
@@ -235,7 +235,7 @@ version: alpha 0.1
 								
 							li.setStyle('overflow','hidden').transition({height:0,opacity:0},function(){this.remove()})
 							console.log("deleting item with id:"+id)
-							background.stickythang.db.disable(id,null);
+							background.stickythang.db.remove(id,null);
 						},"span.del");
 					}	
 				}

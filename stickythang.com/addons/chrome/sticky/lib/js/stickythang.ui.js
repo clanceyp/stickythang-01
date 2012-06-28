@@ -2,13 +2,14 @@
 Copyright (c) 2011, P Clancey. All rights reserved.
 Code licensed under the BSD License:
 http://www.opensource.org/licenses/bsd-license.php
-version: alpha 1
+version: 0.1
 */
  
 
 if (chrome && chrome.extension){
 	chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-		stickythang.log("request recived:" + request.action)
+		if (stickythang.debug == "true")
+			stickythang.log("request recived:" + request.action)
 		switch (request.action) {
 			case "create-note" :
 				stickythang.createNoteYUI(null);
@@ -20,7 +21,9 @@ if (chrome && chrome.extension){
 				stickythang.stickiesActive(request.stickiesActive);
 				stickythang.urlSingleNote = request.urlSingleNote;
 				stickythang.online = request.online;
-				console.log('setting urlsingle to '+ request.urlSingleNote)
+				stickythang.debug = request.debug || "false";
+				if (stickythang.debug == "true")
+					console.log('setting urlsingle to '+ request.urlSingleNote)
 				sendResponse({message:'thank you, Im checking:'+request.stickiesActive});
 			break;
 			case "css" :
@@ -28,7 +31,8 @@ if (chrome && chrome.extension){
 				sendResponse({message:'thank you, amending'});
 			break;	
 			case "checkforchanges" :
-			console.log("something changed, check for updates")
+				if (stickythang.debug == "true")
+					console.log("something changed, check for updates")
 				stickythang.backgroundnotes = request.notes;
 				stickythang.checkforchanges();
 				sendResponse({message:'thank you, checking'})
@@ -42,8 +46,8 @@ if (chrome && chrome.extension){
 window.stickythang={
 	isloaded:false,
 	online:"false",
-	log:function(message){if(stickythang.debug){console.log(message)}},
-	debug:true,
+	log:function(message){if(stickythang.debug == "true"){console.log(message)}},
+	debug:"false",
 	activeids:[],
 	urlSingleNote:"",
 	backgroundnotes:[],
@@ -148,13 +152,15 @@ window.stickythang={
 											'user':Y.one("#tempName"+time).get('value'),
 											'pass':Y.one("#tempPassword"+time).get('value')
 									}}, function(response) {
-										console.log("humm  "+Y.JSON.stringify(response))
+										if (stickythang.debug == "true")
+											console.log("humm  "+Y.JSON.stringify(response))
 										if (response.user != "me"){
 											stickythang.user = response.user;
 											note.one("span.buttonShareStickyNote").setStyle('display','none');
 											note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.getUser());
 										} else {
-											console.log("user me "+Y.JSON.stringify(response))
+											if (stickythang.debug == "true")
+												console.log("user me "+Y.JSON.stringify(response))
 											Y.one("#tempLogin"+time).set('value','Sorry, try again');
 										}
 									});
@@ -172,7 +178,8 @@ window.stickythang={
 									return;
 								}
 								else {
-									console.log('trying to share')
+									if (stickythang.debug == "true")
+										console.log('trying to share')
 									note.one("input.buttonShareSticky").set('value', 'Setting public...')
 									setTimeout(function(){
 										note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
@@ -481,7 +488,7 @@ stickythang.Note.prototype = {
 		if(note.isNew){
 			stickythang.log('adding node:'+ops.id)	
 			chrome.extension.sendRequest({action:"saveNew", ops:ops }, function(response) {
-			  if(window.stickythang.debug){
+			  if(window.stickythang.debug == "true"){
 				 console.log(response.message)
 				}
 			});				
@@ -504,7 +511,7 @@ stickythang.Note.prototype = {
 				.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
 		
 		var id = this.id,
-			action = (this.urlex) ? "disable" : "remove";
+			action = (this.urlex) ? "remove" : "remove";
 		stickythang.log('sticky '+action + ':'+ id )
 		removeFormPageArrays(id)
 		//stickythang.db.remove(id);
@@ -549,7 +556,8 @@ stickythang.Note.prototype = {
 		str = stickythang.Y.JSON.stringify(ops);
 		
 		chrome.extension.sendRequest({action:"newPost", ops:{message:str,subject:ops.html} }, function(response) {
-		 	console.log(response.message)
+		 	if (stickythang.debug == "true")
+				console.log(response.message)
 		});
 	}	
 }
@@ -585,7 +593,8 @@ stickythang.createNoteYUI = function(result){
 		stickythang.currentids.push(note.id);
 		stickythang.currentnotes.push(note);
 
-		console.log( Y.JSON.stringify( note.ops ) )
+		if (stickythang.debug == "true")
+			console.log( Y.JSON.stringify( note.ops ) )
 		
 		note.div.set('id',note.id)
 			.addClass("stickythang")
