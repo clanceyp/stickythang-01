@@ -9,6 +9,22 @@ version: 0.1
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		<title>stickythang popup</title>
+		<!--
+		<script type="text/javascript">
+	
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-33017882-1']);
+		_gaq.push(['_trackPageview']);
+		
+		
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = 'https://ssl.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+		
+		</script>
+		-->
 		<script src="lib/yui/3.4.0/build/yui/yui-min.js"></script>
 		<link href="lib/css/popup.css" rel="stylesheet" />
 		
@@ -29,7 +45,7 @@ version: 0.1
 				width:auto;
 			}
 			div.bottom {
-				background: #121A28 url(http://stickythang.com/assets/templates/drupify/images/bottom-bg.png) 0 0 repeat-x;
+				background: #121A28 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAB2CAIAAABu/BnJAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAsSAAALEgHS3X78AAAAH3RFWHRTb2Z0d2FyZQBNYWNyb21lZGlhIEZpcmV3b3JrcyA4tWjSeAAAABV0RVh0Q3JlYXRpb24gVGltZQAzLzE2LzA3rujbGAAAAZ5JREFUeJzt3MFtAzEMAEFdwDZcgstIk+7Jtfjpp9zF6bEzFdxjQTBi4GvvvRo+39NfwGnzel+nvwFu8nf6A+A+cidE7oTInZDr8fw//Q1wE9OdELkTIndC5E6I3AmROyFyJ0TuhMidELkTIndC5E6I3AmROyFyJ0TuhMidkOn8zgyY7oTInZBZyzJDxaidDssMIZYZQkx3QuROiDMTIaY7IXInxMsMIaY7Ia6qhFhmCLHMECJ3QpyZCDHdCZE7IXInxEMkIc5MhJjuhNjdCZE7Ic5MhJjuhMidELkT4iGSEGcmQkx3QuzuhMidELkTMtvuTobpTojcCZE7IbP8RyQZpjshcidE7oT4nxlCxl+qdJjuhNjdCZE7IX54gxDTnRC5EyJ3QjxEEuKHNwgx3QmxuxMid0LkToirKiGmOyFyJ8RDJCHOTISY7oTY3QmROyFyJ8SZiRDTnRC5E+IhkhBnJkIsM4RYZggx3QmROyHOTISY7oTInRAvM4SY7oS4qhJimSHEMkOI3AlxZiLEdCdE7oTInRC5EyJ3QuROyA8jWULYSk9oGAAAAABJRU5ErkJggg==) 0 0 repeat-x;
 				border-radius:0 0 10px 10px ;
 				color:#888;
 				font-size:120%;
@@ -66,7 +82,7 @@ version: 0.1
 	</head>
 
 	<body>
-		<h1 class="centre"><a href="http://stickythang.com" target="_blank"><span>StickyThang!</span></a></h1>
+		<h1 class="centre"><a href="http://www.stickythang.com" target="_blank"><span>StickyThang!</span></a></h1>
 		<ul class="menu">
 			<li class="active"><a class="MyStickies"><span>My stickies</span></a></li>
 			<li class=""><a class="AllStickies"><span>Friends stickies</span></a></li>
@@ -98,7 +114,7 @@ version: 0.1
 			</form>
 			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
 			<div style="min-height:40px;">
-				<form id="feedback" action="http://stickythang.com/contact" method="post">
+				<form id="feedback" action="http://www.stickythang.com/contact" method="post">
 					<input type="hidden" name="name" id="name" />
 					<input type="hidden" name="email" value="feedback@stickythang.com" />
 					<legend>Give feedback</legend>
@@ -163,6 +179,10 @@ version: 0.1
 			-->
 		</div>
 	</body>
+	
+	<script src="lib/js/stickythang.popup.js"></script>
+	
+	<!--
 		<script>
 			var background = chrome.extension.getBackgroundPage().window,
 				username = background.stickythang.getLoggedInUser(),
@@ -371,4 +391,6 @@ version: 0.1
 				CheckLoginStatus()
 			});
 		</script>	
+		
+		-->
 </html>

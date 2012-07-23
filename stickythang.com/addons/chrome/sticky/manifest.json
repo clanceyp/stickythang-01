@@ -1,14 +1,14 @@
 {
-  // Required
-  "name": "StickyThang! ALPHA",
-  "version": "0.1.8",
-  "update_url": "http://stickythang.com/extentions/chrome/update.xml",
-  "homepage_url": "http://stickythang.com",
-  "background_page": "background.html",
+  "name": "StickyThang!",
+  "version": "0.1.9",
+  "manifest_version": 2,
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "update_url": "http://www.stickythang.com/extentions/chrome/update.xml",
+  "homepage_url": "http://www.stickythang.com",
+  "background": {
+    "page":"background.html"
+  },
   "options_page": "options.html",
-  
-
-  // Recommended
   "description": "Syndicate your notes with your friends, work colleagues and study buddies"
   ,"icons": { 
 		"16": "icon16.png" 
@@ -16,18 +16,17 @@
 		,"128": "icon128.png" 
   }
   ,"page_action": {
-    "default_icon": "icon16.png", // optional
-    "default_title": "StickyThang!",    // optional; shown in tooltip
-    "default_popup": "popup.html"    // optional
+    "default_icon": "icon16.png",
+    "default_title": "StickyThang!",
+    "default_popup": "popup.html"
   }
-  ,"options_page": "options.html"
+  ,"content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'"
   ,"content_scripts": [{
     	"matches": [
 			"http://*/*"
 			,"https://*/*"
 		],
 		"js": [
-//			"lib/yui/3.4.0/build/yui/yui-debug.js"
 			"lib/yui/3.4.0/build/yui/yui-min.js"
 			,"lib/yui/3.4.0/build/anim/anim-min.js"
 			,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
@@ -102,11 +101,7 @@
 			,"lib/yui/3.4.0/build/widget-skin/widget-skin-min.js"
 			,"lib/yui/3.4.0/build/yql/yql-min.js"
 			,"lib/yui/3.4.0/build/yui-throttle/yui-throttle-min.js"
-			//,"lib/yui/3.4.0/build/loader-base/loader-base-min.js"
-			//,"lib/yui/3.4.0/build/loader-rollup/loader-rollup-min.js"
-			//,"lib/yui/3.4.0/build/loader-yui3/loader-yui3-min.js"
 			,"lib/js/stickythang.ui.js"
-			//,"lib/js/stickythang.db.js"
 			,"lib/js/ready.js"
 		],
 		"css": [

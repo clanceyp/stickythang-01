@@ -371,6 +371,7 @@ div.stickythang div.timestamp {
 	top:0;
 }
 div.stickythang form label {
+	color:#fff;
 	display:block;
 	font-size:13px;
 	margin-bottom:3px;
