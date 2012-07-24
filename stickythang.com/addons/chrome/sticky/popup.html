@@ -113,10 +113,10 @@ version: 0.1
 				</div>
 			</form>
 			<div style="margin-top:8px;padding-bottom:8px;border-top:1px solid #e2e2e2"></div>
-			<div style="min-height:40px;">
+			<div style="min-height:40px;position:relative;">
 				<form id="feedback" action="http://www.stickythang.com/contact" method="post">
 					<input type="hidden" name="name" id="name" />
-					<input type="hidden" name="email" value="feedback@stickythang.com" />
+					<input type="hidden" name="email" value="popup" />
 					<legend>Give feedback</legend>
 					<p>
 						<label for="type">Type:</label>
@@ -131,7 +131,7 @@ version: 0.1
 						<input type="submit" value="send feedback" />
 					</p>
 				</form>
-				<h2 style="opacity:0;display:none;" id="h2feedbackthanks">Thanks your for feedback</h2>
+				<h2 style="opacity:0;display:none;position:absolute;top:10px;" id="h2feedbackthanks">Thanks your for feedback</h2>
 			</div>
 			
 		</div>

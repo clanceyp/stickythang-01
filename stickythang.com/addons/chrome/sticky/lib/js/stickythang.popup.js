@@ -139,11 +139,6 @@
 				    Y.io(uri, cfg);			
 					Y.one("#feedback").transition({
 						    easing: 'linear',
-							height:{
-						        delay: 0.5,
-						        duration: 0.5,
-						        value: 0
-						    },
 						    opacity: {
 						        delay: 0.5,
 						        duration: 0.5,

@@ -167,7 +167,11 @@ window.stickythang={
 								})
 						} else {
 							stickythang.user = response.user;
-							if (note.getData('shared') == 'true') {
+							if (note.one("div.edit textarea").get("value") == ""){
+								note.one("input.buttonShareSticky").set('value','Add content to share');
+								return;
+							}
+							else if (note.getData('shared') == 'true') {
 								note.one("input.buttonShareSticky").set('value','Already shared');
 							} else {
 								note.one("input.buttonShareSticky").set('value','Share as '+ stickythang.getUser());
@@ -390,13 +394,12 @@ stickythang.init = function(){
 		var settings = (temp) ? Y.JSON.parse(temp) : stickythang.ops.defultsettings ;
 		
 		Y.one('body').append('<div id="stickythangContainer" />')
-		Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
+		//Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
 		Y.one("html").on("key",stickythang.stickiesMinimizeAll,"esc");
 		
 
 		
-		Y.one('#stickythangFormContainer')
-			.setStyle('webkitAnimationName','stickyThangFadeIn')
+		//Y.one('#stickythangFormContainer').setStyle('webkitAnimationName','stickyThangFadeIn')
 
 	    // stickythang.db.count();
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
@@ -442,6 +445,11 @@ stickythang.Note.prototype = {
 		ops.user = stickythang.getUser();
 	
 		return ops;
+	},
+	focus:function(){
+		var self = this;
+		//console.log('trying to focus element')
+		//self.div.one("div.edit textarea").getDOMNode().focus();
 	},
 	getHTML:function(){
 		var html,
@@ -507,8 +515,9 @@ stickythang.Note.prototype = {
 			this.div.setStyle("display","none");	
 		}
 		this.div.setStyle("max-width",this.div.one("div.card").getStyle("max-width"));
-		this.div.one('div.card').setStyle("webkitTransformOrigin","100% 0")
-				.setStyle('webkitAnimationName' , 'stickyThangNoteDelete') ;	
+		this.div.one('div.card')
+				.setStyle("webkitTransformOrigin","100% 0")
+				.setStyle('webkitAnimationName' , 'stickyThangNoteDelete');
 		
 		var id = this.id,
 			action = (this.urlex) ? "remove" : "remove";
@@ -516,8 +525,8 @@ stickythang.Note.prototype = {
 		removeFormPageArrays(id)
 		//stickythang.db.remove(id);
 		chrome.extension.sendRequest({action:action, id:id }, function(response) {
-		  stickythang.log(response.message)
-		});			
+			stickythang.log(response.message)
+		});
 		
 		function removeFormPageArrays(id){
 			try {
@@ -629,7 +638,9 @@ stickythang.createNoteYUI = function(result){
 		note.div.one("div.closebutton").on('click',stickythang.util.remove)
 
 		Y.one("#stickythangContainer").appendChild(note.div);
-		note.div.one("div.card").setStyle("webkitTransformOrigin","0 0")
+		note.div.one("div.card")
+				.setStyle("opacity","0.99")
+				.setStyle("webkitTransformOrigin","0 0")
 				.setStyle('webkitAnimationName' , 'stickyThangNoteCreate') ;
 		note.div.initForm = InitForm;
 		note.div.initForm(note);
@@ -678,7 +689,7 @@ stickythang.createNoteYUI = function(result){
 		document.getElementById( note.id ).addEventListener('webkitAnimationEnd', function() { 
 			var animation = note.div.one('div.card').getStyle('webkitAnimationName');
 			note.div.one('div.card').setStyle('webkitAnimationName', '') ;
-			
+			//console.log(animation)
 			switch (animation) {
 				case "stickyThangNoteMinimise" :
 					note.div.replaceClass('maximise','minimise').setData('state','minimise')
@@ -700,6 +711,11 @@ stickythang.createNoteYUI = function(result){
 				case "stickyThangNoteFlip" :
 					stickythang.log("webkitAnimationEnd: resize to fit form");
 					break;
+				;
+				case "stickyThangNoteCreate":
+					//note.focus();
+					break;
+				;
 			}
 			function noteSave(){
 				note.save();

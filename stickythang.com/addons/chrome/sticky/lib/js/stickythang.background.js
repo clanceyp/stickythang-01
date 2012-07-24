@@ -112,7 +112,7 @@ window.stickythang = {
 		var buddies = stickythang.db.listBuddies;
 		return buddies.join(",") ;
 	},
-	getPublicStickies:function(){
+	getPublicStickies:function(buddy){
 		console.log("checking public stickies")
 		var uri = stickythang.ops.urlListNots,
 			Y = stickythang.Y,
@@ -125,20 +125,20 @@ window.stickythang = {
 				},
 				on: {
 					complete:function(id,request){
-						console.log("request.responseText: "+ request.responseText);
+						// console.log("request.responseText: "+ request.responseText);
 						if ( !request.responseText.trim() ){
 							return;
 						}
 						var obj = Y.JSON.parse(request.responseText),
 							ids = window.ids;
-						console.log("ids:"+ ids.length);
+						/*console.log("ids:"+ ids.length);
 						console.log("obj:"+ obj.notes.length);
-						console.log("sql:"+ obj.sql);
+						console.log("sql:"+ obj.sql);*/
 						for (var i = 0; i < obj.notes.length ; i++){
 							var note = obj.notes[i],
 								id = note.id, 
 								x=false;
-							console.log("id element "+ id)
+							// console.log("id element "+ id)
 							for (var ii = 0; ii < ids.length; ii++){
 								if (ids[ii] == id){
 									x = true;
@@ -146,7 +146,7 @@ window.stickythang = {
 								}
 							}
 							if (x){
-								console.log("id exsists in db for element "+ id)
+								//console.log("id exsists in db for element "+ id)
 								continue;
 							}
 							//console.log(note.ops);
@@ -171,15 +171,20 @@ window.stickythang = {
 					}
 				}
 			};
-		if (buddies) {
+		if (buddy){
+			console.log("getting;" + buddy)
+			Y.one("#inputAuthors").set("value", buddy);
+			Y.one("#inputOffset").set("value", stickythang.getLocalStorage("inputOffset","0"));
+			Y.one("#inputFrom").set("value", "1275427064000");
+			Y.io(uri, cfg);
+		} else if (buddies) {
 			stickythang.db.getIds();
 			console.log("getting;" + buddies)
 			Y.one("#inputAuthors").set("value", buddies);
 			Y.one("#inputOffset").set("value", stickythang.getLocalStorage("inputOffset","0"));
 			Y.one("#inputFrom").set("value", stickythang.getLocalStorage("lastUpdated","1275427064000"));
-			console.log("checking for updates")
-			Y.io(uri, cfg);
 			stickythang.setLocalStorage("lastUpdated", new Date().getTime() );
+			Y.io(uri, cfg);
 		} else {
 			console.log("not checking for updates")
 		}
@@ -196,14 +201,15 @@ YUI().use("io","json", function(Y) {
 	
 	function onFailure(transactionid, response, arguments) {
 		stickythang.setLocalStorage('online','false');
-		console.log('not good:'+ response.responseText +','+response.statusText+','+response.status)
+		console.log("connection problem:"+ response.status)
+		//console.log('not good:'+ response.responseText +','+response.statusText+','+response.status)
 	}
 	// Subscribe to "io.failure".
 	Y.on('io:failure', onFailure, Y, 'Transaction Failed');
 	
 	function onSuccess(transactionid, response, arguments) {
 		stickythang.setLocalStorage('online','true');
-		console.log('good:'+ response.responseText)
+		//console.log('good:'+ response.responseText)
 	}	
 	Y.on('io:success', onSuccess, Y, true);		
 		
@@ -273,10 +279,10 @@ YUI().use("io","json", function(Y) {
 					Y.one("#postAuthor").set('value', user);	
 					Y.one("#postOps").set('value',ops.message);	
 					Y.one("#postNote").set('value',ops.subject);
-					console.log('Trying to submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
+					//console.log('Trying to submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
 					request = Y.io(uri,cfg);
 				} else {
-					console.log('Could not submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
+					//console.log('Could not submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
 					sendResponse({message:"Could not save sticky",error:"user not logged in, or content error"});
 				}
 					
@@ -316,7 +322,7 @@ YUI().use("io","json", function(Y) {
 			request,
 			obj,
 			cfg = {on:{complete:function(id,request){
-				console.log('got user name:'+ request.responseText);
+				//console.log('got user name:'+ request.responseText);
 				var i = request.responseText.indexOf("user"),
 					obj,
 					user;
@@ -338,7 +344,7 @@ YUI().use("io","json", function(Y) {
 					user = obj.user;
 					console.log("obj and obj.user :"+ user);
 				} else {
-					console.log("some sort of issue");
+					console.log("undefined issue");
 				}
 				if (sendResponse){
 					ops.user = user;
@@ -626,7 +632,17 @@ stickythang.db = {
 					function(tx,error){
 						sendResponse(error)
 				});
-	        });			
+	        });
+			stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("DELETE from "+ stickythang.db.tableName +" WHERE user = ?", 
+					[buddy],
+					function(){
+						// ignore responce
+					},
+					function(tx,error){
+						// ignore error
+				});
+	        });
 		},
 		save:function(note,sendResponse){			
 	        stickythang.db.localdb.transaction(function (trans){
@@ -680,6 +696,7 @@ stickythang.db = {
 					["","",buddy],
 					function(){
 						stickythang.db.getBuddies(sendResponse);
+						stickythang.getPublicStickies(buddy);
 					},
 					function(tx,error){
 						console.log(error.message)
@@ -688,7 +705,7 @@ stickythang.db = {
 	        });			
 		},
 		saveNewIfNotExists:function(note){			
-			console.log('trying to save a new note from an external source, called by popup.html');
+			//console.log('trying to save a new note from an external source, called by popup.html');
 			if (!note.html || note.html == ''){
 				//sendResponse({message:'!!!!note empty, not creating'})
 			}
