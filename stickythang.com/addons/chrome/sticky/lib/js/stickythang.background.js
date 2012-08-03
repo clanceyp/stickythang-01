@@ -249,7 +249,8 @@ YUI().use("io","json", function(Y) {
 						user = obj.user
 						window.stickythang.setLocalStorage('user',user);
 					}
-					sendResponse({'message':'from login','user':user,'ops':ops,'online':stickythang.getLocalStorage('online')});
+					//sendResponse({'message':'from login','user':user,'ops':ops,'online':stickythang.getLocalStorage('online')});
+					sendResponse({'message':'from login','user':user,'online':stickythang.getLocalStorage('online')});
 				}
 			}
 			Y.io(uri, cfg);

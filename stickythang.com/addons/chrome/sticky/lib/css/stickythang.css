@@ -38,8 +38,8 @@ div#stickythangFormContainer:hover span.handle {
 	100%{-webkit-transform:scale(0) skew(30deg, 0deg) rotate(-5deg) }
 }
 @-webkit-keyframes stickyThangNoteCreate{
-	0%{-webkit-transform:scale(0) skew(30deg, 0deg) }
-	100%{-webkit-transform:scale(1) skew(0deg, 0deg) }
+	0%{-webkit-transform:scale(0) skew(-30deg, 0deg) rotate(5deg) }
+	100%{-webkit-transform:scale(1) skew(0deg, 0deg) rotate(0deg) }
 }
 @-webkit-keyframes stickyThangNoteMaximise {
 	0%{-webkit-transform:scale(0) skew(30deg, 0deg) rotate(-15deg)}

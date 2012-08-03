@@ -158,6 +158,16 @@ window.stickythang={
 											stickythang.user = response.user;
 											note.one("span.buttonShareStickyNote").setStyle('display','none');
 											note.one("input.buttonShareSticky").setStyle('display','block').set('value','Share as '+ stickythang.getUser());
+											note.one("input.buttonShareSticky").on("click",function(e){
+												if (stickythang.debug == "true"){
+													console.log('trying to share')
+												}
+												note.one("input.buttonShareSticky").set('value', 'Setting public...')
+												setTimeout(function(){
+													note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
+												},2000)
+												note.Super.shareMe('true');
+											})
 										} else {
 											if (stickythang.debug == "true")
 												console.log("user me "+Y.JSON.stringify(response))
@@ -640,7 +650,7 @@ stickythang.createNoteYUI = function(result){
 		Y.one("#stickythangContainer").appendChild(note.div);
 		note.div.one("div.card")
 				.setStyle("opacity","0.99")
-				.setStyle("webkitTransformOrigin","0 0")
+				.setStyle("webkitTransformOrigin","100% 0")
 				.setStyle('webkitAnimationName' , 'stickyThangNoteCreate') ;
 		note.div.initForm = InitForm;
 		note.div.initForm(note);
