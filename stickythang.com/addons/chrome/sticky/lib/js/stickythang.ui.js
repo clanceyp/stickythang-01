@@ -22,8 +22,10 @@ if (chrome && chrome.extension){
 				stickythang.urlSingleNote = request.urlSingleNote;
 				stickythang.online = request.online;
 				stickythang.debug = request.debug || "false";
-				if (stickythang.debug == "true")
-					console.log('setting urlsingle to '+ request.urlSingleNote)
+				stickythang.user = request.user || "";
+				if (stickythang.debug == "true"){
+					console.log( "[debug]"+ stickythang.Y.JSON.stringify( request ) )
+				}
 				sendResponse({message:'thank you, Im checking:'+request.stickiesActive});
 			break;
 			case "css" :
@@ -54,8 +56,8 @@ window.stickythang={
 	currentids:[],
 	currentnotes:[],
 	user:"",
-	getUser:function(){return stickythang.user || "me"},
-	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') },
+	getUser:function(){return stickythang.user || "me2"},
+	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') +"&author="+ stickythang.getUser() },
 	settings:{
 		save:function(Y,node){
 			var xy = node.getXY();
@@ -415,7 +417,7 @@ stickythang.init = function(){
 		chrome.extension.sendRequest({action: "getAll"}, function(response) {
 		  stickythang.log('response recieved loading shares and stickies:'+ response.message);
 		  stickythang.shares = response.shares;
-		  stickythang.user = response.user;
+		  stickythang.user = response.user || "";
 		  stickythang.online = response.online;
 		  stickythang.urlSingleNote = response.urlSingleNote;
 		  stickythang.stickiesActive(response.stickiesActive);

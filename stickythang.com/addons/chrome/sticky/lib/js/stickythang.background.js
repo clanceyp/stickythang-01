@@ -19,6 +19,7 @@
 					online:stickythang.getLocalStorage('online'),
 					notes:stickythang.db.listAll,
 					urlSingleNote:stickythang.ops.urlSingleNote,
+					user:stickythang.getLocalStorage('user','me'),
 					debug:stickythang.getLocalStorage('debug','false'),
 					shares:stickythang.shares // may be depricated, check!
 				}, function(response) {
@@ -433,7 +434,7 @@ stickythang.db = {
 							list: stickythang.db.listAll,
 							stickiesActive: stickythang.getLocalStorage('stickiesActive'),
 							urlSingleNote: stickythang.ops.urlSingleNote,
-							// user: stickythang.getLocalStorage('user','me'),
+							user: stickythang.getLocalStorage('user',''),
 							shares: stickythang.shares,
 							message: 'success'
 						})
