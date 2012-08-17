@@ -44,7 +44,7 @@
 						var rs = response.list,
 							myStickies = "",
 							buddiesStickies = "",
-							mxlen = 140;
+							mxlen = background.stickythang.getLocalStorage('popup-list-link-mxlen',50);
 						for (var i = rs.length-1; i >= 0; i--) {
 							var sticky = rs[i],
 								note="",
@@ -52,13 +52,13 @@
 								user;
 							if (!sticky.note){continue}
 							note = sticky.note.replace(/<[^>]*>?/g," ");
-							note = note.length > mxlen ? note.substring(0,mxlen) + "..." : note;
-							url = sticky.url;
+							note = note.length > mxlen+3 ? note.substring(0,mxlen) + "..." : note;
+							url = (sticky.url.indexOf("#") > 0) ? sticky.url : sticky.url + "#" + sticky.id;
 							user = sticky.user || "";
 							if (note && sticky.urlex){
-								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'"><span id="span'+rs[i].id+'" class="del"></span>'+ user +'; '+ note  +'</a></li>';
+								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ url +'"><span id="span'+rs[i].id+'" class="del"></span>'+ user +'; '+ note  +'</a></li>';
 							} else if (note){
-								myStickies+= '<li><a target="_blank" class="strip" href="'+ rs[i].url +'">'+ note  +'</a></li>';
+								myStickies+= '<li><a target="_blank" class="strip" href="'+ url +'">'+ note  +'</a></li>';
 							}
 						}
 						if (!myStickies){myStickies = "<li>You have no saved stickies</li>"}

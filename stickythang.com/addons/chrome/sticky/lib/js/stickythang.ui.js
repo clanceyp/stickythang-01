@@ -56,7 +56,7 @@ window.stickythang={
 	currentids:[],
 	currentnotes:[],
 	user:"",
-	getUser:function(){return stickythang.user || "me2"},
+	getUser:function(){return stickythang.user || ""},
 	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') +"&author="+ stickythang.getUser() },
 	settings:{
 		save:function(Y,node){
@@ -726,6 +726,9 @@ stickythang.createNoteYUI = function(result){
 				;
 				case "stickyThangNoteCreate":
 					//note.focus();
+					if ("#"+ note.id == window.location.hash){
+						window.location = "#"+ note.id;
+					}
 					break;
 				;
 			}
@@ -781,5 +784,6 @@ stickythang.createNoteYUI = function(result){
 					self.removeClass("fixed").addClass(position).setData('position',position);
 				})
 		}	
+		
 } 
 
