@@ -8,6 +8,10 @@
           chrome.pageAction.show(tabId);
 		}
       };
+	  
+		if (!console){
+			console = {log:function(){}}
+		}
 
       // Listen for any changes to the URL of any tab.
       chrome.tabs.onUpdated.addListener(checkForValidUrl);

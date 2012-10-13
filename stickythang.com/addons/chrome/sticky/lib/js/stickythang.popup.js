@@ -35,6 +35,9 @@
 				if (window.username){
 					Y.one("#username").set('value',username);
 				}
+				if (!console){
+					console = {log:function(){}}
+				}
 				var loader = {
 					LoadList:function(results){
 						console.log('ST!' + results.list.length)
