@@ -61,6 +61,7 @@ div#stickythangFormContainer:hover span.handle {
 div#stickythangFormContainer *.fade {
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-duration:0.75s;
+	-webkit-animation-fill-mode:forwards;
 }
 div.stickythang div.card form.externalShare div.share {
 	display:none;
