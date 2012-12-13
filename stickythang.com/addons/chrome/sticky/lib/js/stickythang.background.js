@@ -23,10 +23,12 @@
 					online:stickythang.getLocalStorage('online'),
 					notes:stickythang.db.listAll,
 					urlSingleNote:stickythang.ops.urlSingleNote,
-					user:stickythang.getLocalStorage('user','me'),
+					userId:stickythang.getLocalStorage('userId'),
+					userName:stickythang.getLocalStorage('userName','me'),
 					debug:stickythang.getLocalStorage('debug','false'),
 					shares:stickythang.shares // may be depricated, check!
 				}, function(response) {
+				if (response)
 				console.log(response.message);
 			});
 			//});		  	
@@ -59,6 +61,8 @@ chrome.extension.onRequest.addListener(
 		case "disable" : // disable a sticky
 			stickythang.db.disable(request.id,sendResponse);
 		break;
+		case "disabled" : // disable stickythang
+		break;
 		case "save" : // update a sticky
 			stickythang.db.save(request.ops,sendResponse);
 		break;
@@ -84,9 +88,9 @@ chrome.extension.onRequest.addListener(
 });	  
 
 window.stickythang = {
-	user:'',bespokeCSS:"",shares:[],
+	userId:"",userName:'',bespokeCSS:"",shares:[],
 	ops:{
-		uriUserName:"http://www.stickythang.com/login",
+		uriUserName:"http://www.stickythang.com/user.php",
 		uriLogin:"http://www.stickythang.com/login",
 		uriNewPost:"http://www.stickythang.com/notes/add.php",
 		urlListNots:"http://www.stickythang.com/notes/list.php",
@@ -98,10 +102,6 @@ window.stickythang = {
 	setLocalStorage:function(key,val){
 		localStorage[key] = val || localStorage[key] || '';
 		return val;
-	},
-	updateUser:function(user){
-		localStorage["user"] = user;
-		stickythang.user = user;
 	},
 	isBuddy:function(buddy){
 		var buddies = stickythang.db.listBuddies;
@@ -223,7 +223,7 @@ YUI().use("io","json", function(Y) {
 		if (!ops || !ops.user || !ops.pass){
 			var user = stickythang.getLoggedInUser();
 			if (user){
-				return {responseText:'Logged in, user name '+ user, st:'true'}
+				return {responseText:'Logged in, user name '+ user.name, st:'true'}
 			}else{
 				return {responseText:'Not logged in and user name and/or password not set',st:'true'}
 			}
@@ -281,9 +281,10 @@ YUI().use("io","json", function(Y) {
 						}
 					}
 			    };
-				if (user && user != 'me' && ops.message && ops.subject){
-					Y.one("#postAuthor").set('value', user);	
-					Y.one("#postOps").set('value',ops.message);	
+				if (user && user.name != 'me' && ops.message && ops.subject){
+					Y.one("#postAuthor").set('value', user.id);
+					Y.one("#postAuthorAlias").set('value', user.name);
+					Y.one("#postOps").set('value',ops.message);
 					Y.one("#postNote").set('value',ops.subject);
 					//console.log('Trying to submit note; user:'+ user +', "'+ ops.message + '", subject:'+ ops.subject);
 					request = Y.io(uri,cfg);
@@ -303,7 +304,7 @@ YUI().use("io","json", function(Y) {
 		}
 	}
 	window.stickythang.getLoggedInUser = function(){// sync get the logged in user name
-		var user = '',
+		var userName = '',userId,
 			uri = stickythang.ops.uriUserName,
 	    	cfg = {sync:true},
 	        request,
@@ -315,13 +316,15 @@ YUI().use("io","json", function(Y) {
 			if (i > 0 && i < 5 ){
 				obj = Y.JSON.parse(request.responseText);	
 			}
-			if (obj && obj.user){
-				user = obj.user
-				window.stickythang.setLocalStorage('user',user);
+			if (obj && obj.userName){
+				userName = obj.userName;
+				userId = obj.userId;
+				window.stickythang.setLocalStorage('userId',userId);
+				window.stickythang.setLocalStorage('userName',userName);
 			}
 		}catch(e){user="Error getting user info:"+e.message}
 		
-		return user;
+		return {"name":userName,"id":userId};
 	}
 	window.stickythang.checkLoggedInUser = function(ops,sendResponse){// lazy get the logged in user name
 		var uri = stickythang.ops.uriUserName,
@@ -331,7 +334,7 @@ YUI().use("io","json", function(Y) {
 				//console.log('got user name:'+ request.responseText);
 				var i = request.responseText.indexOf("user"),
 					obj,
-					user;
+					userName,userId;
 				if (i > 0 && i < 5 ){
 					try {
 						obj = Y.JSON.parse(request.responseText);
@@ -339,21 +342,23 @@ YUI().use("io","json", function(Y) {
 					catch (e) {
 						console.log('not logged in, or error:' + e.message);
 					}finally {
-						console.log('user:'+user)
+						console.log('userId: '+obj.userId)
 					}
 				}else{
 					console.log( 'not logged in' );
-					user = "me";
 				}
 				if (obj && obj.user){
-					window.stickythang.setLocalStorage('user',obj.user);
-					user = obj.user;
-					console.log("obj and obj.user :"+ user);
+					window.stickythang.setLocalStorage('userId',obj.user);
+					window.stickythang.setLocalStorage('userName',obj.name);
+					userName = obj.name;
+					userId = obj.user;
+					console.log("obj and obj.user :"+ userId + " and userName :"+ obj.name);
 				} else {
 					console.log("undefined issue");
 				}
 				if (sendResponse){
-					ops.user = user;
+					ops.user = userName;
+					ops.userId = userId;
 					ops.message = "response from server";
 					ops.online = stickythang.getLocalStorage('online');
 					sendResponse(ops)
@@ -406,7 +411,7 @@ stickythang.db = {
 					for (var i = 0; i < result.rows.length; ++i) {
 						list.push({note:result.rows.item(i).note,url:result.rows.item(i).url});
 					}
-					sendResponse({results:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user')})			
+					sendResponse({results:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('userName')})
 		        }, function(tx, error) {
 		            console.log('Failed to retrieve notes from database - ' + error.message);
 					sendResponse({results:[]});
@@ -438,7 +443,7 @@ stickythang.db = {
 							list: stickythang.db.listAll,
 							stickiesActive: stickythang.getLocalStorage('stickiesActive'),
 							urlSingleNote: stickythang.ops.urlSingleNote,
-							user: stickythang.getLocalStorage('user',''),
+							user: stickythang.getLocalStorage('userName',''),
 							shares: stickythang.shares,
 							message: 'success'
 						})
@@ -472,7 +477,7 @@ stickythang.db = {
 						});
 						stickythang.db.listAll = list;
 					}
-					sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('user'),message:'success'})					
+					sendResponse({list:list,stickiesActive:stickythang.getLocalStorage('stickiesActive'),user:stickythang.getLocalStorage('userName'),message:'success'})
 		        }, function(tx, error) {
 		            sendResponse({message:error.massage,list:[]})
 		        });
