@@ -2,12 +2,14 @@
  * @author patcla
  */
 
-			var background = chrome.extension.getBackgroundPage().window,
-				username = background.stickythang.getLoggedInUser(),
+			var background = chrome.extension.getBackgroundPage(),
+				//user = background.stickythang.getLoggedInUser(),
 				buddies = background.stickythang.db.getBuddies(),
-				debug = 0;
-			
-				console.log('current user:'+username);
+				debug = true;
+				//username = user.userName;
+
+				//console.log(user)
+				//console.log('current user:'+username);
 				
 			
 			YUI().use('node','yql','io-form','json-parse','node-load','transition',function(Y){
@@ -34,9 +36,6 @@
 				*/
 				if (window.username){
 					Y.one("#username").set('value',username);
-				}
-				if (!console){
-					console = {log:function(){}}
 				}
 				var loader = {
 					LoadList:function(results){
@@ -66,6 +65,7 @@
 						}
 						if (!myStickies){myStickies = "<li>You have no saved stickies</li>"}
 						if (!buddiesStickies){buddiesStickies = "<li>No stickies found</li>"}
+						if (!buddies){buddiesStickies = '<li>You are not following anyone. <a target="_blank" href="options.html">Find friends</a></li>'}
 						Y.one("#stickyList").setContent(myStickies);
 						Y.one('#ulAllList').setContent(buddiesStickies);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -157,34 +157,7 @@
 						})
 					})		
 				})
-				function Login(e){
-					e.preventDefault();
-					
-					// Y.one("#loginButton").set('value',typeof background.window)
-					// return;
-					try {
-						var v = background.stickythang.login({
-							user:Y.one("#username").get('value')
-							,pass:Y.one("#password").get('value')
-						})
-						if ( v.responseText == 'ST!invalid'){
-							Y.one("#loginButton").set('value','Incorrect username or password')
-						} else if ( v.responseText.match("You have been successfully logged in") ){
-							Y.one("#loginButton").set('value','Login successful')
-						} else if ( v.responseText.indexOf('{"user":') == 0 ) {
-							var obj = Y.JSON.parse(v.responseText)
-							// user aleady had a logged in session, get logged in user name
-							Y.one("#loginButton").set('value','Logged in as '+obj.user);
-						} else {
-							Y.one("#loginButton").set('value','Could not login : ( ');
-							console.log(v.responseText)
-						}
-						
-					}catch(e){
-						Y.one("#loginButton").set('value','e:'+e.message)
-					}				
-				}
-				Y.one("#login").on('submit',Login);
+
 	
 				function CheckLoginStatus(){
 					console.log('checking login status:')
@@ -193,16 +166,22 @@
 					var html = "",
 						u = background.stickythang.getLoggedInUser();
 						
-						if ( !u ){// it's a sticky thang response
-							html = 'To share stickies you need to login below or <a target="_blank" href="options.html">register</a>.';
+						if ( !u || !u.name | !u.id ){// it's a sticky thang response
+							html = 'To share stickies you need to <a target="_blank" href="options.html">login</a>.';
 							// Y.one("#loginInputArea").setStyle('display','block');
 							// Y.one('#ulAllList').setContent('<li>You need to login to see your friends stickies</li><li><a target="_blank" href="options.html">register</a></li>')
 						} else {
 							// html = 'Status, unknown';
-							html = 'Logged in as, '+ u;
+							html = '<span>Logged in as, '+ u.name +'</span>';
 							Y.one("#loginInputArea").setStyle('display','none');
 						}
-						Y.one("#loginStatus").setContent(html);
+						if (u.img){
+							var img = new Image();
+							img.src = u.img;
+							img.onerror = function(){this.parentNode.removeChild(this)}
+							Y.one("#loginStatus").append(img)
+						}
+						Y.one("#loginStatus").append(html)
 				}
 				CheckLoginStatus()
 			});

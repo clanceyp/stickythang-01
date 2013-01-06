@@ -63,6 +63,7 @@ div#stickythangFormContainer *.fade {
 	-webkit-animation-duration:0.75s;
 	-webkit-animation-fill-mode:forwards;
 }
+div.st-anonymous input.buttonShareSticky,
 div.stickythang div.card form.externalShare div.share {
 	display:none;
 }

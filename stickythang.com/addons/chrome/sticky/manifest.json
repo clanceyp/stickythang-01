@@ -1,5 +1,5 @@
 {
-  "name": "StickyThang!",
+  "name": "StickyThang! Shared Notes",
   "version": "0.2.2",
   "manifest_version": 2,
   "content_security_policy": "script-src 'self'; object-src 'self'",
@@ -25,7 +25,8 @@
 			,"https://*/*"
 		],
 		"js": [
-			"lib/yui/3.4.0/build/yui/yui-min.js"
+			"lib/underscore/underscore.js"
+			,"lib/yui/3.4.0/build/yui/yui-min.js"
 			,"lib/yui/3.4.0/build/anim/anim-min.js"
 			,"lib/yui/3.4.0/build/attribute-base/attribute-base-min.js"
 			,"lib/yui/3.4.0/build/attribute-complex/attribute-complex-min.js"

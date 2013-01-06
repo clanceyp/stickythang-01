@@ -1,7 +1,7 @@
 /**
  * @author patcla
  */
-	var background = chrome.extension.getBackgroundPage().window;
+	var background = chrome.extension.getBackgroundPage();
 		background.stickythang.checkLoggedInUser();
 
 		if (!background.stickythang.db.localdb){
@@ -20,7 +20,7 @@
 		
 		
 		YUI().use('node','yql','json-parse','node-load',"io-form","transition",function(Y){
-
+			window.Y = Y;
 			Y.all("ul.menu a").on("click",function(e){
 				e.preventDefault();
 				var target = e.currentTarget;
@@ -126,19 +126,33 @@
 				if (ops && ops.message){
 					console.log('build buddy list:'+ ops.message)
 				}
-				var buddies = background.stickythang.db.listBuddies;
-				console.log('trying to build buddy list:'+ buddies.length)
-				Y.one("#ulBuddiesList").empty();
-				for (var i = 0;i<buddies.length;i++){
-					Y.one("#ulBuddiesList").append("<li>"+ buddies[i] +"</li>")
-				}	
+				window.listBuddies = background.stickythang.db.listBuddies;
+				if (!Y.one("#ulBuddiesList li")){
+					stickythang.buildHTMLList(background.stickythang.db.listBuddies);
+				}
 			}
-			function UpdateBuddyList(){
-					var buddy = Y.one("#inputAddBuddy").get('value');
+			stickythang.buildHTMLList = function(friends){
+				Y.one("#ulBuddiesList").empty()
+				var f = _.sortBy(friends, function(item){return item.name.toLowerCase()})
+				for (var i = 0; i<f.length; i++){
+					var o = f[i];
+					if (o.name && o.id && o.name.indexOf("<") !== 0){
+						if (background.stickythang.isBuddy(o.id)){
+							Y.one("#ulBuddiesList").append('<li id="li-'+ o.id+'" class="isBuddy"><span class="toggle"></span>'+ o.name.replace("<","&lt;") +'</li>')
+						} else {
+							Y.one("#ulBuddiesList").append('<li id="li-'+ o.id+'"><span class="toggle"></span>'+ o.name +'</li>')
+						}
+					}
+				}
+			}
+			function UpdateBuddyList(buddy){
+					//var buddy = Y.one("#inputAddBuddy").get('value');
 					// console.log('buddy:'+ buddy)
-					if (!buddy){return}
+					//alert('trying to remove')
+					//if (true){return}
+					Y.one("#inputFriendsOnly").set('checked',false)
 					if (background.stickythang.isBuddy( buddy )){
-						console.log('is buddy:'+ buddy)
+						Y.one("#li-"+ buddy.id).transition({height:0},function(){this.remove()});
 						background.stickythang.db.removeBuddy( buddy , BuildBuddyList )
 					}else{
 						console.log('is NOT buddy:'+ buddy)
@@ -149,28 +163,75 @@
 			}
 			function RemoveBuddy(e){
 				var target = e.target,
-					buddy = target.getContent();
-				
-				target.blur();
-				if (confirm("Delete "+ buddy + " from list")){
-					background.stickythang.db.removeBuddy( buddy , BuildBuddyList );
-				}
+					id = target.get("id").substring(3);
+				alert('depricated')
+				return;
+				background.stickythang.db.removeBuddy( buddy , BuildBuddyList );
 			}
-			Y.one("#buttonUpdateBuddies").on('click',UpdateBuddyList);	
-			Y.one("#ulBuddiesList").delegate("dblclick", RemoveBuddy, "li");
-			
+			function ToggleBuddy(e){
+				var target = e.target,
+					id = target.get("id").substring(3),
+					buddy = _.find(window.friends, function(item){return item.id == id})
+				if (!buddy){
+					buddy = _.find(window.listBuddies, function(item){return item.id == id})
+				}
+				if (!buddy){
+					console.log("No friend found with id: "+id)
+					return;
+				}
+				target.toggleClass('isBuddy');
+				UpdateBuddyList(buddy);
+
+			}
+			Y.one("#buttonUpdateBuddies").on('click',UpdateBuddyList);
+			//Y.one("#ulBuddiesList").delegate("dblclick", RemoveBuddy, "li");
+			Y.one("#ulBuddiesList").delegate("click", ToggleBuddy, "li");
 			
 			Y.one("#formSettings").on("submit",function(e){
 				e.preventDefault();
 				UpdateBuddyList();
 			})
+			Y.one("#inputFriendsOnly").on('click',function(e){
+				Y.one("#ulBuddiesList").empty()
+				BuildBuddyList();
+			})
 		})
+
+
+function receiveMessage(message){
+	if ( /^https?:\/\/www\.stickythang\.com/.test(message.origin)){
+		if (message.data.action === "load-friends"){
+			window.friends = message.data.friends;
+			/*
+			Y.one("#ulBuddiesList").empty()
+			var f = _.sortBy(message.data.friends, function(item){return item.name.toLowerCase()})
+			for (var i = 0; i<f.length; i++){
+				var o = f[i];
+				if (o.name && o.id && o.name.indexOf("<") !== 0){
+					if (background.stickythang.isBuddy(o.id)){
+						Y.one("#ulBuddiesList").append('<li id="li-'+ o.id+'" class="isBuddy"><span class="toggle"></span>'+ o.name.replace("<","&lt;") +'</li>')
+					} else {
+						Y.one("#ulBuddiesList").append('<li id="li-'+ o.id+'"><span class="toggle"></span>'+ o.name +'</li>')
+
+				}
+			}*/
+			stickythang.buildHTMLList(window.friends);
+		} else if (message.data.action === "login"){
+			console.log(message.data.id +": "+ message.data.name);
+		} else if (message.data.action === "loginout"){
+			console.log('logged out');
+		} else {
+			console.log('unsupported request')
+		}
+	}else{
+		console.log(message.origin)
+		console.log('This domain is not permitted to post messages')
+	}
+}
+window.addEventListener("message",receiveMessage,false);
 		
 		
-		
-		
-		
-			
+
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-33017882-1']);
 _gaq.push(['_trackPageview']);

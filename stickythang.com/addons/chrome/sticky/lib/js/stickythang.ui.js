@@ -56,8 +56,13 @@ window.stickythang={
 	currentids:[],
 	currentnotes:[],
 	user:"",
+	getLoggedInUser:function(fn,ops){
+		chrome.extension.sendRequest({action:"checkLoggedInUser"},fn);
+	},
 	getUser:function(){return stickythang.user || ""},
-	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') +"&author="+ stickythang.getUser() },
+	getUserId:function(){return stickythang.userId || ""},
+	setUser:function(user){stickythang.user = user.name;stickythang.userId = user.id},
+	getShareUrl:function(note){return stickythang.urlSingleNote +"?id="+note.id+"&c="+ note.div.getData('className') +"&author="+ stickythang.getUserId() },
 	settings:{
 		save:function(Y,node){
 			var xy = node.getXY();
@@ -80,11 +85,8 @@ window.stickythang={
 				if (stickythang.debug)
 					console.log('trying to share')
 				note.one("input.buttonShareSticky").set('value', 'Setting public...')
-				setTimeout(function(){
-					note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
-				},1000)
 				// self.one("#buttonShareSticky").set('value',"share")
-				note.Super.shareMe('true');
+				note.Super.shareMe();
 			}
 		},
 		modifiedString:function(x,n){
@@ -140,18 +142,40 @@ window.stickythang={
 				if (note.getData("shared") == "true"){
 					note.one("input.buttonShareSticky").setStyle('display','none')
 					note.one("span.buttonShareStickyNote").setContent("This sticky is shared, well done!")
+					note.one("form").setStyle('overflow','visible');
 				}else{
 					chrome.extension.sendRequest({action:"checkLoggedInUser",ops:{noteId:note.get("id")}}, function(response) {
 						stickythang.log( "flipping note: got response from server ("+ response.noteId +","+ response.user +")")
 						stickythang.online = response.online;
 						var Y = stickythang.Y,
 							note = Y.one("#"+ response.noteId);
+						if (stickythang.debug){
+							console.log("note.id:"+ response.noteId);
+						}
 						if (stickythang.online == 'false'){
+							if (stickythang.debug){
+								console.log("stickythang.online:"+ stickythang.online);
+							}
 							note.one("input.buttonShareSticky").setStyle('display','none')
 							note.one("span.buttonShareStickyNote").setContent("Sorry, StickyThang! is currently offline, maybe the clearer unpluged the server again. Rest assured our team of crack techies are on the job")
-						} else if (!note || !response.user || response.user == 'me'){
+						} else if (!response.user || response.user == 'me' || response.user == 'undefined'){
+							Y.one("#stickythangContainer").removeClass("st-anonymous")
+							if (stickythang.debug){
+								console.log("user not logged in:"+ response.user);
+								console.log(response);
+							}
 							// user not logged in
-							note.one("input.buttonShareSticky").setStyle('display','none')
+							if (!note){
+								console.log("CAN'T FIND NOTE!!!");
+								console.log("note.id:"+ response.noteId);
+								if (!document.getElementById(response.noteId)){
+									console.log("getElementById can't find it " )
+								}
+								if (document.getElementById(response.noteId)) {
+									console.log("getElementById can find it " )
+								}
+							}
+							//note.one("input.buttonShareSticky").setStyle('display','none')
 							//note.one("span.buttonShareStickyNote").setContent('<iframe frameborder="0" scrolling="no" src="http://www.stickythang.com/small/login" id="iframeLogin00"></iframe>')
 							//Y.one("#iframeLogin00").setStyles({'margin':'0','height':'70px','width':'200px','border':'0 none'}).on('load',function(){
 							//	console.log('loaded');
@@ -159,7 +183,7 @@ window.stickythang={
 							var time = Y.Lang.now();
 							//note.one("span.buttonShareStickyNote").setContent('<input type="text" value="name" id="tempName'+time+'"/><input type="text" value="password" id="tempPassword'+time+'" /><input style="display:block" type="button" value="login to share" id="tempLogin'+time+'" />');
 							note.one("span.buttonShareStickyNote").setContent('<iframe frameborder=0 style="width:99%;height:100px;" src=http://www.stickythang.com/oauth2callback></iframe>');
-							var testLoggedIn = function(){
+							/*var testLoggedIn = function(){
 								var tc = 0;
 								return function(){
 									if (tc > 0){
@@ -180,7 +204,7 @@ window.stickythang={
 									}
 								}
 							}
-							note.one('iframe').on('load',testLoggedIn())
+							note.one('iframe').on('load',testLoggedIn())*/
 							/*Y.one("#tempName"+time).on('focus',function(e){if (e.target.get('value')=='name') {e.target.set('value','')}})
 							Y.one("#tempPassword"+time).on('focus',function(e){e.target.set('type','password').set('value','')})
 							Y.one("#tempLogin"+time).on('click',function(e){
@@ -217,7 +241,10 @@ window.stickythang={
 								})
 							*/
 						} else {
-							stickythang.user = response.user;
+							stickythang.setUser({"name":response.user,"id":response.userId})
+							if (stickythang.debug){
+								console.log("gets here: "+ stickythang.getUser());
+							}
 							if (note.one("div.edit textarea").get("value") == ""){
 								note.one("input.buttonShareSticky").set('value','Add content to share');
 								return;
@@ -308,7 +335,7 @@ window.stickythang={
 			this.isNew = true;
 			this.scope = 'path';// default scope setting
 			this.timestamp = (new Date().getTime());
-			this.id = stickythang.getUser() + '-' + this.timestamp;
+			this.id = Y.guid();
 			this.html = '';
 			this.shared = '';
 		}
@@ -437,7 +464,7 @@ stickythang.init = function(){
 			body = Y.one('body');
 
 		if (body){
-			body.append('<div id="stickythangContainer" />')
+			body.append('<div id="stickythangContainer" class="st-anonymous"/>')
 			//Y.one('body').append('<div id="stickythangButtonLayer" class="fade"><div id="stickythangFormContainer" /></div>');
 			Y.one("html").on("key",stickythang.stickiesMinimizeAll,"esc");
 
@@ -450,6 +477,14 @@ stickythang.init = function(){
 			  stickythang.urlSingleNote = response.urlSingleNote;
 			  stickythang.stickiesActive(response.stickiesActive);
 			  stickythang.loadAll(response.list);
+				stickythang.getLoggedInUser(function(response){
+					console.log(response)
+				})
+				if (stickythang.getUser()){
+					console.log( stickythang.getUser() )
+					console.log("i think im logged in")
+					Y.one("#stickythangContainer").removeClass("st-anonymous")
+				}
 			});
 		} else {
 			chrome.extension.sendRequest({action: "disabled"});
@@ -598,20 +633,26 @@ stickythang.Note.prototype = {
 		// inner.set('innerHTML','trying to load content:'+url);
 		this.div.one("div.edit").empty().append("<iframe src='"+ uri +"' />");
 	},
-	shareMe:function(shared){
-		this.div.setData('shared',shared);
+	shareMe:function(){
 		var ops = this.createOps(),
-			str;
-		//alert('trying to share note:'+str.length+":"+str)
+			str,
+			note = this.div;
+th
 		delete ops.ops;
 		ops.id = stickythang.getUser() + '-' + (new Date().getTime());
 		str = stickythang.Y.JSON.stringify(ops);
 		
 		chrome.extension.sendRequest({action:"newPost", ops:{message:str,subject:ops.html} }, function(response) {
+			if (respose.error){
+				note.one("input.buttonShareSticky").set('value', 'Sorry, connection error :( ');
+			} else {
+				note.setData('shared','true');
+				note.one("input.buttonShareSticky").set('value', 'Bamb... Thanks for sharing!')
+			}
 		 	if (stickythang.debug)
 				console.log(response.message)
 		});
-	}	
+	}
 }
 
 
@@ -796,7 +837,7 @@ stickythang.createNoteYUI = function(result){
 				var opts = "",colour;
 				for (name in stickythang.ops.className){
 					colour = stickythang.ops.className[name];
-					if (self.getData('className') === colour)					
+					if (self.getData('className') === colour)
 						opts += "<option selected='selected' class='"+ colour +"'>"+ colour +"</option>"
 					else
 						opts += "<option class='"+ colour +"'>"+ colour +"</option>"
@@ -818,3 +859,27 @@ stickythang.createNoteYUI = function(result){
 		
 } 
 
+function receiveMessage(message){
+	if ( /^https?:\/\/www\.stickythang\.com/.test(message.origin)){
+		if (message.data.action === "login"){
+			//console.log(message.data.id +": "+ message.data.name);
+			chrome.extension.sendRequest({"action": "userLogin","userId":message.data.id,"userName":message.data.name},function(response){
+				if (response.error){
+					console.log(response.message + " " +response.error)
+				}else{
+					stickythang.setUser({id:response.userId})
+					YUI().use('node','transition', function(Y) {
+						Y.one("#stickythangContainer").removeClass("st-anonymous")
+						Y.all("#stickythangContainer input.buttonShareSticky").set('value','Share as '+ stickythang.getUser());
+					})
+				}
+			});
+		} else {
+			//console.log('unsupported request')
+		}
+	}else{
+		//console.log(message.origin)
+		//console.log('This domain is not permitted to post messages')
+	}
+}
+window.addEventListener("message",receiveMessage,false);
