@@ -26,7 +26,8 @@
 					userId:stickythang.getLocalStorage('userId'),
 					userName:stickythang.getLocalStorage('userName','me'),
 					debug:stickythang.getLocalStorage('debug','false'),
-					shares:stickythang.shares // may be depricated, check!
+					isLoggedIn:stickythang.getLocalStorage('isLoggedIn','false'),
+					shares:stickythang.shares // may be deprecated, check!
 				}, function(response) {
 				if (response)
 				console.log(response.message);
@@ -88,10 +89,19 @@ chrome.extension.onRequest.addListener(
 			if (request.userName && request.userId){
 				window.stickythang.setLocalStorage('userId',request.userId);
 				window.stickythang.setLocalStorage('userName',request.userName);
+				window.stickythang.setLocalStorage('isLoggedIn',request.isLoggedIn);
 				sendResponse({"message":"thank you, user info updated"})
 			} else {
 				sendResponse({"message":"not updated","error":"invalid user data"})
 			}
+		break;
+		case "userLogout" : // is user logged in
+			//sendResponse({"message":"its the message"})
+
+			window.stickythang.setLocalStorage('userId','');
+			window.stickythang.setLocalStorage('userName','');
+			window.stickythang.setLocalStorage('isLoggedIn','');
+			sendResponse({"message":"thank you, user info updated"})
 
 		break;
 	}
@@ -127,8 +137,12 @@ window.stickythang = {
 	},
 	getBuddyList:function(){
 		stickythang.db.getBuddies();
-		var buddies = stickythang.db.listBuddies;
-		return buddies.join(",") ;
+		var buddies = stickythang.db.listBuddies,
+			ids = [];
+		for (var i = 0;i < buddies.length; i++){
+			ids.push(buddies[i].id)
+		}
+		return ids.join(",") ;
 	},
 	getPublicStickies:function(buddy){
 		console.log("checking public stickies")
@@ -301,7 +315,17 @@ YUI().use("io","json", function(Y) {
 					on: {
 						complete:function(id,request){
 							// TODO; handle errors
-							sendResponse({message:"request to save note received by stickythang.com",'online':stickythang.getLocalStorage('online')});
+							console.log("request")
+							console.log(request);
+							var obj = Y.JSON.parse(request.responseText)
+							console.log( obj );
+							console.log( ops );
+							var options = {
+								"id":ops.noteId,
+								"urlex":obj.id
+							}
+							stickythang.db.addShareId(options,sendResponse)
+							//sendResponse({message:"request to save note received by stickythang.com",'online':stickythang.getLocalStorage('online')});
 						}
 					}
 			    };
@@ -310,10 +334,12 @@ YUI().use("io","json", function(Y) {
 					Y.one("#postAuthorAlias").set('value', alias);
 					Y.one("#postOps").set('value',ops.message);
 					Y.one("#postNote").set('value',ops.subject);
+					Y.one("#postMode").set('value',"extension");
 					if(stickythang.debug){
 						console.log('Trying to submit note; author:'+ author +', "'+ ops.message + '", subject:'+ ops.subject);
 					}
-					request = Y.io(uri,cfg);
+					Y.io(uri,cfg);
+
 				} else {
 					if(stickythang.debug){
 						console.log('Could not submit note; author:'+ author +', "'+ ops.message + '", subject:'+ ops.subject);
@@ -346,6 +372,9 @@ YUI().use("io","json", function(Y) {
 				img = obj.img;
 				window.stickythang.setLocalStorage('userId',userId);
 				window.stickythang.setLocalStorage('userName',userName);
+				window.stickythang.setLocalStorage('isLoggedIn','true');
+			} else {
+				window.stickythang.setLocalStorage('isLoggedIn','false');
 			}
 		}catch(e){user="Error getting user info:"+e.message}
 		
@@ -381,20 +410,23 @@ YUI().use("io","json", function(Y) {
 				if (obj && obj.userId){
 					window.stickythang.setLocalStorage('userId',obj.userId);
 					window.stickythang.setLocalStorage('userName',obj.nameName);
+					window.stickythang.setLocalStorage('isLoggedIn','true');
 					userName = obj.userName;
 					userId = obj.userId;
 					console.log("obj and obj.user :"+ userId + " and userName :"+ userName);
 				} else {
+					window.stickythang.setLocalStorage('isLoggedIn','false');
 					console.log("undefined issue");
 					console.log(obj);
 					//console.log(request.responseText)
 				}
 				if (sendResponse){
-					var ops = {};
+					if (!ops){ops = {}};
 					ops.user = userName;
 					ops.userId = userId;
 					ops.message = "response from server";
 					ops.online = stickythang.getLocalStorage('online');
+					ops.isLoggedIn = window.stickythang.getLocalStorage('isLoggedIn');
 					sendResponse(ops)
 				}
 			}}};
@@ -478,6 +510,7 @@ stickythang.db = {
 							stickiesActive: stickythang.getLocalStorage('stickiesActive'),
 							urlSingleNote: stickythang.ops.urlSingleNote,
 							user: stickythang.getLocalStorage('userName',''),
+							isLoggedIn: stickythang.getLocalStorage('isLoggedIn','fales'),
 							shares: stickythang.shares,
 							message: 'success'
 						})
@@ -532,8 +565,6 @@ stickythang.db = {
 					}	
 					if (sendResponse){
 						sendResponse({message:"buddies list updated"})
-					} else {
-						return	stickythang.db.listBuddies;	
 					}
 					
 		        }, function(tx, error) {
@@ -616,6 +647,25 @@ stickythang.db = {
 		        //    });
 		        });
 		    });				
+		},
+		addShareId:function(ops,sendResponse){
+			//console.log('trying to update addShareId ')
+			//console.log(ops)
+
+			stickythang.db.localdb.transaction(function (trans){
+	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET urlex=? WHERE id = ?",
+					[ops.urlex,ops.id],
+					function(){
+						//console.log(' that worked ')
+						if (sendResponse){
+							sendResponse({message:'sticky shared!',ops:{urlex:ops.urlex}})
+						}
+					},
+					function(tx,error){
+						console.log(' oh dear ')
+						sendResponse(error)
+				});
+	        });
 		},
 		disable:function(id,sendResponse){			
 	        stickythang.db.localdb.transaction(function (trans){
