@@ -4,8 +4,8 @@
 
 			var background = chrome.extension.getBackgroundPage(),
 				//user = background.stickythang.getLoggedInUser(),
-				buddies = background.stickythang.db.getBuddies(),
 				debug = true;
+				background.stickythang.db.getBuddies();
 				//username = user.userName;
 
 				//console.log(user)
@@ -64,8 +64,8 @@
 							}
 						}
 						if (!myStickies){myStickies = "<li>You have no saved stickies</li>"}
-						if (!buddiesStickies){buddiesStickies = "<li>No stickies found</li>"}
-						if (!buddies){buddiesStickies = '<li>You are not following anyone. <a target="_blank" href="options.html">Find friends</a></li>'}
+						if (!buddiesStickies){buddiesStickies = "<li>It looks like no one has shared any stickies! : (</li>"}
+						if (!background.stickythang.getBuddyList()){buddiesStickies = '<li>You are not following anyone. <a target="_blank" href="options.html">Find friends</a></li>'}
 						Y.one("#stickyList").setContent(myStickies);
 						Y.one('#ulAllList').setContent(buddiesStickies);
 						// Y.one("#domainLable").setContent(response.domain)
@@ -167,7 +167,7 @@
 						u = background.stickythang.getLoggedInUser();
 						
 						if ( !u || !u.name | !u.id ){// it's a sticky thang response
-							html = 'To share stickies you need to <a target="_blank" href="options.html">login</a>.';
+							html = 'To share stickies you need to login.';
 							// Y.one("#loginInputArea").setStyle('display','block');
 							// Y.one('#ulAllList').setContent('<li>You need to login to see your friends stickies</li><li><a target="_blank" href="options.html">register</a></li>')
 						} else {
@@ -185,9 +185,25 @@
 				}
 				CheckLoginStatus()
 			});
-			
-			
-			
+
+
+
+
+function receiveMessage(message){
+	if ( /^https?:\/\/www\.stickythang\.com/.test(message.origin)){
+		if (message.data.action === "login"){
+			location.reload();
+		} else if (message.data.action === "logout"){
+			location.reload();
+		} else {
+			console.log('unsupported request')
+		}
+	}else{
+		console.log(message.origin)
+		console.log('This domain is not permitted to post messages')
+	}
+}
+window.addEventListener("message",receiveMessage,false);
 			
 				
 var _gaq = _gaq || [];

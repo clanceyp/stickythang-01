@@ -128,11 +128,13 @@
 				}
 				window.listBuddies = background.stickythang.db.listBuddies;
 				if (!Y.one("#ulBuddiesList li")){
+					stickythang.currentlyLoadedFriends = background.stickythang.db.listBuddies;
 					stickythang.buildHTMLList(background.stickythang.db.listBuddies);
 				}
 			}
 			stickythang.buildHTMLList = function(friends){
-				Y.one("#ulBuddiesList").empty()
+
+				Y.one("#ulBuddiesList").empty();
 				var f = _.sortBy(friends, function(item){return item.name.toLowerCase()})
 				for (var i = 0; i<f.length; i++){
 					var o = f[i];
@@ -150,7 +152,7 @@
 					// console.log('buddy:'+ buddy)
 					//alert('trying to remove')
 					//if (true){return}
-					Y.one("#inputFriendsOnly").set('checked',false)
+
 					if (background.stickythang.isBuddy( buddy )){
 						Y.one("#li-"+ buddy.id).transition({height:0},function(){this.remove()});
 						background.stickythang.db.removeBuddy( buddy , BuildBuddyList )
@@ -162,14 +164,14 @@
 				
 			}
 			function RemoveBuddy(e){
-				var target = e.target,
+				var target = e.target.ancestor("li",true),
 					id = target.get("id").substring(3);
-				alert('depricated')
+				//alert('depricated')
 				return;
 				background.stickythang.db.removeBuddy( buddy , BuildBuddyList );
 			}
 			function ToggleBuddy(e){
-				var target = e.target,
+				var target = e.target.ancestor("li",true),
 					id = target.get("id").substring(3),
 					buddy = _.find(window.friends, function(item){return item.id == id})
 				if (!buddy){
@@ -195,6 +197,27 @@
 				Y.one("#ulBuddiesList").empty()
 				BuildBuddyList();
 			})
+			Y.one("#inputFilter").on('keyup',function(e){
+				FilterSoon();
+			})
+			function FilterNow(){
+				var txt = Y.one("#inputFilter").get("value"),
+					friends = _.filter(stickythang.currentlyLoadedFriends,function(item){
+						return item.name.toLowerCase().match(txt.toLocaleLowerCase());
+					})
+				if (txt.length > 2){
+					stickythang.buildHTMLList(friends);
+				} else if (txt.length == 0){
+					stickythang.buildHTMLList(stickythang.currentlyLoadedFriends);
+				}
+
+			}
+			function FilterSoon(){
+				if (window.filerTimer){
+					clearTimeout(window.filerTimer);
+				}
+				window.filerTimer = setTimeout(FilterNow,1000);
+			}
 		})
 
 
@@ -215,11 +238,12 @@ function receiveMessage(message){
 
 				}
 			}*/
+			stickythang.currentlyLoadedFriends = window.friends;
 			stickythang.buildHTMLList(window.friends);
 		} else if (message.data.action === "login"){
 			console.log(message.data.id +": "+ message.data.name);
-		} else if (message.data.action === "loginout"){
-			console.log('logged out');
+		} else if (message.data.action === "logout"){
+			location.reload();
 		} else {
 			console.log('unsupported request')
 		}

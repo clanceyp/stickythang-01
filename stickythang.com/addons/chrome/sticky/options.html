@@ -260,8 +260,12 @@ ul.ulListTwoCol li:last-child{
 							<p><!-- input type="text" id="inputFriendFilter" />
 								<input type="button" id="inputFriendFilterUpdate" value="filter list" / -->
 
-								<label>Show friends only
-								<input type="checkbox" id="inputFriendsOnly" /></label></p>
+
+								<label for="inputFilter">Filter
+									<input type="text" id="inputFilter" />
+								</label>
+
+							</p>
 							<style>
 								ul.ulListTwoCol {
 									float:left;
@@ -273,11 +277,14 @@ ul.ulListTwoCol li:last-child{
 									cursor: pointer;
 									overflow: hidden;
 								}
+								#inputFriendsOnly {
+									margin-top:10px;
+								}
 
 							</style>
 							<ul id="ulBuddiesList" class="ulListTwoCol">
 							</ul>
-
+							<input type="button" id="inputFriendsOnly" value="Show saved friends only" />
 						</fieldset>
 					</div>
 					<div id="Feedback" class="unit off">
