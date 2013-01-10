@@ -61,7 +61,9 @@ div#stickythangFormContainer:hover span.handle {
 div#stickythangFormContainer *.fade {
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-duration:0.75s;
+	-webkit-animation-fill-mode:forwards;
 }
+div.st-anonymous input.buttonShareSticky,
 div.stickythang div.card form.externalShare div.share {
 	display:none;
 }
@@ -112,6 +114,7 @@ div.stickythang div.card {
 	-webkit-animation-iteration-count:1;
 	-webkit-animation-timing-function:ease;
 	-webkit-animation-duration:0.5s;
+	-webkit-animation-fill-mode:forwards;
 	/*-webkit-perspective: 1000;*/
 }
 div.stickythang.stickythangInDrag div.card {

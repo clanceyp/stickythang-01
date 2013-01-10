@@ -129,4 +129,9 @@ p.button input {
 	margin-bottom:10px;
 	text-align:center;
 	width: 220px;
-}		
+}
+#loginStatus img {
+	height: 16px;
+	margin-right: 5px;
+	vertical-align: middle;
+}
