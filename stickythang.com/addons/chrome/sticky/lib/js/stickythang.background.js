@@ -652,8 +652,8 @@ stickythang.db = {
 			//console.log(ops)
 
 			stickythang.db.localdb.transaction(function (trans){
-	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET urlex=? WHERE id = ?",
-					[ops.urlex,ops.id],
+	            trans.executeSql("UPDATE "+ stickythang.db.tableName +" SET user=?, urlex=? WHERE id = ?",
+					[stickythang.getLocalStorage('userName'),ops.urlex,ops.id],
 					function(){
 						//console.log(' that worked ')
 						if (sendResponse){

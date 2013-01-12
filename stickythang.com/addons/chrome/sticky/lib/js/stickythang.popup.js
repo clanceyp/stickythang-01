@@ -39,33 +39,79 @@
 				}
 				var loader = {
 					LoadList:function(results){
-						console.log('ST!' + results.list.length)
+                        if (debug)
+    						console.log('ST!' + results.list.length)
 						loader.populateList(results);
 					},
 					populateList:function(response){
+                        if (debug){
+                            console.log("populateList: "+ response.list.length);
+                        }
 						var rs = response.list,
 							myStickies = "",
 							buddiesStickies = "",
 							mxlen = background.stickythang.getLocalStorage('popup-list-link-mxlen',50);
 						for (var i = rs.length-1; i >= 0; i--) {
+                            console.log("populateList loop a: "+ i);
 							var sticky = rs[i],
 								note="",
 								url="",
 								user;
-							if (!sticky.note){continue}
+							if (!sticky.note){
+                                if (debug)
+                                    console.log("populateList: no sticky.note "+ i);
+                                continue;
+                            }
+                            console.log("populateList loop b: "+ i);
 							note = sticky.note.replace(/<[^>]*>?/g," ");
 							note = note.length > mxlen+3 ? note.substring(0,mxlen) + "..." : note;
 							url = (sticky.url.indexOf("#") > 0) ? sticky.url : sticky.url + "#" + sticky.id;
-							user = sticky.user || "";
-							if (note && sticky.urlex){
+							user = sticky.user || "me";
+                            console.log("populateList loop c: "+ i);
+                            if (!note){
+                                if (debug)
+                                    console.log("populateList: no note "+ i);
+                                continue;
+                            }
+                            console.log("populateList loop d: "+ i);
+                            if (user == 'me' || user == background.stickythang.getLocalStorage('userName')){
+                                myStickies+= '<li><a target="_blank" class="strip" href="'+ url +'">'+ note  +'</a></li>';
+                                if (debug)
+                                    console.log("populateList: note is current user "+ user);
+                            } else if (sticky.urlex){
 								buddiesStickies+= '<li><a target="_blank" class="strip" href="'+ url +'"><span id="span'+rs[i].id+'" class="del"></span>'+ user +'; '+ note  +'</a></li>';
-							} else if (note){
+                                if (debug)
+                                    console.log("populateList: shared note is "+ user);
+							} else {
 								myStickies+= '<li><a target="_blank" class="strip" href="'+ url +'">'+ note  +'</a></li>';
+                                if (debug)
+                                    console.log("populateList: note is "+ user);
 							}
 						}
-						if (!myStickies){myStickies = "<li>You have no saved stickies</li>"}
-						if (!buddiesStickies){buddiesStickies = "<li>It looks like no one has shared any stickies! : (</li>"}
-						if (!background.stickythang.getBuddyList()){buddiesStickies = '<li>You are not following anyone. <a target="_blank" href="options.html">Find friends</a></li>'}
+						if (!myStickies){
+                            myStickies = "<li>You have no saved stickies</li>";
+                            if (debug)
+                                console.log("populateList: no stickies ");
+                        } else {
+                            if (debug)
+                                console.log("populateList: stickies ");
+                        }
+						if (!buddiesStickies){
+                            buddiesStickies = "<li>It looks like no one has shared any stickies! : (</li>";
+                            if (debug)
+                                console.log("populateList: no buddiesStickies ");
+                        } else {
+                            if (debug)
+                                console.log("populateList: buddiesStickies ");
+                        }
+						if (!background.stickythang.getBuddyList()){
+                            buddiesStickies = '<li>You are not following anyone. <a target="_blank" href="options.html">Find friends</a></li>';
+                            if (debug)
+                                console.log("populateList: no buddies ");
+                        } else {
+                            if (debug)
+                                console.log("populateList: buddies ");
+                        }
 						Y.one("#stickyList").setContent(myStickies);
 						Y.one('#ulAllList').setContent(buddiesStickies);
 						// Y.one("#domainLable").setContent(response.domain)
