@@ -499,11 +499,12 @@ stickythang.db = {
 							,path:result.rows.item(i).path
 							,scope:result.rows.item(i).scope
 							,timestamp:result.rows.item(i).timestamp
-							,urlex:result.rows.item(i).urlex
+							,url:result.rows.item(i).url
+                            ,urlex:result.rows.item(i).urlex
 							,user:result.rows.item(i).user
 						});
-						stickythang.db.listAll = list;
 					}
+                    stickythang.db.listAll = list;
 					if (sendResponse) {
 						sendResponse({
 							list: stickythang.db.listAll,
@@ -519,7 +520,6 @@ stickythang.db = {
 		        }, function(tx, error) {
 					if (sendResponse)
 			            sendResponse({message:error.massage,list:[]})
-		            return;
 		        });
 		    });					
 		},
@@ -631,9 +631,8 @@ stickythang.db = {
 						stickythang.db.getIds();
 			            stickythang.db.getShares();
 			            stickythang.db.getAll(sendResponse);
-					}
-					else {
-						
+					} else {
+                        stickythang.db.listAll = [];
 					}
 		        }, function(tx, error) {
 		        //    tx.executeSql("CREATE TABLE "+ stickythang.db.tableName +" (id TEXT, note TEXT, timestamp REAL, left TEXT, top TEXT, pathway TEXT, page TEXT, scope TEXT, state TEXT, class TEXT)", [], function(result) { 
@@ -712,7 +711,10 @@ stickythang.db = {
 						
 					},
 					function(tx,error){
-						sendResponse(error)
+                        console.log(error);
+                        if (sendResponse){
+                            sendResponse({message:'error',error:error})
+                        }
 				});
 	        });			
 		},
@@ -749,10 +751,12 @@ stickythang.db = {
 					[note.html, note.json, note.scope, note.timestamp , note.id],
 					function(){
 						stickythang.db.getAll();
-						sendResponse({message:'updated'})
+                        if (sendResponse)
+						    sendResponse({message:'updated'})
 					},
 					function(tx,error){
-						sendResponse(error)
+                        if (sendResponse)
+    						sendResponse(error)
 				});
 	        });			
 		},

@@ -304,6 +304,7 @@ stickythang.loadAll = function(list){
 			stickythang.createNoteYUI( list[i] );
 		} else {
 			stickythang.log('stickythang.getAll: ignoring note '+i )
+            console.log(list[i])
 		}
     }	
 }
